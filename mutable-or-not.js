@@ -1,4 +1,4 @@
 
 
-let carTotal = int
-const taxRate = int
+let carTotal = 1
+const taxRate = 1
