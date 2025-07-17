@@ -1,4 +1,4 @@
 
 
-let carTotal = 1
-const taxRate = 1
+let cartTotal = 100
+const taxRate = 10
