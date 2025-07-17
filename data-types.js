@@ -1,6 +1,6 @@
 
 
-const isTrue = true;
-const Number = 32;
+const someBool = true;
+const someNumber = 32;
 const undedfinedValue = undefined;
-const stringfirst = "string";
+const someString = "string";
