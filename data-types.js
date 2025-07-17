@@ -2,5 +2,5 @@
 
 const someBool = true;
 const someNumber = 32;
-const undedfinedValue = undefined;
+const someUndefined = undefined;
 const someString = "string";
