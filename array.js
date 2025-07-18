@@ -1,4 +1,4 @@
 
 
-homogeneousArray = ["Apple", "Banana", "cherry"]
-heterogeneousArray = [1, "two", true]
+const homogeneousArray = ["Apple", "42", "cherry"]
+const heterogeneousArray = [1, "two", true]
