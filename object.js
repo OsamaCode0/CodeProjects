@@ -3,6 +3,6 @@
 const person = {
   isMarried: true,
   age: 30,
-  middleName: "Peter",
+  middleName: undefined,
   firstName: "John"
 }
