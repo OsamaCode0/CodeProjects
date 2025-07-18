@@ -4,7 +4,7 @@ const obj = {
   isMarried: true,
   age: 30,
   middleName: undefined,
-  firstName: "john"
+  name: "john"
 }
 
 Object.freeze(obj)
