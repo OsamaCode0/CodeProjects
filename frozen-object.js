@@ -6,5 +6,4 @@ const obj = {
   middleName: undefined,
   name: "john"
 }
-
 Object.freeze(obj)
