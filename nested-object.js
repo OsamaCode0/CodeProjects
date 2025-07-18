@@ -1,7 +1,7 @@
 
 
 
-userProfile = {
+const userProfile = {
   skills: ["JavaScript", "Python"],
 
   person: {
