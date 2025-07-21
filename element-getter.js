@@ -10,7 +10,7 @@ function getLastElement (input) {
 }
 
 
-function getElementByIndex(inout, index) {
+function getElementByIndex(input, index) {
   return input && input.length ? input[index] : undefined
 }
 
