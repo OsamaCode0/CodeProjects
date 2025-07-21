@@ -2,8 +2,7 @@
 
 
 function createPerson(firstName, lastName, age) {
-
-  thePerson = {
+return {
     firstName: firstName,
     lastName: lastName,
     age: age,
