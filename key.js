@@ -1,6 +1,6 @@
 
 
-function getKeyFromValue(object, key) {
+function getValueFromKey(object, key) {
 
   return object[key] || undefined;
 }
