@@ -7,7 +7,7 @@ function splitByDelimiter(string, delimeter) {
 }
 
 
-function joinByDelimiter(array, delimeter) {
+function joinWithDelimiter(array, delimeter) {
 
   return array.join(delimeter)
 }
