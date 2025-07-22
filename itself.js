@@ -7,7 +7,7 @@ const sender = {
   address: "123 Main St",
 }
 
-const deliverPackage = {
+const deliveryPackage = {
   sender: sender,
   contents: "porridge",
 }
