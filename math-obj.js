@@ -1,7 +1,7 @@
 
 
 
-mathObj = {
+const mathObj = {
   abs: function(x) {
     return Math.abs(x)
   },
