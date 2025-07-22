@@ -1,13 +1,13 @@
 
 
 
-function splitByDelimeter(string, delimeter) {
+function splitByDelimiter(string, delimeter) {
 
   return string.split(delimeter)
 }
 
 
-function joinByDelimeter(array, delimeter) {
+function joinByDelimiter(array, delimeter) {
 
   return array.join(delimeter)
 }
