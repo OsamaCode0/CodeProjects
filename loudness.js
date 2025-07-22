@@ -3,7 +3,7 @@
 function makeLouder(string) {
   string = string.toUpperCase(string);
 
-  return newString;
+  return string;
 }
 
 
