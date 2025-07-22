@@ -1,7 +1,7 @@
 
 
 
-function exctractContent(start, end, content) {
+function extractContent (start, end, content) {
 
   if (Array.isArray(content)) {
     let from = start ? content.indexOf(start) : 0;
