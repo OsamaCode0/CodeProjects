@@ -6,6 +6,6 @@ function getKeyFromValue(object, key) {
 }
 
 
-function addKeyValuePairs(originalObject, newKeyValuePairs) {
-  return {...originalObject, ...newKeyValuePairs}
+function addKeyValuePairs(object, key) {
+  return {...object, ...key} || undefined;
 }
