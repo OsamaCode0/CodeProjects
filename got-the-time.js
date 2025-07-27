@@ -26,7 +26,7 @@ function printPrettyDate(date) {
   const formattedMinutes = String(minutes).padStart(2, "0");
   const formattedSeconds = String(seconds).padStart(2, "0");
 
-  const output = `Today is ${dayName}, ${monthName} ${dayNumber}, ${year}, and the time is ${formattedHours}:${formattedMinutes}:${formattedSeconds} ${period}`;
+  const output = `Today is ${dayName}, ${monthName} ${dayNumber}, ${year}, and the time is ${formattedHours}:${formattedMinutes}:${formattedSeconds} ${period}.`;
 
   console.log(output);
 }
