@@ -12,7 +12,7 @@ function filterOutOddNumbers(arrayNumbers) {
 }
 
 function filterObjectsByNameLength(arrayObject, maxLength) {
- filterObject = arrayObject.filter(function(object) {
+  const filterObject = arrayObject.filter(function(object) {
   return object.name.lenght <= maxLength
  }) 
 
