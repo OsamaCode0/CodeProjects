@@ -12,5 +12,5 @@ const months = ["January", "February", "March", "April", "May", "June", "July", 
    const year = Date.getFullYear();
 
 
-  return `${day}, ${month} ${date}, ${year}`;
+  console.log(`${day}, ${month} ${date}, ${year}`);
 }
