@@ -1,28 +1,20 @@
+function classifyDate(date) {
+  const todaysDate = new Date();
+  todaysDate.setHours(0, 0, 0, 0);
 
-
-
-function classifyDate(Date) {
-
-  
-  todaysDate = new Date();
-
-  inputDate = new Date(Date);
+  const inputDate = new Date(date);
+  inputDate.setHours(0, 0, 0, 0);
 
   const oneYearInMs = 365 * 24 * 60 * 60 * 1000;
+  const diff = inputDate - todaysDate;
 
-  diff  = todaysDate - inputDate;
-
-  if (diff > -oneYearInMs) {
-    return "ancient"
-  }
-  else if (diff <= 0) {
-    return "past"
-  }
-  else if (diff < oneYearInMs) {
+  if (diff < -oneYearInMs) {
+    return "ancient";
+  } else if (diff <= 0) {
+    return "past";
+  } else if (diff > oneYearInMs) {
     return "distant future";
-  }
-  else {
+  } else {
     return "future";
   }
-
 }
