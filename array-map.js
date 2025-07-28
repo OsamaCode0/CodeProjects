@@ -16,7 +16,7 @@ function convertArrayOfObjectsToStrings(arrayObjects) {
   let result = [];
 
   for (const obj of arrayObjects) {
-     const str = `${obj}; ${value}`;
+     const str = `${obj}; ${Object.entries(obj).map(([key, value]) => `${key}: ${value}`).join(", ")}`;
     result.push(str);
   }
   return result;
