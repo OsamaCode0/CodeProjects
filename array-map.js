@@ -13,13 +13,13 @@ function convert2DArrayToObjectArray(data) {
 }
 
 function convertArrayOfObjectsToStrings(arrayObjects) {
-  let result = [];
+  
 
-  for (const obj of arrayObjects) {
-     const str = `${obj}; ${Object.entries(obj).map(([key, value]) => `${key}: ${value}`).join(", ")}`;
-    result.push(str);
-  }
-  return result;
+  return arrayObjects.map(obj => {
+    const entries = Object.entries(obj);
+    const parts  = entries.map(([key, value]) => `${key}: ${value}`);
+    return parts.join(", ");
+  })
 }
 
 
