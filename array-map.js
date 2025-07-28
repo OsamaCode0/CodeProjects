@@ -34,7 +34,7 @@ function concatenateStrings (concatString, maxLength) {
     if (str.lenght <= maxLength) {
       result.push(str);
     }else {
-      result.push(str.slice(0, maxLength) + "...");
+      result.push(str.slice(0, maxLength - 3) + "...");
     }
   }
 
