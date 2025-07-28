@@ -9,15 +9,15 @@ function convert2DArrayToObjectArray(data) {
     const value = pair[1];
     result.push({ [key]: value });
   }
-
   return result;
 }
 
-convertArrayOfObjectsToStrings (arrayObjects) {
-const let = []
+function convertArrayOfObjectsToStrings(arrayObjects) {
+  let result = [];
 
-  for (const object of arrayObjects) {
-
-    let.push(`${object.name} ${object.age} `);
+  for (const obj of arrayObjects) {
+     const str = `Name: ${obj.name}, Age: ${obj.age}, City: ${obj.city}`;
+    result.push(str);
   }
+  return result;
 }
