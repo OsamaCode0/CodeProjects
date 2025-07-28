@@ -21,3 +21,18 @@ function convertArrayOfObjectsToStrings(arrayObjects) {
   }
   return result;
 }
+
+
+function concatenateStrings (concatString, maxLength) {
+
+  let result = [];
+
+  for (const str of concatString) {
+    if (str.lenght <= maxLength) {
+      result.push(str);
+    }}
+     {
+
+  }
+  return result.join(", ");
+}
