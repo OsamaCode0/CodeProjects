@@ -17,7 +17,10 @@ function convertArrayOfObjectsToStrings(arrayObjects) {
 
   return arrayObjects.map(obj => {
     const entries = Object.entries(obj);
-    const parts  = entries.map(([key, value]) => `${key}: ${value}`);
+    const parts  = entries.map(([key, value]) => {
+      let capitalizeKey = key.charAt(0).toUpperCase() + key.slice(1);
+      return `${capitalizeKey}: ${value}`;
+    }); 
     return parts.join(", ");
   })
 }
@@ -30,9 +33,13 @@ function concatenateStrings (concatString, maxLength) {
   for (const str of concatString) {
     if (str.lenght <= maxLength) {
       result.push(str);
-    }}
+    }else {
+      result.push(str.slice(0, maxLength));
+    }
+  }
+
      {
 
   }
-  return result.join(", ");
+  return result
 }
