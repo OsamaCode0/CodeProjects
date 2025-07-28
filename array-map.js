@@ -41,5 +41,5 @@ function concatenateStrings (concatString, maxLength) {
      {
 
   }
-  return result
+  return result.join(", ");
 }
