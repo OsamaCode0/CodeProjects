@@ -13,7 +13,7 @@ return totatPrice;
 
 function getAverageAge(people) {
 
-  if (people.length === 0); return 0;
+  if (people.length === 0) return 0;
 
   const averageAge = people.reduce((accumulator, person) => {
     return  accumulator + person.age;
