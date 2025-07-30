@@ -39,8 +39,9 @@ if (cars == null || cars.length === 0) {
 
 
     return JSON.stringify({
+      totalFines,
       cars: finedCars,
-      totalFines
+
     })
   }
 
