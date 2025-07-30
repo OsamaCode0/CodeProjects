@@ -1,7 +1,8 @@
 
 
-function isAuthorizedUser (AuthorizedUser) {
-  return function(id) {
-    return AuthorizedUser(id)
+
+function isAuthorizedUser(authList) {
+  return function(idToCheck) {
+    return authList.includes(idToCheck);
   };
 }
