@@ -53,7 +53,7 @@ class Cat extends Pet {
   }
 
   purr () {
-    console.log(`${this.name} purr on the ${this.favoriteNapSpot}`)
+    console.log(`Alice ${this.name} purr on the ${this.favoriteNapSpot}`)
   }
 
 }
