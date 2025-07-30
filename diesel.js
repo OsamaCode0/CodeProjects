@@ -12,6 +12,11 @@ function calculateFines (carsData) {
 
   //Initialize an array to hold the fines
   //Iterate through each car object
+
+if (cars == null || cars.length === 0) {
+      return JSON.stringify({ cars: [], totalFines: 0 });
+    }
+
   for (let car of cars) {
     const [make, model, reg, year, fuel] = car;
     let fine = 0;
@@ -19,16 +24,12 @@ function calculateFines (carsData) {
     if (year < 2000) fine = 20;
     else if (fuel == "diesel" && year < 2015) fine = 10;
 
-    if (cars == null || cars.length === 0) {
-      return JSON.stringify({ cars: [], totalFines: 0 });
-    }
+    
 
     if (fine > 0) {
       totalFines += fine;
       finedCars.push
-      ( { make,
-         model,
-          reg, 
+      ( {  reg, 
           year,
            fuel,
             fine })
