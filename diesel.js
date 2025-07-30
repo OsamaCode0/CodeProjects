@@ -19,6 +19,10 @@ function calculateFines (carsData) {
     if (year < 2000) fine = 20;
     else if (fuel == "diesel" && year < 2015) fine = 10;
 
+    if (cars == null || cars.length === 0) {
+      return JSON.stringify({ cars: [], totalFines: 0 });
+    }
+
     if (fine > 0) {
       totalFines += fine;
       finedCars.push
@@ -30,6 +34,9 @@ function calculateFines (carsData) {
             fine })
     }
     }
+
+
+
     return JSON.stringify({
       cars: finedCars,
       totalFines
