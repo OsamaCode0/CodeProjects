@@ -1,7 +1,7 @@
 
 
-function isAuthorizedUser (isAuthorizedUser) {
+function isAuthorizedUser (AuthorizedUser) {
   return function(id) {
-    return isAuthorizedUser(id)
+    return AuthorizedUser(id)
   };
 }
