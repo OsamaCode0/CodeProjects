@@ -26,8 +26,13 @@ function getElementById(tagId) {
 }
 
 
-function getElementsByAttribute(tagAttribute) {
+function getElementsByAttribute(attributeName, attributeValue) {
 
- let gottenAttribute = document.querySelector(tagAttribute)
-  return gottenAttribute
+  if (attributeValue !== undefined) {
+
+    return document.querySelector(`[${attributeName} = "${attributeName}"]`)
+  }else {
+    return document.querySelector(`[${attributeName}]`)
+  }
+
 }
