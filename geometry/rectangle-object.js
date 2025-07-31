@@ -1,4 +1,4 @@
-const rectObj = {
+export const rectObj = {
   width: 50,
   height: 30,
   area() {
@@ -8,5 +8,3 @@ const rectObj = {
     return 2 * (this.width + this.height);
   }
 };
-
-module.exports = { rectObj };

@@ -1,12 +1,10 @@
-const { Rectangle } = require('./rectangle');
+import { Rectangle } from './rectangle.js';
 
-class Square extends Rectangle {
+export class Square extends Rectangle {
   constructor(side) {
     super(side, side);
     this.side = side;
   }
 }
 
-const square = new Square(4);
-
-module.exports = { Square, square };
+export const square = new Square(4);

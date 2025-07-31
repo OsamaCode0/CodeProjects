@@ -1,4 +1,4 @@
-class Triangle {
+export class Triangle {
   constructor(sideA, sideB, sideC) {
     this.sideA = sideA;
     this.sideB = sideB;
@@ -17,6 +17,4 @@ class Triangle {
   }
 }
 
-const triangle = new Triangle(3, 4, 5);
-
-module.exports = { Triangle, triangle };
+export const triangle = new Triangle(3, 4, 5);
