@@ -1,15 +1,12 @@
-
-
-
-import { Rectangle } from '../rectangle';
+const { Rectangle } = require('./rectangle');
 
 class Square extends Rectangle {
   constructor(side) {
-    super(side, side)
-    this.side = side
+    super(side, side);
+    this.side = side;
   }
 }
 
-const newSquare = new Square(4)
+const square = new Square(4);
 
-export default { Square, square }
+module.exports = { Square, square };

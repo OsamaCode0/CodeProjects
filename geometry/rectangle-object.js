@@ -1,5 +1,3 @@
-
-
 const rectObj = {
   width: 50,
   height: 30,
