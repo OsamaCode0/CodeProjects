@@ -28,6 +28,6 @@ function getElementById(tagId) {
 
 function getElementsByAttribute(tagAttribute) {
 
- let gottenAttribute = document.getElementsByAttribute(tagAttribute)
+ let gottenAttribute = document.getElementByAttribute(tagAttribute)
   return gottenAttribute
 }
