@@ -27,12 +27,12 @@ function getElementById(tagId) {
 
 
 function getElementsByAttribute(attributeName, attributeValue) {
-
   if (attributeValue !== undefined) {
-
-    return document.querySelector(`[${attributeName} = "${attributeName}"]`)
-  }else {
-    return document.querySelector(`[${attributeName}]`)
+    // Match elements with the exact attribute and value
+    return document.querySelectorAll(`[${attributeName}="${attributeValue}"]`);
+  } else {
+    // Match elements that have the attribute, regardless of value
+    return document.querySelectorAll(`[${attributeName}]`);
   }
-
 }
+
