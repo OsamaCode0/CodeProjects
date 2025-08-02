@@ -1,5 +1,20 @@
+document.addEventListener('DOMContentLoaded', function() {
+    initializeChessboard();
+});
+
 function initializeChessboard() {
-    // Create the chessboard container
+    // Get or create the chessboard container
+    let container = document.getElementById('chessboard-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'chessboard-container';
+        document.body.appendChild(container);
+    }
+
+    // Clear any existing chessboard
+    container.innerHTML = '';
+
+    // Create the chessboard
     const chessboard = document.createElement('div');
     chessboard.className = 'chessboard';
     
@@ -10,30 +25,31 @@ function initializeChessboard() {
             square.className = 'square';
             square.id = `square-${row}-${col}`;
             
-            // Determine if square should be black or white
-            // Top left (1,1) is white, alternating pattern
-            if ((row + col) % 2 === 0) {
-                square.style.backgroundColor = 'white';
-            } else {
-                square.style.backgroundColor = 'black';
-            }
+            // Set initial color
+            const isWhite = (row + col) % 2 === 0;
+            square.dataset.originalColor = isWhite ? 'white' : 'black';
+            square.style.backgroundColor = square.dataset.originalColor;
             
             // Add click event listener
             square.addEventListener('click', function() {
-                // Reset all squares to their original colors
+                // Reset all squares to original colors
                 document.querySelectorAll('.square').forEach(sq => {
-                    const [r, c] = sq.id.split('-').slice(1).map(Number);
-                    sq.style.backgroundColor = (r + c) % 2 === 0 ? 'white' : 'black';
+                    sq.style.backgroundColor = sq.dataset.originalColor;
                 });
                 
-                // Set clicked square to red
-                this.style.backgroundColor = 'red';
+                // If this square wasn't already red, make it red
+                if (this.style.backgroundColor !== 'red') {
+                    this.style.backgroundColor = 'red';
+                } else {
+                    // If it was red, revert to original color
+                    this.style.backgroundColor = this.dataset.originalColor;
+                }
             });
             
             chessboard.appendChild(square);
         }
     }
     
-    // Add chessboard to the body
-    document.body.appendChild(chessboard);
+    // Add chessboard to the container
+    container.appendChild(chessboard);
 }
