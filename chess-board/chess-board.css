@@ -1,25 +1,32 @@
 .chessboard {
-  display: grid;
-  grid-template-columns: repeat(8, 60px);
-  grid-template-rows: repeat(8, 60px);
-  border: 2px solid #333;
-  width: fit-content;
-  margin: 20px auto;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr); /* 8 equal columns */
+    grid-template-rows: repeat(8, 1fr);    /* 8 equal rows */
+    width: 80vmin; /* Responsive sizing, e.g., 80% of viewport min dimension */
+    height: 80vmin;
+    border: 2px solid #333;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    margin: 50px auto; /* Center the board */
 }
 
 .square {
-  width: 60px;
-  height: 60px;
+    width: 100%; /* Ensure squares fill their grid cell */
+    height: 100%;
+    display: flex; /* Optional: Add flexbox for future piece centering */
+    justify-content: center;
+    align-items: center;
 }
 
-.white {
-  background-color: rgb(255, 255, 255);
+
+.white-square {
+    background-color: #f0d9b5; /* Light wood color */
 }
 
-.black {
-  background-color: #000000;
+.black-square {
+    background-color: #b58863; /* Dark wood color */
 }
 
-.selected {
-  background-color: red !important;
+
+.selected-square {
+    background-color: red!important; /* Use!important to ensure override */
 }
