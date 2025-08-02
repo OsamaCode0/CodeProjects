@@ -1,12 +1,15 @@
 function initializeChessboard() {
-  const board = document.getElementById("chessboard");
+  const board = document.createElement("div");
+  board.className = "chessboard";
+  
   let selectedSquare = null;
 
   for (let row = 1; row <= 8; row++) {
     for (let column = 1; column <= 8; column++) {
       const square = document.createElement("div");
       square.classList.add("square");
-      square.id = `r${row}-c${column}`;
+      // FIXED: Use correct ID format
+      square.id = `square-${row}-${column}`;
 
       const isWhite = (row + column) % 2 === 0;
       square.classList.add(isWhite ? "white" : "black");
@@ -22,6 +25,10 @@ function initializeChessboard() {
       board.appendChild(square);
     }
   }
+
+  // FIXED: Add to body instead of replacing existing element
+  document.body.appendChild(board);
 }
 
-initializeChessboard();
+// FIXED: Add event listener to run after DOM loads
+document.addEventListener('DOMContentLoaded', initializeChessboard);
