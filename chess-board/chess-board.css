@@ -37,7 +37,7 @@ h1 {
 }
 
 .white-square {
-    background-color: #f0d9b5; /* Light wood color */
+    background-color: rgb(255, 255, 255)
 }
 
 .black-square {
