@@ -15,11 +15,15 @@ function initializeChessboard() {
       square.classList.add(isWhite ? "white" : "black");
 
       square.addEventListener("click", () => {
-        if (selectedSquare) {
+        if (selectedSquare === square) {
           selectedSquare.classList.remove("selected");
+        } else {
+          if (selectedSquare) {
+            selectedSquare.classList.remove("selected")
+          }
+          square.classList.add("selected")
+          selectedSquare = square
         }
-        square.classList.add("selected");
-        selectedSquare = square;
       });
 
       board.appendChild(square);
