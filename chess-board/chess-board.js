@@ -7,22 +7,27 @@ function initializeChessboard() {
   for (let row = 1; row <= 8; row++) {
     for (let column = 1; column <= 8; column++) {
       const square = document.createElement("div");
-      square.classList.add("square");
-      // FIXED: Use correct ID format
+      square.className = "square";
       square.id = `square-${row}-${column}`;
 
+      // CHANGED: Use inline style instead of class
       const isWhite = (row + column) % 2 === 0;
-      square.classList.add(isWhite ? "white" : "black");
+      square.style.backgroundColor = isWhite ? 'white' : 'black';
 
       square.addEventListener("click", () => {
         if (selectedSquare === square) {
-          selectedSquare.classList.remove("selected");
+          // CHANGED: Revert to original color using style
+          const [r, c] = square.id.split('-').slice(1).map(Number);
+          square.style.backgroundColor = (r + c) % 2 === 0 ? 'white' : 'black';
+          selectedSquare = null;
         } else {
           if (selectedSquare) {
-            selectedSquare.classList.remove("selected")
+            // CHANGED: Revert previous selection using style
+            const [r, c] = selectedSquare.id.split('-').slice(1).map(Number);
+            selectedSquare.style.backgroundColor = (r + c) % 2 === 0 ? 'white' : 'black';
           }
-          square.classList.add("selected")
-          selectedSquare = square
+          square.style.backgroundColor = 'red';
+          selectedSquare = square;
         }
       });
 
@@ -30,9 +35,7 @@ function initializeChessboard() {
     }
   }
 
-  // FIXED: Add to body instead of replacing existing element
   document.body.appendChild(board);
 }
 
-// FIXED: Add event listener to run after DOM loads
 document.addEventListener('DOMContentLoaded', initializeChessboard);
