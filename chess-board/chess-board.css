@@ -3,20 +3,12 @@
   grid-template-columns: repeat(8, 60px);
   grid-template-rows: repeat(8, 60px);
   border: 2px solid #333;
-  width: fit-content;
 }
 
 .square {
   width: 60px;
   height: 60px;
-}
-
-.white {
-  background-color: white
-}
-
-.black {
-  background-color: black
+  cursor: pointer;
 }
 
 .selected {
