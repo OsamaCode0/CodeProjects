@@ -1,26 +1,46 @@
-// Delete any existing chessboard first
-document.querySelector('.chessboard')?.remove();
-
-// Create fresh chessboard
-const chessboard = document.createElement('div');
-chessboard.className = 'chessboard';
-
-// Build chessboard
-for (let i = 1; i <= 8; i++) {
-  for (let j = 1; j <= 8; j++) {
-    const square = document.createElement('div');
-    square.className = 'square';
-    square.id = `square-${i}-${j}`;
-    square.style.backgroundColor = (i + j) % 2 ? 'black' : 'white';
-    
-    square.onclick = function() {
-      document.querySelector('.selected')?.classList.remove('selected');
-      this.classList.add('selected');
-    };
-    
-    chessboard.appendChild(square);
-  }
+// Remove any existing chessboard first
+function clearExisting() {
+  const existing = document.querySelector('.chessboard');
+  if (existing) existing.remove();
 }
 
-// Add to page
-document.body.appendChild(chessboard);
+function initializeChessboard() {
+  clearExisting(); // Ensure clean slate
+  
+  const board = document.createElement("div");
+  board.className = "chessboard";
+  
+  // Create document fragment for better performance
+  const fragment = document.createDocumentFragment();
+  
+  for (let row = 1; row <= 8; row++) {
+    for (let col = 1; col <= 8; col++) {
+      const square = document.createElement("div");
+      square.className = "square";
+      square.id = `square-${row}-${col}`;
+      
+      // Inline styles only
+      square.style.backgroundColor = (row + col) % 2 === 0 ? 'white' : 'black';
+      
+      // Click handler with full style management
+      square.addEventListener("click", function() {
+        const current = document.querySelector('.square[style*="red"]');
+        if (current) {
+          const [r, c] = current.id.split('-').slice(1).map(Number);
+          current.style.backgroundColor = (r + c) % 2 === 0 ? 'white' : 'black';
+        }
+        if (current !== this) {
+          this.style.backgroundColor = 'red';
+        }
+      });
+      
+      fragment.appendChild(square);
+    }
+  }
+  
+  board.appendChild(fragment);
+  document.body.appendChild(board);
+}
+
+// Initialize immediately when script loads
+initializeChessboard();
