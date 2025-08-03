@@ -1,105 +1,25 @@
-/* Main container for all letter elements */
 .letter-container {
-  /* Use flexbox layout for letters */
   display: flex;
-  /* Allow letters to wrap to next line if needed */
   flex-wrap: wrap;
-  /* Space between letters */
   gap: 10px;
-  /* Space below letters before buttons */
   margin-bottom: 20px;
 }
 
-.selected {
-  font-weight: 700; /* Not just 'bold' */
-}
-
-/* Style for each individual letter */
 .letter {
-  /* Default font size (will be overridden by JS) */
-  font-size: 14px;
-  /* Show pointer cursor on hover to indicate clickability */
+  font-size: 14px; /* Explicit default size */
   cursor: pointer;
-  /* Smooth transition for font size changes */
-  transition: font-size 0.2s;
-  /* Add padding around letters for better click targets */
-  padding: 5px 10px;
-  /* Light gray border for visual separation */
-  border: 1px solid #ddd;
-  /* Rounded corners */
-  border-radius: 4px;
 }
 
-/* Style for the currently selected letter */
 .selected {
-  /* Make selected letter bold */
-  font-weight: bold;
-  /* Highlight color for selected letter */
-  background-color: #f0f0f0;
-  /* Darker border for selected state */
-  border-color: #999;
+  font-weight: 700; /* Bold, not just 'bold' */
 }
 
-/* Container for control buttons */
 .button-container {
-  /* Use flexbox layout for buttons */
   display: flex;
-  /* Space between buttons */
   gap: 10px;
-  /* Center buttons horizontally */
-  justify-content: center;
 }
 
-/* Style for all buttons */
 button {
-  /* Comfortable button padding */
-  padding: 8px 16px;
-  /* Pointer cursor to indicate clickability */
+  padding: 5px 10px;
   cursor: pointer;
-  /* Remove default button border */
-  border: none;
-  /* Rounded corners */
-  border-radius: 4px;
-  /* Button background color */
-  background-color: #4CAF50;
-  /* White text color */
-  color: white;
-  /* Smooth hover effect */
-  transition: background-color 0.3s;
-}
-
-/* Hover state for buttons */
-button:hover {
-  /* Darker green on hover */
-  background-color: #45a049;
-}
-
-/* Active state for buttons */
-button:active {
-  /* Even darker when clicked */
-  background-color: #3e8e41;
-}
-
-/* Specific style for decrease button */
-#decrease {
-  /* Red color for decrease action */
-  background-color: #f44336;
-}
-
-/* Hover state for decrease button */
-#decrease:hover {
-  /* Darker red on hover */
-  background-color: #d32f2f;
-}
-
-/* Specific style for increase button */
-#increase {
-  /* Blue color for increase action */
-  background-color: #2196F3;
-}
-
-/* Hover state for increase button */
-#increase:hover {
-  /* Darker blue on hover */
-  background-color: #0b7dda;
 }
