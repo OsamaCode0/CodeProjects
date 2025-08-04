@@ -36,18 +36,20 @@ body {
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transform: translate(-50%, -50%); /* Centers character on cursor */
+    pointer-events: none; /* Allows clicks to pass through */
+    transition: all 0.1s ease-out;
+}
+
+.trapped {
+    background-color: orange !important;
+    transition: none; /* Remove smooth transition when trapped */
 }
 
 .follow {
     transition: all 0.1s ease-out;
 }
 
-.trapped {
-    background-color: orange; /* Changed to exact 'orange' */
-    transition: background-color 0.3s;
-}
 
 :root {
     --orange: orange; /* Changed to exact 'orange' */
