@@ -25,14 +25,14 @@ document.addEventListener('mousemove', (e) => {
     
     // If we have an active following character
     if (currentChar && currentChar.classList.contains('follow')) {
-        // Position character at pointer
+        // Position character at pointer (centered)
         currentChar.style.left = `${e.clientX}px`;
         currentChar.style.top = `${e.clientY}px`;
         
         // Trap if pointer enters jail
         if (isPointerInJail) {
             currentChar.classList.add('trapped');
-            currentChar.style.backgroundColor = 'var(--orange)';
+            currentChar.style.backgroundColor = 'orange'; // Exact color
         }
     }
 });
@@ -46,14 +46,20 @@ document.addEventListener('keydown', (e) => {
             currentChar.classList.remove('follow');
         }
         
-        // Create new character
+        // Create new character at current mouse position
         currentChar = document.createElement('div');
         currentChar.textContent = e.key;
         currentChar.classList.add('character', 'follow');
         
-        // Position at current mouse location
+        // Set initial position to current mouse position
         currentChar.style.left = `${event.clientX}px`;
         currentChar.style.top = `${event.clientY}px`;
+        
+        // If created in jail, make it orange immediately
+        if (event.clientX > window.innerWidth / 2) {
+            currentChar.classList.add('trapped');
+            currentChar.style.backgroundColor = 'orange';
+        }
         
         document.body.appendChild(currentChar);
     }

@@ -18,12 +18,12 @@ body {
 
 .outside {
     left: 0;
-    background-color: #3498db; /* Blue */
+    background-color: #3498db;
 }
 
 .inside {
     right: 0;
-    background-color: #e74c3c; /* Red */
+    background-color: #e74c3c;
 }
 
 .character {
@@ -45,10 +45,10 @@ body {
 }
 
 .trapped {
-    background-color: var(--orange);
+    background-color: orange; /* Changed to exact 'orange' */
     transition: background-color 0.3s;
 }
 
 :root {
-    --orange: #f39c12;
+    --orange: orange; /* Changed to exact 'orange' */
 }
