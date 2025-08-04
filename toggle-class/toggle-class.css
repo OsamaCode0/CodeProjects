@@ -1,14 +1,18 @@
-
 #content {
   padding: 20px;
   margin: 10px;
   background-color: white;
-  transition: background-color 0.3s;
+  display: inline-block;
+}
+
+#content.highlight {
+  background-color: yellow;
 }
 
 #content p {
   margin: 0;
   font-size: 24px;
+  display: inline;
 }
 
 .controls {
@@ -21,8 +25,14 @@
   cursor: pointer;
 }
 
-/* Style classes to toggle */
-.bold { font-weight: bold; }
-.italic { font-style: italic; }
-.underline { text-decoration: underline; }
-.highlight { background-color: yellow; }
+.bold {
+  font-weight: bold;
+}
+
+.italic {
+  font-style: italic;
+}
+
+.underline {
+  text-decoration: underline;
+}
