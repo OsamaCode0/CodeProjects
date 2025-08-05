@@ -11,6 +11,7 @@ rightZone.textContent = 'Jail';
 
 // Game state
 let currentChar = null;
+let isPointerInJail = false;
 let mouseX = 0;
 let mouseY = 0;
 
@@ -19,26 +20,29 @@ document.addEventListener('mousemove', (e) => {
   mouseX = e.clientX;
   mouseY = e.clientY;
   const jailBoundary = window.innerWidth / 2;
-  
+  isPointerInJail = mouseX > jailBoundary;
+
   if (currentChar && currentChar.classList.contains('follow')) {
+    // If character is trapped, restrict movement to jail
     if (currentChar.classList.contains('trapped')) {
-      // Keep character in jail
+      // Force character to stay in jail
       currentChar.style.left = `${Math.max(mouseX, jailBoundary + 1)}px`;
       currentChar.style.top = `${mouseY}px`;
       
-      // If mouse leaves jail, snap to boundary
-      if (mouseX <= jailBoundary) {
+      // If cursor leaves jail, snap to boundary
+      if (!isPointerInJail) {
         currentChar.style.left = `${jailBoundary + 1}px`;
       }
-    } else {
-      // Free movement
+    } 
+    else {
+      // Normal movement in free world
       currentChar.style.left = `${mouseX}px`;
       currentChar.style.top = `${mouseY}px`;
       
       // Check if entered jail
-      if (mouseX > jailBoundary) {
+      if (isPointerInJail) {
         currentChar.classList.add('trapped');
-        currentChar.style.left = `${jailBoundary + 1}px`;
+        currentChar.style.left = `${jailBoundary + 1}px`; // Snap inside
       }
     }
   }
@@ -66,7 +70,7 @@ document.addEventListener('keydown', (e) => {
     document.body.appendChild(currentChar);
 
     // Immediately check if spawned in jail
-    if (mouseX > window.innerWidth / 2) {
+    if (isPointerInJail) {
       currentChar.classList.add('trapped');
       currentChar.style.left = `${window.innerWidth / 2 + 1}px`;
     }
