@@ -16,7 +16,7 @@ let mouseX = 0;
 let mouseY = 0;
 
 // How many pixels past center counts as “inside”?
-const OFFSET = 5;
+const OFFSET = 20;  // ← bump this to 20px
 
 // Track mouse position
 document.addEventListener('mousemove', (e) => {
