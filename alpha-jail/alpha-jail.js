@@ -22,42 +22,42 @@ document.addEventListener('mousemove', (e) => {
   const jailBoundary = window.innerWidth / 2;
   isPointerInJail = mouseX > jailBoundary;
 
-  if (currentChar && currentChar.classList.contains('follow')) {
-    if (currentChar.classList.contains('trapped')) {
-      // If trying to leave jail, fully detach the character
-      if (!isPointerInJail) {
-        currentChar.classList.remove('follow', 'trapped'); // Remove both classes
-        currentChar.style.backgroundColor = 'white'; // Reset color
-        currentChar.style.left = `${jailBoundary}px`; // Snap to boundary
-        currentChar = null; // Clear reference
-      }
-      else {
-        // Still in jail - keep moving
-        currentChar.style.left = `${mouseX}px`;
-        currentChar.style.top = `${mouseY}px`;
-      }
+  if (!currentChar || !currentChar.classList.contains('follow')) return;
+
+  // If it's already trapped...
+  if (currentChar.classList.contains('trapped')) {
+    // and pointer leaves → detach follow, leave trapped state
+    if (!isPointerInJail) {
+      currentChar.classList.remove('follow');
+      // snap to jail edge
+      currentChar.style.left = `${jailBoundary + 1}px`;
+      // drop reference so it no longer follows
+      currentChar = null;
+      return;
     }
-    else {
-      // Free movement
-      currentChar.style.left = `${mouseX}px`;
-      currentChar.style.top = `${mouseY}px`;
-      
-      // Entering jail
-      if (isPointerInJail) {
-        currentChar.classList.add('trapped');
-      }
-    }
+    // otherwise still in jail → keep following
+    currentChar.style.left = `${mouseX}px`;
+    currentChar.style.top  = `${mouseY}px`;
+    return;
+  }
+
+  // Not yet trapped → free movement
+  currentChar.style.left = `${mouseX}px`;
+  currentChar.style.top  = `${mouseY}px`;
+
+  // If entering jail for the first time
+  if (isPointerInJail) {
+    currentChar.classList.add('trapped');
   }
 });
+
 // Keyboard controls
 document.addEventListener('keydown', (e) => {
+  // spawn on a–z
   if (e.key >= 'a' && e.key <= 'z') {
-    // Remove follow from previous character
+    // detach previous follow (but leave it trapped if it was)
     if (currentChar) {
       currentChar.classList.remove('follow');
-      if (currentChar.classList.contains('trapped')) {
-        currentChar.style.left = `${window.innerWidth / 2 + 1}px`;
-      }
     }
 
     // Create new character
@@ -65,25 +65,28 @@ document.addEventListener('keydown', (e) => {
     currentChar.textContent = e.key;
     currentChar.classList.add('character', 'follow');
     currentChar.style.left = `${mouseX}px`;
-    currentChar.style.top = `${mouseY}px`;
+    currentChar.style.top  = `${mouseY}px`;
     document.body.appendChild(currentChar);
 
-    // Immediately check if spawned in jail
+    // Immediately trap if in jail
     if (isPointerInJail) {
       currentChar.classList.add('trapped');
     }
   }
 
+  // clear all
   if (e.key === 'Escape') {
-    document.querySelectorAll('.character').forEach(char => char.remove());
+    document.querySelectorAll('.character').forEach(c => c.remove());
     currentChar = null;
   }
 });
 
-// Handle window resize
+// Keep already-trapped chars locked to the jail edge on resize
 window.addEventListener('resize', () => {
   const boundary = window.innerWidth / 2 + 1;
-  document.querySelectorAll('.character.trapped').forEach(char => {
-    char.style.left = `${boundary}px`;
-  });
+  document.querySelectorAll('.character.trapped:not(.follow)')
+    .forEach(char => {
+      // ensure anything detached to the edge stays there
+      char.style.left = `${boundary}px`;
+    });
 });
