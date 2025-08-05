@@ -1,79 +1,90 @@
-// alpha-jail.js
-
-// 1) build the two zones
-const leftZone  = document.createElement('div');
+// Create the two zones
+const leftZone = document.createElement('div');
 const rightZone = document.createElement('div');
-leftZone.className  = 'zone outside';
-rightZone.className = 'zone inside';
-leftZone.textContent  = 'Free World';
+document.body.appendChild(leftZone);
+document.body.appendChild(rightZone);
+
+leftZone.classList.add('zone', 'outside');
+rightZone.classList.add('zone', 'inside');
+leftZone.textContent = 'Free World';
 rightZone.textContent = 'Jail';
-document.body.append(leftZone, rightZone);
 
-// 2) game state
+// Game state
 let currentChar = null;
-let mouseX = 0, mouseY = 0;
+let isPointerInJail = false;
+let mouseX = 0;
+let mouseY = 0;
 
-// 3) on mouse move, track cursor and manage follow/trap/detach
+// How many pixels past center counts as “inside”?
+const OFFSET = 5;
+
+// Track mouse position
 document.addEventListener('mousemove', (e) => {
   mouseX = e.clientX;
   mouseY = e.clientY;
-  const inJail = mouseX > window.innerWidth / 2;
+  const boundary = window.innerWidth / 2 + OFFSET;
+  isPointerInJail = mouseX > boundary;
 
-  // If we have a character that's both follow+trapped but now outside, detach it immediately
-  if (
-    currentChar &&
-    currentChar.classList.contains('follow') &&
-    currentChar.classList.contains('trapped') &&
-    !inJail
-  ) {
-    currentChar.classList.remove('follow');
-    // snap to the edge
-    currentChar.style.left = (window.innerWidth / 2) + 'px';
-    // clear ref so it won't follow again
-    currentChar = null;
+  if (!currentChar || !currentChar.classList.contains('follow')) return;
+
+  if (currentChar.classList.contains('trapped')) {
+    // Pointer leaves the buffered jail area → detach follow (but stay trapped)
+    if (!isPointerInJail) {
+      currentChar.classList.remove('follow');
+      currentChar.style.left = `${boundary}px`;
+      currentChar = null;
+      return;
+    }
+    // Still inside buffered jail → keep following
+    currentChar.style.left = `${mouseX}px`;
+    currentChar.style.top  = `${mouseY}px`;
     return;
   }
 
-  // If there's a follower, update its position
-  if (currentChar && currentChar.classList.contains('follow')) {
-    currentChar.style.left = mouseX + 'px';
-    currentChar.style.top  = mouseY + 'px';
+  // Free movement before trapping
+  currentChar.style.left = `${mouseX}px`;
+  currentChar.style.top  = `${mouseY}px`;
 
-    // first time it enters jail: mark trapped
-    if (inJail && !currentChar.classList.contains('trapped')) {
-      currentChar.classList.add('trapped');
-    }
+  // First time crossing into buffered jail
+  if (isPointerInJail) {
+    currentChar.classList.add('trapped');
   }
 });
 
-// 4) on keydown, create or clear characters
+// Keyboard controls
 document.addEventListener('keydown', (e) => {
-  // letter a–z?
   if (e.key >= 'a' && e.key <= 'z') {
-    // detach old follower (leaving it trapped at the edge if it was)
+    // Detach previous follower (it remains trapped if it was)
     if (currentChar) {
       currentChar.classList.remove('follow');
     }
-    // make a new one
-    const d = document.createElement('div');
-    d.textContent = e.key;
-    d.className = 'character follow';
-    d.style.left = mouseX + 'px';
-    d.style.top  = mouseY + 'px';
-    document.body.appendChild(d);
-    currentChar = d;
+
+    // Create a new character element
+    currentChar = document.createElement('div');
+    currentChar.textContent = e.key;
+    currentChar.classList.add('character', 'follow');
+    currentChar.style.left = `${mouseX}px`;
+    currentChar.style.top  = `${mouseY}px`;
+    document.body.appendChild(currentChar);
+
+    // Immediate trapping if cursor is already in buffered jail
+    if (isPointerInJail) {
+      currentChar.classList.add('trapped');
+    }
   }
 
-  // Escape clears all
+  // Remove all characters
   if (e.key === 'Escape') {
     document.querySelectorAll('.character').forEach(c => c.remove());
     currentChar = null;
   }
 });
 
-// 5) on resize, lock any detached/trapped chars to the edge
+// Keep detached, trapped characters locked at the buffered jail edge on resize
 window.addEventListener('resize', () => {
-  const edgeX = window.innerWidth / 2;
+  const boundary = window.innerWidth / 2 + OFFSET;
   document.querySelectorAll('.character.trapped:not(.follow)')
-    .forEach(c => c.style.left = edgeX + 'px');
+    .forEach(char => {
+      char.style.left = `${boundary}px`;
+    });
 });
