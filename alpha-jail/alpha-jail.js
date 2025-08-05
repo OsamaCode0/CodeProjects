@@ -24,29 +24,31 @@ document.addEventListener('mousemove', (e) => {
 
   if (currentChar && currentChar.classList.contains('follow')) {
     if (currentChar.classList.contains('trapped')) {
-      // Keep character strictly in jail
-      currentChar.style.left = `${Math.max(mouseX, jailBoundary + 1)}px`;
-      currentChar.style.top = `${mouseY}px`;
-      
-      // If mouse leaves jail, detach immediately
+      // If trying to leave jail, fully detach the character
       if (!isPointerInJail) {
-        currentChar.classList.remove('follow');
-        currentChar.style.left = `${jailBoundary + 1}px`;
-        currentChar = null;
+        currentChar.classList.remove('follow', 'trapped'); // Remove both classes
+        currentChar.style.backgroundColor = 'white'; // Reset color
+        currentChar.style.left = `${jailBoundary}px`; // Snap to boundary
+        currentChar = null; // Clear reference
       }
-    } else {
+      else {
+        // Still in jail - keep moving
+        currentChar.style.left = `${mouseX}px`;
+        currentChar.style.top = `${mouseY}px`;
+      }
+    }
+    else {
       // Free movement
       currentChar.style.left = `${mouseX}px`;
       currentChar.style.top = `${mouseY}px`;
       
-      // Check if entered jail
+      // Entering jail
       if (isPointerInJail) {
         currentChar.classList.add('trapped');
       }
     }
   }
 });
-
 // Keyboard controls
 document.addEventListener('keydown', (e) => {
   if (e.key >= 'a' && e.key <= 'z') {
