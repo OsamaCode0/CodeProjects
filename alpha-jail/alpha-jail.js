@@ -24,28 +24,25 @@ document.addEventListener('mousemove', (e) => {
 
   if (!currentChar || !currentChar.classList.contains('follow')) return;
 
-  // If it's already trapped...
   if (currentChar.classList.contains('trapped')) {
-    // and pointer leaves → detach follow, leave trapped state
+    // Pointer leaves jail → detach following but keep trapped
     if (!isPointerInJail) {
       currentChar.classList.remove('follow');
-      // snap to jail edge
       currentChar.style.left = `${jailBoundary + 1}px`;
-      // drop reference so it no longer follows
       currentChar = null;
       return;
     }
-    // otherwise still in jail → keep following
+    // Still inside jail → keep following
     currentChar.style.left = `${mouseX}px`;
     currentChar.style.top  = `${mouseY}px`;
     return;
   }
 
-  // Not yet trapped → free movement
+  // Free movement before trapping
   currentChar.style.left = `${mouseX}px`;
   currentChar.style.top  = `${mouseY}px`;
 
-  // If entering jail for the first time
+  // Entering jail for the first time
   if (isPointerInJail) {
     currentChar.classList.add('trapped');
   }
@@ -53,14 +50,13 @@ document.addEventListener('mousemove', (e) => {
 
 // Keyboard controls
 document.addEventListener('keydown', (e) => {
-  // spawn on a–z
   if (e.key >= 'a' && e.key <= 'z') {
-    // detach previous follow (but leave it trapped if it was)
+    // Detach previous follower (it remains trapped if it was)
     if (currentChar) {
       currentChar.classList.remove('follow');
     }
 
-    // Create new character
+    // Create a new character element
     currentChar = document.createElement('div');
     currentChar.textContent = e.key;
     currentChar.classList.add('character', 'follow');
@@ -68,25 +64,24 @@ document.addEventListener('keydown', (e) => {
     currentChar.style.top  = `${mouseY}px`;
     document.body.appendChild(currentChar);
 
-    // Immediately trap if in jail
+    // Immediate trapping if cursor is already in jail
     if (isPointerInJail) {
       currentChar.classList.add('trapped');
     }
   }
 
-  // clear all
+  // Remove all characters
   if (e.key === 'Escape') {
     document.querySelectorAll('.character').forEach(c => c.remove());
     currentChar = null;
   }
 });
 
-// Keep already-trapped chars locked to the jail edge on resize
+// Keep detached, trapped characters locked at the jail edge on resize
 window.addEventListener('resize', () => {
   const boundary = window.innerWidth / 2 + 1;
   document.querySelectorAll('.character.trapped:not(.follow)')
     .forEach(char => {
-      // ensure anything detached to the edge stays there
       char.style.left = `${boundary}px`;
     });
 });
