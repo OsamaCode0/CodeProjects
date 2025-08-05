@@ -14,6 +14,7 @@ let currentChar = null;
 let isPointerInJail = false;
 let mouseX = 0;
 let mouseY = 0;
+const characterSize = 20; // Half of character width/height for centering
 
 // Track mouse position
 document.addEventListener('mousemove', (e) => {
@@ -23,26 +24,25 @@ document.addEventListener('mousemove', (e) => {
   isPointerInJail = mouseX > jailBoundary;
 
   if (currentChar && currentChar.classList.contains('follow')) {
-    // If character is trapped, restrict movement to jail
     if (currentChar.classList.contains('trapped')) {
-      // Force character to stay in jail
-      currentChar.style.left = `${Math.max(mouseX, jailBoundary + 1)}px`;
+      // Keep character strictly in jail
+      const minX = jailBoundary + characterSize;
+      currentChar.style.left = `${Math.max(mouseX, minX)}px`;
       currentChar.style.top = `${mouseY}px`;
       
-      // If cursor leaves jail, snap to boundary
-      if (!isPointerInJail) {
-        currentChar.style.left = `${jailBoundary + 1}px`;
+      // If mouse leaves jail, snap to boundary
+      if (mouseX <= jailBoundary) {
+        currentChar.style.left = `${minX}px`;
       }
-    } 
-    else {
-      // Normal movement in free world
+    } else {
+      // Free movement
       currentChar.style.left = `${mouseX}px`;
       currentChar.style.top = `${mouseY}px`;
       
       // Check if entered jail
-      if (isPointerInJail) {
+      if (mouseX > jailBoundary) {
         currentChar.classList.add('trapped');
-        currentChar.style.left = `${jailBoundary + 1}px`; // Snap inside
+        currentChar.style.left = `${jailBoundary + characterSize}px`;
       }
     }
   }
@@ -57,7 +57,7 @@ document.addEventListener('keydown', (e) => {
       currentChar.classList.remove('follow');
       // If was in jail, snap to boundary
       if (currentChar.classList.contains('trapped')) {
-        currentChar.style.left = `${window.innerWidth / 2 + 1}px`;
+        currentChar.style.left = `${window.innerWidth / 2 + characterSize}px`;
       }
     }
 
@@ -70,9 +70,9 @@ document.addEventListener('keydown', (e) => {
     document.body.appendChild(currentChar);
 
     // Immediately check if spawned in jail
-    if (isPointerInJail) {
+    if (mouseX > window.innerWidth / 2) {
       currentChar.classList.add('trapped');
-      currentChar.style.left = `${window.innerWidth / 2 + 1}px`;
+      currentChar.style.left = `${window.innerWidth / 2 + characterSize}px`;
     }
   }
 
@@ -86,7 +86,8 @@ document.addEventListener('keydown', (e) => {
 // Handle window resize
 window.addEventListener('resize', () => {
   // Update positions of trapped characters
+  const boundary = window.innerWidth / 2 + characterSize;
   document.querySelectorAll('.character.trapped').forEach(char => {
-    char.style.left = `${window.innerWidth / 2 + 1}px`;
+    char.style.left = `${boundary}px`;
   });
 });
