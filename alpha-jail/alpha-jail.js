@@ -1,87 +1,75 @@
-// Create the two zones
+// alpha-jail.js
+
+// 1) create zones
 const leftZone = document.createElement('div');
 const rightZone = document.createElement('div');
-document.body.appendChild(leftZone);
-document.body.appendChild(rightZone);
-
-leftZone.classList.add('zone', 'outside');
-rightZone.classList.add('zone', 'inside');
+leftZone.className = 'zone outside';
+rightZone.className = 'zone inside';
 leftZone.textContent = 'Free World';
 rightZone.textContent = 'Jail';
+document.body.append(leftZone, rightZone);
 
-// Game state
+// state
 let currentChar = null;
-let isPointerInJail = false;
-let mouseX = 0;
-let mouseY = 0;
+let mouseX = 0, mouseY = 0;
 
-// Track mouse position
-document.addEventListener('mousemove', (e) => {
-  mouseX = e.clientX;
-  mouseY = e.clientY;
-  const jailBoundary = window.innerWidth / 2;
-  isPointerInJail = mouseX > jailBoundary;
-
-  if (!currentChar || !currentChar.classList.contains('follow')) return;
-
-  if (currentChar.classList.contains('trapped')) {
-    // Pointer leaves jail → detach following but keep trapped
-    if (!isPointerInJail) {
-      currentChar.classList.remove('follow');
-      currentChar.style.left = `${jailBoundary + 1}px`;
-      currentChar = null;
-      return;
-    }
-    // Still inside jail → keep following
-    currentChar.style.left = `${mouseX}px`;
-    currentChar.style.top  = `${mouseY}px`;
-    return;
+// update char position if it's following
+document.addEventListener('mousemove', e => {
+  mouseX = e.clientX; mouseY = e.clientY;
+  if (currentChar?.classList.contains('follow')) {
+    currentChar.style.left = mouseX + 'px';
+    currentChar.style.top  = mouseY + 'px';
   }
+});
 
-  // Free movement before trapping
-  currentChar.style.left = `${mouseX}px`;
-  currentChar.style.top  = `${mouseY}px`;
-
-  // Entering jail for the first time
-  if (isPointerInJail) {
+// ENTER jail → trap
+rightZone.addEventListener('pointerenter', () => {
+  if (currentChar?.classList.contains('follow')) {
     currentChar.classList.add('trapped');
   }
 });
 
-// Keyboard controls
-document.addEventListener('keydown', (e) => {
+// LEAVE jail → detach trapped
+rightZone.addEventListener('pointerleave', () => {
+  if (currentChar?.classList.contains('follow') &&
+      currentChar.classList.contains('trapped')) {
+    // remove only follow (trapped stays)
+    currentChar.classList.remove('follow');
+    // snap to just outside the jail edge
+    const edgeX = window.innerWidth / 2 - 1;
+    currentChar.style.left = edgeX + 'px';
+    // drop reference so it won't follow again
+    currentChar = null;
+  }
+});
+
+// key handling
+document.addEventListener('keydown', e => {
+  // a–z
   if (e.key >= 'a' && e.key <= 'z') {
-    // Detach previous follower (it remains trapped if it was)
-    if (currentChar) {
-      currentChar.classList.remove('follow');
-    }
+    // detach previous follower (if any)
+    if (currentChar) currentChar.classList.remove('follow');
 
-    // Create a new character element
-    currentChar = document.createElement('div');
-    currentChar.textContent = e.key;
-    currentChar.classList.add('character', 'follow');
-    currentChar.style.left = `${mouseX}px`;
-    currentChar.style.top  = `${mouseY}px`;
-    document.body.appendChild(currentChar);
-
-    // Immediate trapping if cursor is already in jail
-    if (isPointerInJail) {
-      currentChar.classList.add('trapped');
-    }
+    // make new
+    const d = document.createElement('div');
+    d.textContent = e.key;
+    d.className = 'character follow';
+    d.style.left = mouseX + 'px';
+    d.style.top  = mouseY + 'px';
+    document.body.append(d);
+    currentChar = d;
   }
 
-  // Remove all characters
+  // ESC clears all
   if (e.key === 'Escape') {
     document.querySelectorAll('.character').forEach(c => c.remove());
     currentChar = null;
   }
 });
 
-// Keep detached, trapped characters locked at the jail edge on resize
+// keep any trapped-but-detached chars at the edge on resize
 window.addEventListener('resize', () => {
-  const boundary = window.innerWidth / 2 + 1;
+  const edgeX = window.innerWidth / 2 - 1;
   document.querySelectorAll('.character.trapped:not(.follow)')
-    .forEach(char => {
-      char.style.left = `${boundary}px`;
-    });
+    .forEach(c => c.style.left = edgeX + 'px');
 });
