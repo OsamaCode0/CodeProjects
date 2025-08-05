@@ -25,13 +25,13 @@ document.addEventListener('mousemove', (e) => {
   if (currentChar && currentChar.classList.contains('follow')) {
     if (currentChar.classList.contains('trapped')) {
       // Keep character strictly in jail
-      currentChar.style.left = `${Math.max(mouseX, jailBoundary + 20)}px`;
+      currentChar.style.left = `${Math.max(mouseX, jailBoundary + 1)}px`;
       currentChar.style.top = `${mouseY}px`;
       
-      // If mouse leaves jail, detach character
+      // If mouse leaves jail, detach immediately
       if (!isPointerInJail) {
         currentChar.classList.remove('follow');
-        currentChar.style.left = `${jailBoundary + 20}px`;
+        currentChar.style.left = `${jailBoundary + 1}px`;
         currentChar = null;
       }
     } else {
@@ -42,7 +42,6 @@ document.addEventListener('mousemove', (e) => {
       // Check if entered jail
       if (isPointerInJail) {
         currentChar.classList.add('trapped');
-        // No position change here - keep at cursor position
       }
     }
   }
@@ -50,18 +49,16 @@ document.addEventListener('mousemove', (e) => {
 
 // Keyboard controls
 document.addEventListener('keydown', (e) => {
-  // Create new character with a-z keys
   if (e.key >= 'a' && e.key <= 'z') {
     // Remove follow from previous character
     if (currentChar) {
       currentChar.classList.remove('follow');
-      // If was in jail, snap to boundary
       if (currentChar.classList.contains('trapped')) {
-        currentChar.style.left = `${window.innerWidth / 2 + 20}px`;
+        currentChar.style.left = `${window.innerWidth / 2 + 1}px`;
       }
     }
 
-    // Create new character at exact mouse position
+    // Create new character
     currentChar = document.createElement('div');
     currentChar.textContent = e.key;
     currentChar.classList.add('character', 'follow');
@@ -70,13 +67,11 @@ document.addEventListener('keydown', (e) => {
     document.body.appendChild(currentChar);
 
     // Immediately check if spawned in jail
-    if (mouseX > window.innerWidth / 2) {
+    if (isPointerInJail) {
       currentChar.classList.add('trapped');
-      // Keep at exact cursor position in jail
     }
   }
 
-  // Clear all characters with Escape
   if (e.key === 'Escape') {
     document.querySelectorAll('.character').forEach(char => char.remove());
     currentChar = null;
@@ -85,9 +80,8 @@ document.addEventListener('keydown', (e) => {
 
 // Handle window resize
 window.addEventListener('resize', () => {
-  // Update positions of trapped characters
-  const boundary = window.innerWidth / 2 + 20;
-  document.querySelectorAll('.character.trapped:not(.follow)').forEach(char => {
+  const boundary = window.innerWidth / 2 + 1;
+  document.querySelectorAll('.character.trapped').forEach(char => {
     char.style.left = `${boundary}px`;
   });
 });
