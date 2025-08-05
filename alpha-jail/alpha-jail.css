@@ -1,56 +1,53 @@
+:root {
+  --orange: #ffa500;
+}
+
 body {
-    margin: 0;
-    overflow: hidden;
-    font-family: Arial, sans-serif;
+  margin: 0;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
 }
 
 .zone {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    color: white;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
 }
 
 .outside {
-    left: 0;
-    background-color: #3498db;
+  left: 0;
+  background-color: #e0f7fa;
 }
 
 .inside {
-    right: 0;
-    background-color: #e74c3c;
+  right: 0;
+  background-color: #ffebee;
 }
 
 .character {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    background-color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    transform: translate(-50%, -50%); /* Centers character on cursor */
-    pointer-events: none; /* Allows clicks to pass through */
-    transition: all 0.1s ease-out;
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background-color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  user-select: none;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
 .trapped {
-    background-color: orange !important;
-    transition: none; /* Remove smooth transition when trapped */
-}
-
-.follow {
-    transition: all 0.1s ease-out;
-}
-
-
-:root {
-    --orange: orange; /* Changed to exact 'orange' */
+  background-color: var(--orange) !important;
+  box-shadow: 0 0 10px rgba(255, 165, 0, 0.7);
 }
