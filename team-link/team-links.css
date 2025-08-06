@@ -1,0 +1,19 @@
+.team-links {
+  list-style: none;
+  padding: 0;
+}
+
+.team-links li {
+  padding: 10px;
+  margin: 5px 0;
+}
+
+.team-links li:hover a {
+  font-weight: bold;
+}
+
+.copy-btn {
+  cursor: pointer;
+  margin-left: 8px;
+  color: #333;
+}
