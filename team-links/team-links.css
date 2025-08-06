@@ -15,6 +15,7 @@
 .team-links a {
     text-decoration: none;
     transition: color 0.3s ease;
+    font-weight: 700;
 }
 
 .team-links span {
@@ -26,3 +27,4 @@
 .team-links span:hover {
     opacity: 1;
 }
+

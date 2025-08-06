@@ -49,7 +49,7 @@ function createLinks(teams) {
         if (e.target.tagName === 'LI') {
             const a = e.target.querySelector('a');
             if (a) {
-                a.querySelector('strong').style.fontWeight = 'bold';
+                a.querySelector('strong').style.fontWeight = '700';
             }
         }
     });
