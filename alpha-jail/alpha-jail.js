@@ -1,6 +1,6 @@
 // alpha-jail.js
 
-// 1) build the two zones
+// 1) Build the two zones immediately
 const leftZone  = document.createElement('div');
 const rightZone = document.createElement('div');
 leftZone.className  = 'zone outside';
@@ -9,17 +9,19 @@ leftZone.textContent  = 'Free World';
 rightZone.textContent = 'Jail';
 document.body.append(leftZone, rightZone);
 
-// 2) game state
+// 2) Game state
 let currentChar = null;
 let mouseX = 0, mouseY = 0;
 
-// 3) on mouse move, track cursor and manage follow/trap/detach
-document.addEventListener('mousemove', (e) => {
+// 3) Mouse move: track cursor & manage follow → trap → detach
+document.addEventListener('mousemove', e => {
   mouseX = e.clientX;
   mouseY = e.clientY;
-  const inJail = mouseX > window.innerWidth / 2;
+  // use a 1px offset so "inside" starts just beyond the midpoint
+  const boundary = window.innerWidth / 2 + 1;
+  const inJail   = mouseX > boundary;
 
-  // If we have a character that's both follow+trapped but now outside, detach it immediately
+  // If our currentChar is both following & trapped, but now outside → detach
   if (
     currentChar &&
     currentChar.classList.contains('follow') &&
@@ -27,53 +29,56 @@ document.addEventListener('mousemove', (e) => {
     !inJail
   ) {
     currentChar.classList.remove('follow');
-    // snap to the edge
-    currentChar.style.left = (window.innerWidth / 2) + 'px';
-    // clear ref so it won't follow again
+    // snap to right at the jail edge
+    currentChar.style.left = `${boundary}px`;
     currentChar = null;
     return;
   }
 
-  // If there's a follower, update its position
+  // If it's still following, update its position…
   if (currentChar && currentChar.classList.contains('follow')) {
-    currentChar.style.left = mouseX + 'px';
-    currentChar.style.top  = mouseY + 'px';
+    currentChar.style.left = `${mouseX}px`;
+    currentChar.style.top  = `${mouseY}px`;
 
-    // first time it enters jail: mark trapped
+    // …and first time it crosses into jail, mark it trapped
     if (inJail && !currentChar.classList.contains('trapped')) {
       currentChar.classList.add('trapped');
     }
   }
 });
 
-// 4) on keydown, create or clear characters
-document.addEventListener('keydown', (e) => {
-  // letter a–z?
+// 4) Keyboard: create new lowercase letters, Escape to clear
+document.addEventListener('keydown', e => {
+  // Only a–z
   if (e.key >= 'a' && e.key <= 'z') {
-    // detach old follower (leaving it trapped at the edge if it was)
+    // detach existing follower if any (trapped ones stay at the edge)
     if (currentChar) {
       currentChar.classList.remove('follow');
     }
-    // make a new one
+    // make a fresh character at the mouse
     const d = document.createElement('div');
-    d.textContent = e.key;
-    d.className = 'character follow';
-    d.style.left = mouseX + 'px';
-    d.style.top  = mouseY + 'px';
-    document.body.appendChild(d);
+    d.textContent          = e.key;
+    d.className            = 'character follow';
+    d.style.left           = `${mouseX}px`;
+    d.style.top            = `${mouseY}px`;
+    document.body.append(d);
     currentChar = d;
+    return;
   }
 
-  // Escape clears all
+  // Escape: wipe all characters
   if (e.key === 'Escape') {
     document.querySelectorAll('.character').forEach(c => c.remove());
     currentChar = null;
   }
 });
 
-// 5) on resize, lock any detached/trapped chars to the edge
+// 5) On window resize, re-lock any detached/trapped characters at the edge
 window.addEventListener('resize', () => {
-  const edgeX = window.innerWidth / 2;
-  document.querySelectorAll('.character.trapped:not(.follow)')
-    .forEach(c => c.style.left = edgeX + 'px');
+  const boundary = window.innerWidth / 2 + 1;
+  document
+    .querySelectorAll('.character.trapped:not(.follow)')
+    .forEach(c => {
+      c.style.left = `${boundary}px`;
+    });
 });
