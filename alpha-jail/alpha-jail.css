@@ -8,6 +8,7 @@ body {
   font-family: Arial, sans-serif;
 }
 
+/* The two half-screen zones */
 .zone {
   position: absolute;
   top: 0;
@@ -31,6 +32,7 @@ body {
   background-color: #ffebee;
 }
 
+/* The character circles */
 .character {
   position: absolute;
   width: 40px;
@@ -44,10 +46,11 @@ body {
   transform: translate(-50%, -50%);
   pointer-events: none;
   user-select: none;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-.trapped {
+/* When “trapped” inside jail */
+.character.trapped {
   background-color: var(--orange) !important;
   box-shadow: 0 0 10px rgba(255, 165, 0, 0.7);
   cursor: not-allowed;
