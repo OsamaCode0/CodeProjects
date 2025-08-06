@@ -1,19 +1,28 @@
 .team-links {
-  list-style: none;
-  padding: 0;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    font-family: Arial, sans-serif;
 }
 
 .team-links li {
-  padding: 10px;
-  margin: 5px 0;
+    padding: 10px 15px;
+    margin: 5px 0;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
 }
 
-.team-links li:hover a {
-  font-weight: bold;
+.team-links a {
+    text-decoration: none;
+    transition: color 0.3s ease;
 }
 
-.copy-btn {
-  cursor: pointer;
-  margin-left: 8px;
-  color: #333;
+.team-links span {
+    font-size: 0.8em;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.team-links span:hover {
+    opacity: 1;
 }
