@@ -4,8 +4,8 @@
   "description": "Real-time racetrack management system for Beachside Racetrack",
   "main": "server.js",
   "scripts": {
-    "start": "RACE_DURATION=600000 node server.js",
-    "dev": "RACE_DURATION=60000 node server.js",
+    "start": "cross-env RACE_DURATION=600000 node server.js",
+    "dev": "cross-env RACE_DURATION=60000 node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
@@ -20,5 +20,8 @@
     "racing"
   ],
   "author": "Beachside Racetrack",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "cross-env": "^10.0.0"
+  }
 }

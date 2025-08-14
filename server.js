@@ -4,6 +4,23 @@ const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
 
+// Utility function to clean game state before emission
+function cleanGameStateForEmission(state) {
+  // Create a shallow copy
+  const cleanState = { ...state };
+
+  // Remove non-serializable properties
+  delete cleanState.raceTimer;
+
+  // Handle nested objects
+  cleanState.raceSessions = state.raceSessions.map((session) => ({
+    ...session,
+  }));
+  cleanState.lapTimes = { ...state.lapTimes };
+
+  return cleanState;
+}
+
 // Check for required environment variables
 const requiredKeys = ['RECEPTIONIST_KEY', 'OBSERVER_KEY', 'SAFETY_KEY'];
 const missingKeys = requiredKeys.filter((key) => !process.env[key]);
@@ -104,7 +121,7 @@ io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
 
   // Send initial state to client
-  socket.emit('gameState', gameState);
+  socket.emit('gameState', cleanGameStateForEmission(gameState));
 
   // Handle race session management
   socket.on('addRaceSession', (data) => {
@@ -114,7 +131,7 @@ io.on('connection', (socket) => {
       createdAt: new Date(),
     };
     gameState.raceSessions.push(newSession);
-    io.emit('gameState', gameState);
+    io.emit('gameState', cleanGameStateForEmission(gameState));
   });
 
   socket.on('removeRaceSession', (sessionId) => {
@@ -124,7 +141,7 @@ io.on('connection', (socket) => {
     if (gameState.currentRaceIndex >= gameState.raceSessions.length) {
       gameState.currentRaceIndex = -1;
     }
-    io.emit('gameState', gameState);
+    io.emit('gameState', cleanGameStateForEmission(gameState));
   });
 
   socket.on('addDriver', (data) => {
@@ -148,7 +165,7 @@ io.on('connection', (socket) => {
           name: driverName,
           carNumber: carNumber,
         });
-        io.emit('gameState', gameState);
+        io.emit('gameState', cleanGameStateForEmission(gameState));
       }
     }
   });
@@ -158,7 +175,7 @@ io.on('connection', (socket) => {
     const session = gameState.raceSessions.find((s) => s.id === sessionId);
     if (session) {
       session.drivers.splice(driverIndex, 1);
-      io.emit('gameState', gameState);
+      io.emit('gameState', cleanGameStateForEmission(gameState));
     }
   });
 
@@ -187,14 +204,14 @@ io.on('connection', (socket) => {
 
       // Start race timer
       startRaceTimer();
-      io.emit('gameState', gameState);
+      io.emit('gameState', cleanGameStateForEmission(gameState));
     }
   });
 
   socket.on('changeRaceMode', (mode) => {
     if (gameState.raceStatus === 'active' && mode !== 'finish') {
       gameState.raceMode = mode;
-      io.emit('gameState', gameState);
+      io.emit('gameState', cleanGameStateForEmission(gameState));
     } else if (mode === 'finish') {
       finishRace();
     }
@@ -219,7 +236,7 @@ io.on('connection', (socket) => {
         gameState.raceTimer = null;
       }
 
-      io.emit('gameState', gameState);
+      io.emit('gameState', cleanGameStateForEmission(gameState));
     }
   });
 
@@ -242,7 +259,7 @@ io.on('connection', (socket) => {
           carData.fastestLap = lapDuration;
         }
 
-        io.emit('gameState', gameState);
+        io.emit('gameState', cleanGameStateForEmission(gameState));
       }
     }
   });
@@ -276,10 +293,10 @@ function finishRace() {
   // After a short delay, mark race as finished
   setTimeout(() => {
     gameState.raceStatus = 'finished';
-    io.emit('gameState', gameState);
+    io.emit('gameState', cleanGameStateForEmission(gameState));
   }, 3000);
 
-  io.emit('gameState', gameState);
+  io.emit('gameState', cleanGameStateForEmission(gameState));
 }
 
 const PORT = process.env.PORT || 3000;
