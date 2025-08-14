@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Beachside Racetrack - System Overview</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: white;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 1.2rem;
+      opacity: 0.9;
+      margin-bottom: 3rem;
+    }
+
+    .interfaces {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+
+    .interface-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 2rem;
+      text-align: center;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .interface-card:hover {
+      transform: translateY(-5px);
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .interface-card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: #fff;
+    }
+
+    .interface-card .persona {
+      font-size: 0.9rem;
+      opacity: 0.8;
+      margin-bottom: 1rem;
+    }
+
+    .interface-card .description {
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+      opacity: 0.9;
+    }
+
+    .interface-card a {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      text-decoration: none;
+      padding: 12px 24px;
+      border-radius: 25px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .interface-card a:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.05);
+    }
+
+    .employee-section {
+      margin-bottom: 3rem;
+    }
+
+    .section-title {
+      font-size: 2rem;
+      text-align: center;
+      margin-bottom: 2rem;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .lock-icon {
+      display: inline-block;
+      margin-left: 0.5rem;
+      font-size: 0.8em;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      .interfaces {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Beachside Racetrack</h1>
+    <p class="subtitle">Real-time Race Management System</p>
+
+    <div class="employee-section">
+      <h2 class="section-title">Employee Interfaces <span class="lock-icon">🔒</span></h2>
+      <div class="interfaces">
+        <div class="interface-card">
+          <h3>Front Desk</h3>
+          <p class="persona">Receptionist</p>
+          <p class="description">Configure race sessions, add/remove drivers, and manage upcoming races</p>
+          <a href="/front-desk">Access Interface</a>
+        </div>
+
+        <div class="interface-card">
+          <h3>Race Control</h3>
+          <p class="persona">Safety Official</p>
+          <p class="description">Start races, control race modes, and manage race safety</p>
+          <a href="/race-control">Access Interface</a>
+        </div>
+
+        <div class="interface-card">
+          <h3>Lap Line Tracker</h3>
+          <p class="persona">Lap-line Observer</p>
+          <p class="description">Record lap times as cars cross the lap line</p>
+          <a href="/lap-line-tracker">Access Interface</a>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h2 class="section-title">Public Displays</h2>
+      <div class="interfaces">
+        <div class="interface-card">
+          <h3>Leader Board</h3>
+          <p class="persona">Spectators</p>
+          <p class="description">View real-time lap times and race standings</p>
+          <a href="/leaderboard">View Display</a>
+        </div>
+
+        <div class="interface-card">
+          <h3>Next Race</h3>
+          <p class="persona">Race Drivers</p>
+          <p class="description">See upcoming race information and car assignments</p>
+          <a href="/next-race">View Display</a>
+        </div>
+
+        <div class="interface-card">
+          <h3>Race Countdown</h3>
+          <p class="persona">Race Drivers</p>
+          <p class="description">View race countdown timer and status</p>
+          <a href="/race-countdown">View Display</a>
+        </div>
+
+        <div class="interface-card">
+          <h3>Race Flags</h3>
+          <p class="persona">Race Drivers</p>
+          <p class="description">See current race mode and flag status</p>
+          <a href="/race-flags">View Display</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

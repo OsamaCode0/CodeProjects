@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lap Line Tracker - Beachside Racetrack</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      min-height: 100vh;
+      color: #333;
+      padding: 1rem;
+    }
+
+    .auth-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .auth-modal {
+      background: white;
+      padding: 3rem;
+      border-radius: 15px;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .auth-modal h2 {
+      margin-bottom: 1rem;
+      color: #333;
+    }
+
+    .auth-modal input {
+      width: 100%;
+      padding: 1rem;
+      margin: 1rem 0;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    .auth-modal button {
+      background: #f5576c;
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .auth-modal button:hover {
+      background: #e74c3c;
+    }
+
+    .error-message {
+      color: #e74c3c;
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+
+    .main-content {
+      display: none;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 2rem;
+      border-radius: 15px;
+      margin-bottom: 2rem;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      color: #f5576c;
+      margin-bottom: 0.5rem;
+    }
+
+    .header .subtitle {
+      font-size: 1.1rem;
+      color: #666;
+    }
+
+    .status-panel {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 1.5rem;
+      border-radius: 15px;
+      margin-bottom: 2rem;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .race-status {
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+
+    .status-active {
+      color: #27ae60;
+    }
+
+    .status-finished {
+      color: #e74c3c;
+    }
+
+    .status-waiting {
+      color: #95a5a6;
+    }
+
+    .lap-buttons {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .lap-buttons h2 {
+      text-align: center;
+      color: #f5576c;
+      margin-bottom: 2rem;
+      font-size: 1.8rem;
+    }
+
+    .buttons-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .car-button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+      padding: 3rem 2rem;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .car-button:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .car-button:active {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .car-button:disabled {
+      background: #bdc3c7;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .car-button .car-number {
+      display: block;
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .car-button .driver-name {
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+
+    .lap-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .car-info {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .car-info-header {
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      color: #333;
+    }
+
+    .lap-count {
+      font-size: 1.5rem;
+      color: #667eea;
+      font-weight: bold;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+      margin: 3rem 0;
+      font-size: 1.2rem;
+    }
+
+    .session-ended {
+      background: rgba(231, 76, 60, 0.1);
+      border: 2px solid #e74c3c;
+      color: #c0392b;
+      padding: 1.5rem;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .buttons-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .car-button {
+        padding: 2rem 1rem;
+        font-size: 1.5rem;
+      }
+
+      .car-button .car-number {
+        font-size: 2.5rem;
+      }
+
+      .lap-info {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .buttons-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Authentication Overlay -->
+  <div id="authOverlay" class="auth-overlay">
+    <div class="auth-modal">
+      <h2>Lap Line Tracker Access</h2>
+      <p>Enter your observer access key:</p>
+      <input type="password" id="accessKey" placeholder="Access Key">
+      <br>
+      <button onclick="authenticate()">Access Interface</button>
+      <div id="authError" class="error-message"></div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div id="mainContent" class="main-content">
+    <div class="header">
+      <h1>Lap Line Tracker</h1>
+      <p class="subtitle">Observer Interface</p>
+    </div>
+
+    <div class="status-panel">
+      <div id="raceStatusDisplay" class="race-status">Waiting for Race</div>
+      <div id="sessionEndedMessage" class="session-ended" style="display: none;">
+        Race session ended. Buttons are now disabled.
+      </div>
+    </div>
+
+    <div class="lap-buttons">
+      <h2>Car Lap Recording</h2>
+      <div id="lapButtonsGrid" class="buttons-grid">
+        <!-- Buttons will be populated here -->
+      </div>
+
+      <div id="lapInfo" class="lap-info">
+        <!-- Lap information will be displayed here -->
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    let socket;
+    let gameState = {};
+
+    async function authenticate() {
+      const key = document.getElementById('accessKey').value;
+      const errorDiv = document.getElementById('authError');
+
+      try {
+        const response = await fetch('/authenticate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            key: key,
+            interface: 'lap-line-tracker'
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          document.getElementById('authOverlay').style.display = 'none';
+          document.getElementById('mainContent').style.display = 'block';
+          initializeSocket();
+        } else {
+          errorDiv.textContent = 'Invalid access key. Please try again.';
+        }
+      } catch (error) {
+        errorDiv.textContent = 'Authentication failed. Please try again.';
+      }
+    }
+
+    function initializeSocket() {
+      socket = io();
+
+      socket.on('gameState', (state) => {
+        gameState = state;
+        updateUI();
+      });
+    }
+
+    function updateUI() {
+      const statusDisplay = document.getElementById('raceStatusDisplay');
+      const sessionEndedMessage = document.getElementById('sessionEndedMessage');
+      const lapButtonsGrid = document.getElementById('lapButtonsGrid');
+      const lapInfo = document.getElementById('lapInfo');
+
+      // Update status display
+      if (gameState.raceStatus === 'active') {
+        statusDisplay.textContent = 'Race Active - Record Laps';
+        statusDisplay.className = 'race-status status-active';
+        sessionEndedMessage.style.display = 'none';
+      } else if (gameState.raceStatus === 'finished') {
+        statusDisplay.textContent = 'Race Finished';
+        statusDisplay.className = 'race-status status-finished';
+        sessionEndedMessage.style.display = 'block';
+      } else {
+        statusDisplay.textContent = 'Waiting for Race';
+        statusDisplay.className = 'race-status status-waiting';
+        sessionEndedMessage.style.display = 'none';
+      }
+
+      // Show buttons and info if there's an active or recently finished race
+      if (gameState.currentRaceIndex >= 0 && gameState.currentRaceIndex < gameState.raceSessions.length) {
+        const currentSession = gameState.raceSessions[gameState.currentRaceIndex];
+
+        // Generate lap buttons
+        if (currentSession.drivers.length > 0) {
+          const buttonsDisabled = gameState.raceStatus !== 'active' && gameState.raceMode !== 'finish';
+
+          lapButtonsGrid.innerHTML = currentSession.drivers.map(driver => `
+                        <button class="car-button" 
+                                onclick="recordLap(${driver.carNumber})" 
+                                ${buttonsDisabled ? 'disabled' : ''}>
+                            <span class="car-number">${driver.carNumber}</span>
+                            <span class="driver-name">${driver.name}</span>
+                        </button>
+                    `).join('');
+
+          // Generate lap info
+          lapInfo.innerHTML = currentSession.drivers.map(driver => {
+            const lapData = gameState.lapTimes[driver.carNumber] || { currentLap: 0, fastestLap: null };
+            return `
+                            <div class="car-info">
+                                <div class="car-info-header">Car ${driver.carNumber} - ${driver.name}</div>
+                                <div class="lap-count">Lap ${lapData.currentLap}</div>
+                                <div style="margin-top: 0.5rem; color: #666;">
+                                    ${lapData.fastestLap ? `Fastest: ${(lapData.fastestLap / 1000).toFixed(2)}s` : 'No laps recorded'}
+                                </div>
+                            </div>
+                        `;
+          }).join('');
+        } else {
+          lapButtonsGrid.innerHTML = '<div class="empty-state">No drivers in current race session</div>';
+          lapInfo.innerHTML = '';
+        }
+      } else {
+        lapButtonsGrid.innerHTML = '<div class="empty-state">No active race session</div>';
+        lapInfo.innerHTML = '';
+      }
+    }
+
+    function recordLap(carNumber) {
+      if (socket && (gameState.raceStatus === 'active' || gameState.raceMode === 'finish')) {
+        socket.emit('recordLap', carNumber);
+
+        // Visual feedback
+        const button = event.target;
+        const originalBg = button.style.background;
+        button.style.background = 'linear-gradient(135deg, #27ae60 0%, #2ecc71 100%)';
+
+        setTimeout(() => {
+          button.style.background = originalBg;
+        }, 300);
+      }
+    }
+
+    // Handle Enter key in access key input
+    document.getElementById('accessKey').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        authenticate();
+      }
+    });
+  </script>
+</body>
+
+</html>

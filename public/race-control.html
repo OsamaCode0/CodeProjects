@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Race Control - Beachside Racetrack</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+
+    .auth-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .auth-modal {
+      background: white;
+      padding: 3rem;
+      border-radius: 15px;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .auth-modal h2 {
+      margin-bottom: 1rem;
+      color: #333;
+    }
+
+    .auth-modal input {
+      width: 100%;
+      padding: 1rem;
+      margin: 1rem 0;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    .auth-modal button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .auth-modal button:hover {
+      background: #5a6fd8;
+    }
+
+    .error-message {
+      color: #e74c3c;
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+
+    .main-content {
+      display: none;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 2rem;
+      border-radius: 15px;
+      margin-bottom: 2rem;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      color: #667eea;
+      margin-bottom: 0.5rem;
+    }
+
+    .header .subtitle {
+      font-size: 1.1rem;
+      color: #666;
+    }
+
+    .status-panel {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 2rem;
+      border-radius: 15px;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .status-indicator {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-right: 1rem;
+    }
+
+    .status-waiting {
+      background: #95a5a6;
+      color: white;
+    }
+
+    .status-active {
+      background: #27ae60;
+      color: white;
+    }
+
+    .status-finished {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .mode-indicator {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .mode-safe {
+      background: #27ae60;
+      color: white;
+    }
+
+    .mode-hazard {
+      background: #f39c12;
+      color: white;
+    }
+
+    .mode-danger {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .mode-finish {
+      background: #2c3e50;
+      color: white;
+    }
+
+    .controls {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 2rem;
+      border-radius: 15px;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn {
+      background: #27ae60;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      margin-right: 1rem;
+      margin-bottom: 1rem;
+      transition: all 0.3s ease;
+      font-weight: bold;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-start {
+      background: #27ae60;
+    }
+
+    .btn-safe {
+      background: #27ae60;
+    }
+
+    .btn-hazard {
+      background: #f39c12;
+    }
+
+    .btn-danger {
+      background: #e74c3c;
+    }
+
+    .btn-finish {
+      background: #2c3e50;
+    }
+
+    .btn-end {
+      background: #7f8c8d;
+    }
+
+    .btn-start:hover {
+      background: #229954;
+    }
+
+    .btn-safe:hover {
+      background: #229954;
+    }
+
+    .btn-hazard:hover {
+      background: #e67e22;
+    }
+
+    .btn-danger:hover {
+      background: #c0392b;
+    }
+
+    .btn-finish:hover {
+      background: #34495e;
+    }
+
+    .btn-end:hover {
+      background: #95a5a6;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .current-race {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .drivers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .driver-card {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .car-number {
+      background: #667eea;
+      color: white;
+      padding: 0.5rem;
+      border-radius: 50%;
+      font-weight: bold;
+      min-width: 2.5rem;
+      text-align: center;
+      font-size: 1.2rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+      margin: 2rem 0;
+    }
+
+    .control-section {
+      margin-bottom: 2rem;
+    }
+
+    .control-section h3 {
+      color: #667eea;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .main-content {
+        padding: 1rem;
+      }
+
+      .btn {
+        width: 100%;
+        margin-right: 0;
+      }
+
+      .drivers-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Authentication Overlay -->
+  <div id="authOverlay" class="auth-overlay">
+    <div class="auth-modal">
+      <h2>Race Control Access</h2>
+      <p>Enter your safety official access key:</p>
+      <input type="password" id="accessKey" placeholder="Access Key">
+      <br>
+      <button onclick="authenticate()">Access Interface</button>
+      <div id="authError" class="error-message"></div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div id="mainContent" class="main-content">
+    <div class="header">
+      <h1>Race Control</h1>
+      <p class="subtitle">Safety Official Interface</p>
+    </div>
+
+    <div class="status-panel">
+      <h3 style="margin-bottom: 1rem;">Current Status</h3>
+      <div>
+        <span id="raceStatus" class="status-indicator">Waiting</span>
+        <span id="raceMode" class="mode-indicator">Safe</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="control-section">
+        <h3>Race Management</h3>
+        <button id="startBtn" class="btn btn-start" onclick="startRace()">Start Race</button>
+        <button id="endBtn" class="btn btn-end" onclick="endRaceSession()" style="display: none;">End Race
+          Session</button>
+      </div>
+
+      <div class="control-section" id="modeControls" style="display: none;">
+        <h3>Race Mode Controls</h3>
+        <button class="btn btn-safe" onclick="changeRaceMode('safe')">Safe (Green)</button>
+        <button class="btn btn-hazard" onclick="changeRaceMode('hazard')">Hazard (Yellow)</button>
+        <button class="btn btn-danger" onclick="changeRaceMode('danger')">Danger (Red)</button>
+        <button class="btn btn-finish" onclick="changeRaceMode('finish')">Finish (Chequered)</button>
+      </div>
+    </div>
+
+    <div class="current-race">
+      <h3 style="color: #667eea; margin-bottom: 1rem;">Current Race Information</h3>
+      <div id="raceInfo">
+        <!-- Race information will be populated here -->
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    let socket;
+    let gameState = {};
+
+    async function authenticate() {
+      const key = document.getElementById('accessKey').value;
+      const errorDiv = document.getElementById('authError');
+
+      try {
+        const response = await fetch('/authenticate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            key: key,
+            interface: 'race-control'
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          document.getElementById('authOverlay').style.display = 'none';
+          document.getElementById('mainContent').style.display = 'block';
+          initializeSocket();
+        } else {
+          errorDiv.textContent = 'Invalid access key. Please try again.';
+        }
+      } catch (error) {
+        errorDiv.textContent = 'Authentication failed. Please try again.';
+      }
+    }
+
+    function initializeSocket() {
+      socket = io();
+
+      socket.on('gameState', (state) => {
+        gameState = state;
+        updateUI();
+      });
+    }
+
+    function updateUI() {
+      // Update status indicators
+      const statusElement = document.getElementById('raceStatus');
+      const modeElement = document.getElementById('raceMode');
+
+      statusElement.textContent = gameState.raceStatus;
+      statusElement.className = `status-indicator status-${gameState.raceStatus}`;
+
+      modeElement.textContent = gameState.raceMode;
+      modeElement.className = `mode-indicator mode-${gameState.raceMode}`;
+
+      // Update controls
+      const startBtn = document.getElementById('startBtn');
+      const endBtn = document.getElementById('endBtn');
+      const modeControls = document.getElementById('modeControls');
+
+      if (gameState.raceStatus === 'waiting') {
+        startBtn.style.display = 'inline-block';
+        endBtn.style.display = 'none';
+        modeControls.style.display = 'none';
+        startBtn.disabled = gameState.raceSessions.length === 0;
+      } else if (gameState.raceStatus === 'active') {
+        startBtn.style.display = 'none';
+        endBtn.style.display = 'none';
+        modeControls.style.display = 'block';
+      } else if (gameState.raceStatus === 'finished') {
+        startBtn.style.display = 'none';
+        endBtn.style.display = 'inline-block';
+        modeControls.style.display = 'none';
+      }
+
+      // Update race information
+      const raceInfo = document.getElementById('raceInfo');
+
+      if (gameState.raceSessions.length === 0) {
+        raceInfo.innerHTML = '<div class="empty-state">No race sessions configured. Please configure races at the Front Desk.</div>';
+      } else if (gameState.currentRaceIndex >= 0 && gameState.currentRaceIndex < gameState.raceSessions.length) {
+        const currentSession = gameState.raceSessions[gameState.currentRaceIndex];
+        raceInfo.innerHTML = `
+                    <h4>Race Session ${gameState.currentRaceIndex + 1}</h4>
+                    <div class="drivers-grid">
+                        ${currentSession.drivers.map(driver => `
+                            <div class="driver-card">
+                                <div class="car-number">${driver.carNumber}</div>
+                                <div>${driver.name}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+      } else if (gameState.currentRaceIndex >= gameState.raceSessions.length) {
+        raceInfo.innerHTML = '<div class="empty-state">All race sessions completed.</div>';
+      } else {
+        const nextSession = gameState.raceSessions[0];
+        raceInfo.innerHTML = `
+                    <h4>Next Race Session</h4>
+                    <div class="drivers-grid">
+                        ${nextSession.drivers.map(driver => `
+                            <div class="driver-card">
+                                <div class="car-number">${driver.carNumber}</div>
+                                <div>${driver.name}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+      }
+    }
+
+    function startRace() {
+      if (socket && gameState.raceSessions.length > 0) {
+        socket.emit('startRace');
+      }
+    }
+
+    function changeRaceMode(mode) {
+      if (socket) {
+        socket.emit('changeRaceMode', mode);
+      }
+    }
+
+    function endRaceSession() {
+      if (socket && confirm('End the current race session and move to the next one?')) {
+        socket.emit('endRaceSession');
+      }
+    }
+
+    // Handle Enter key in access key input
+    document.getElementById('accessKey').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        authenticate();
+      }
+    });
+  </script>
+</body>
+
+</html>

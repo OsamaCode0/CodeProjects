@@ -1,0 +1,24 @@
+{
+  "name": "beachside-racetrack",
+  "version": "1.0.0",
+  "description": "Real-time racetrack management system for Beachside Racetrack",
+  "main": "server.js",
+  "scripts": {
+    "start": "RACE_DURATION=600000 node server.js",
+    "dev": "RACE_DURATION=60000 node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "socket.io": "^4.8.1"
+  },
+  "keywords": [
+    "racetrack",
+    "real-time",
+    "socket.io",
+    "racing"
+  ],
+  "author": "Beachside Racetrack",
+  "license": "MIT"
+}
