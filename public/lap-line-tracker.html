@@ -177,10 +177,11 @@
     }
 
     .car-button:disabled {
-      background: #bdc3c7;
+      opacity: 0.6;
       cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
+      transform: none !important;
+      box-shadow: none !important;
+      background: #bdc3c7 !important;
     }
 
     .car-button .car-number {
@@ -377,7 +378,8 @@
 
         // Generate lap buttons
         if (currentSession.drivers.length > 0) {
-          const buttonsDisabled = gameState.raceStatus !== 'active' && gameState.raceMode !== 'finish';
+          // const buttonsDisabled = gameState.raceStatus !== 'active' && gameState.raceMode !== 'finish';
+          const buttonsDisabled = gameState.raceStatus !== 'active'
 
           lapButtonsGrid.innerHTML = currentSession.drivers.map(driver => `
                         <button class="car-button" 
@@ -411,18 +413,40 @@
       }
     }
 
+    /*     function recordLap(carNumber) {
+          if (socket && (gameState.raceStatus === 'active' || gameState.raceMode === 'finish')) {
+            socket.emit('recordLap', carNumber);
+    
+            // Visual feedback
+            const button = event.target;
+            const originalBg = button.style.background;
+            button.style.background = 'linear-gradient(135deg, #27ae60 0%, #2ecc71 100%)';
+    
+            setTimeout(() => {
+              button.style.background = originalBg;
+            }, 300);
+          }
+        } */
+
     function recordLap(carNumber) {
+      // Only allow recording if race is active
+      if (gameState.raceStatus !== 'active') {
+        return; // Exit if race isn't active
+      }
+
       if (socket && (gameState.raceStatus === 'active' || gameState.raceMode === 'finish')) {
         socket.emit('recordLap', carNumber);
 
         // Visual feedback
-        const button = event.target;
-        const originalBg = button.style.background;
-        button.style.background = 'linear-gradient(135deg, #27ae60 0%, #2ecc71 100%)';
+        const button = event.target.closest('.car-button');
+        if (button) {
+          const originalBg = button.style.background;
+          button.style.background = 'linear-gradient(135deg, #27ae60 0%, #2ecc71 100%)';
 
-        setTimeout(() => {
-          button.style.background = originalBg;
-        }, 300);
+          setTimeout(() => {
+            button.style.background = originalBg;
+          }, 300);
+        }
       }
     }
 
