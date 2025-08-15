@@ -28,34 +28,21 @@
 
 ## Function signatures
 
-### Authentication
-
-```
+```javascript
+// Authentication
 function authenticate(): Promise<void>
-```
 
-### Socket Initialization
-
-```
+// Socket Initialization
 function initializeSocket(): void
-```
 
-### UI Updates
-
-```
+// UI Updates
 function updateUI(): void
-```
 
-### Race Session Management
-
-```
+// Race Session Management
 function addRaceSession(): void
 function removeRaceSession(sessionId: number): void
-```
 
-### Driver Management
-
-```
+// Driver Management
 function addDriver(sessionId: number): void
 function removeDriver(sessionId: number, driverIndex: number): void
 ```
