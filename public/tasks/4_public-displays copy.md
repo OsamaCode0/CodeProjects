@@ -18,44 +18,7 @@
 
 - Update leaderboard on gameState changes
 
-## 4.2 Next Race Module
-
-### Tasks
-
-#### UI Components
-
-- Driver cards (car number + name)
-- "Proceed to Paddock" announcement
-
-#### Logic
-
-- Show next session (or waiting message)
-
-## 4.3 Race Countdown Module
-
-### Tasks
-
-#### UI Components
-
-- Large timer display
-- Warning state (last 30 seconds)
-- Race status indicator
-
-## 4.4 Race Flags Module
-
-### Tasks
-
-#### UI Components
-
-- Fullscreen flag animations:
-  - Green (safe)
-  - Yellow pulsing (hazard)
-  - Red flashing (danger)
-  - Checkered (finish)
-
 ## Function signatures
-
-### Leaderboard Module
 
 ```javascript
 // Socket Initialization
@@ -73,7 +36,20 @@ function updateTimer(timeRemaining: number): void
 function toggleFullscreen(): void
 ```
 
-### Next Race Module
+## 4.2 Next Race Module
+
+### Tasks
+
+#### UI Components
+
+- Driver cards (car number + name)
+- "Proceed to Paddock" announcement
+
+#### Logic
+
+- Show next session (or waiting message)
+
+## Function signatures
 
 ```javascript
 // Socket Initialization
@@ -86,7 +62,17 @@ function updateUI(): void
 function toggleFullscreen(): void
 ```
 
-### Race Countdown Module
+## 4.3 Race Countdown Module
+
+### Tasks
+
+#### UI Components
+
+- Large timer display
+- Warning state (last 30 seconds)
+- Race status indicator
+
+## Function signatures
 
 ```javascript
 // Socket Initialization
@@ -102,7 +88,19 @@ function updateRaceInfo(): void
 function toggleFullscreen(): void
 ```
 
-### Race Flags Module
+## 4.4 Race Flags Module
+
+### Tasks
+
+#### UI Components
+
+- Fullscreen flag animations:
+  - Green (safe)
+  - Yellow pulsing (hazard)
+  - Red flashing (danger)
+  - Checkered (finish)
+
+## Function signatures
 
 ```javascript
 // Socket Initialization
