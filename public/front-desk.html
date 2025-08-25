@@ -231,6 +231,71 @@
       margin: 2rem 0;
     }
 
+    .driver-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-edit {
+      background: #f39c12 !important;
+    }
+
+    .btn-edit:hover {
+      background: #e67e22 !important;
+    }
+
+    .edit-driver-form {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .edit-driver-form input {
+      flex: 1;
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 0.9rem;
+    }
+
+    .edit-driver-form button {
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    .driver-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem;
+      background: white;
+      border-radius: 8px;
+      margin-bottom: 0.75rem;
+      transition: all 0.3s ease;
+    }
+
+    .driver-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex: 1;
+    }
+
+    .driver-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-edit {
+      background: #f39c12;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    .btn-edit:hover {
+      background: #e67e22;
+    }
+
     @media (max-width: 768px) {
       .main-content {
         padding: 1rem;
@@ -345,13 +410,16 @@
                         ${session.drivers.length === 0 ?
           '<div class="empty-state">No drivers assigned yet.</div>' :
           session.drivers.map((driver, driverIndex) => `
-                                <div class="driver-item">
-                                    <div class="driver-info">
-                                        <div class="car-number">${driver.carNumber}</div>
-                                        <span>${driver.name}</span>
-                                    </div>
-                                    <button class="btn btn-danger" onclick="removeDriver(${session.id}, ${driverIndex})">Remove</button>
-                                </div>
+                <div class="driver-item">
+                  <div class="driver-info">
+                    <div class="car-number">${driver.carNumber}</div>
+                    <span id="driver-name-${session.id}-${driverIndex}">${driver.name}</span>
+                  </div>
+                  <div class="driver-actions">
+                    <button class="btn btn-edit" onclick="enableEdit(${session.id}, ${driverIndex})">Edit</button>
+                    <button class="btn btn-danger" onclick="removeDriver(${session.id}, ${driverIndex})">Remove</button>
+                  </div>
+                </div>
                             `).join('')
         }
                     </div>
@@ -399,6 +467,66 @@
         });
       }
     }
+
+    function enableEdit(sessionId, driverIndex) {
+      const nameElement = document.getElementById(`driver-name-${sessionId}-${driverIndex}`);
+      const currentName = nameElement.textContent;
+
+      nameElement.innerHTML = `
+    <div class="edit-driver-form">
+      <input type="text" id="edit-input-${sessionId}-${driverIndex}" value="${currentName}" maxlength="50">
+      <button class="btn" onclick="saveEdit(${sessionId}, ${driverIndex})">Save</button>
+      <button class="btn btn-danger" onclick="cancelEdit(${sessionId}, ${driverIndex}, '${currentName}')">Cancel</button>
+    </div>
+  `;
+
+      // Focus the input field
+      setTimeout(() => {
+        const input = document.getElementById(`edit-input-${sessionId}-${driverIndex}`);
+        input.focus();
+        input.select();
+      }, 100);
+    }
+
+    function saveEdit(sessionId, driverIndex) {
+      const input = document.getElementById(`edit-input-${sessionId}-${driverIndex}`);
+      const newName = input.value.trim();
+
+      if (newName && socket) {
+        socket.emit('editDriver', {
+          sessionId: sessionId,
+          driverIndex: driverIndex,
+          newName: newName
+        });
+      }
+    }
+
+    function cancelEdit(sessionId, driverIndex, originalName) {
+      const nameElement = document.getElementById(`driver-name-${sessionId}-${driverIndex}`);
+      nameElement.textContent = originalName;
+    }
+
+    // Handle Enter key in edit inputs
+    document.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && e.target.id.startsWith('edit-input-')) {
+        const parts = e.target.id.split('-');
+        const sessionId = parseInt(parts[2]);
+        const driverIndex = parseInt(parts[3]);
+        saveEdit(sessionId, driverIndex);
+      }
+    });
+
+    // Handle Escape key to cancel edit
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && e.target.id.startsWith('edit-input-')) {
+        const parts = e.target.id.split('-');
+        const sessionId = parseInt(parts[2]);
+        const driverIndex = parseInt(parts[3]);
+        const originalName = e.target.value; // This will get the current value, but we'd need to store original
+        // For simplicity, we'll just reload the UI on escape
+        updateUI();
+      }
+    });
 
     // Handle Enter key in driver input fields
     document.addEventListener('keypress', (e) => {

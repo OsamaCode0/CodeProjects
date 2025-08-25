@@ -170,6 +170,23 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('editDriver', (data) => {
+    const { sessionId, driverIndex, newName } = data;
+    const session = gameState.raceSessions.find((s) => s.id === sessionId);
+
+    if (session && session.drivers[driverIndex]) {
+      // Check for duplicate names in the same session
+      const nameExists = session.drivers.some(
+        (driver, index) => driver.name === newName && index !== driverIndex
+      );
+
+      if (!nameExists) {
+        session.drivers[driverIndex].name = newName;
+        io.emit('gameState', cleanGameStateForEmission(gameState));
+      }
+    }
+  });
+
   socket.on('removeDriver', (data) => {
     const { sessionId, driverIndex } = data;
     const session = gameState.raceSessions.find((s) => s.id === sessionId);
