@@ -170,23 +170,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('editDriver', (data) => {
-    const { sessionId, driverIndex, newName } = data;
-    const session = gameState.raceSessions.find((s) => s.id === sessionId);
-
-    if (session && session.drivers[driverIndex]) {
-      // Check for duplicate names in the same session
-      const nameExists = session.drivers.some(
-        (driver, index) => driver.name === newName && index !== driverIndex
-      );
-
-      if (!nameExists) {
-        session.drivers[driverIndex].name = newName;
-        io.emit('gameState', cleanGameStateForEmission(gameState));
-      }
-    }
-  });
-
   socket.on('removeDriver', (data) => {
     const { sessionId, driverIndex } = data;
     const session = gameState.raceSessions.find((s) => s.id === sessionId);
@@ -205,10 +188,8 @@ io.on('connection', (socket) => {
       gameState.raceTimeRemaining = RACE_DURATION;
       gameState.raceStartTime = Date.now();
 
-      // Clear ALL previous lap times when starting a new race
-      gameState.lapTimes = {};
-
       // Initialize lap times for current race
+      gameState.lapTimes = {};
       const currentSession = gameState.raceSessions[gameState.currentRaceIndex];
       if (currentSession) {
         currentSession.drivers.forEach((driver) => {
@@ -238,19 +219,25 @@ io.on('connection', (socket) => {
 
   socket.on('endRaceSession', () => {
     if (gameState.raceStatus === 'finished') {
-      // Clear lap times when ending a session
-      gameState.lapTimes = {};
+      // Remove the completed session from the list
+      if (
+        gameState.currentRaceIndex >= 0 &&
+        gameState.currentRaceIndex < gameState.raceSessions.length
+      ) {
+        gameState.raceSessions.splice(gameState.currentRaceIndex, 1);
+      }
 
       // Move to next session
-      if (gameState.currentRaceIndex < gameState.raceSessions.length - 1) {
-        gameState.currentRaceIndex++;
+      if (gameState.raceSessions.length > 0) {
+        gameState.currentRaceIndex = 0; // Always set to the first session since we removed the completed one
       } else {
         gameState.currentRaceIndex = -1;
       }
 
       gameState.raceStatus = 'waiting';
-      gameState.raceMode = 'danger';
+      gameState.raceMode = 'safe';
       gameState.raceTimeRemaining = 0;
+      gameState.lapTimes = {};
 
       // Clear race timer
       if (gameState.raceTimer) {
