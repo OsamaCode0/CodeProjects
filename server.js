@@ -188,8 +188,10 @@ io.on('connection', (socket) => {
       gameState.raceTimeRemaining = RACE_DURATION;
       gameState.raceStartTime = Date.now();
 
-      // Initialize lap times for current race
+      // Clear ALL previous lap times when starting a new race
       gameState.lapTimes = {};
+
+      // Initialize lap times for current race
       const currentSession = gameState.raceSessions[gameState.currentRaceIndex];
       if (currentSession) {
         currentSession.drivers.forEach((driver) => {
@@ -219,6 +221,9 @@ io.on('connection', (socket) => {
 
   socket.on('endRaceSession', () => {
     if (gameState.raceStatus === 'finished') {
+      // Clear lap times when ending a session
+      gameState.lapTimes = {};
+
       // Move to next session
       if (gameState.currentRaceIndex < gameState.raceSessions.length - 1) {
         gameState.currentRaceIndex++;
