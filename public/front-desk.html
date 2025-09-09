@@ -408,22 +408,30 @@
     function updateUI() {
       const sessionsList = document.getElementById('sessionsList');
 
-      if (gameState.raceSessions.length === 0) {
-        sessionsList.innerHTML = '<div class="empty-state">No race sessions configured yet.</div>';
+      // Filter out current and completed race sessions
+      const upcomingSessions = gameState.raceSessions.filter((session, index) => {
+        return index > gameState.currentRaceIndex;
+      });
+
+      if (upcomingSessions.length === 0) {
+        sessionsList.innerHTML = '<div class="empty-state">No upcoming race sessions</div>';
         return;
       }
 
-      sessionsList.innerHTML = gameState.raceSessions.map((session, index) => `
+      sessionsList.innerHTML = upcomingSessions.map((session, index) => {
+        // Calculate the actual index in the original array
+        const originalIndex = gameState.raceSessions.indexOf(session);
+        return `
                 <div class="session-card">
                     <div class="session-header">
-                        <div class="session-title">Race Session ${index + 1}</div>
+                        <div class="session-title">Race Session ${originalIndex + 1}</div>
                         <button class="btn btn-danger" onclick="removeRaceSession(${session.id})">Remove Session</button>
                     </div>
                     
                     <div class="drivers-list">
                         ${session.drivers.length === 0 ?
-          '<div class="empty-state">No drivers assigned yet.</div>' :
-          session.drivers.map((driver, driverIndex) => `
+            '<div class="empty-state">No drivers assigned yet.</div>' :
+            session.drivers.map((driver, driverIndex) => `
                                 <div class="driver-item">
                                     <div class="driver-info">
                                         <div class="car-number">${driver.carNumber}</div>
@@ -435,7 +443,7 @@
                                     </div>
                                 </div>
                             `).join('')
-        }
+          }
                     </div>
                     
                     ${session.drivers.length < 8 ? `
@@ -445,7 +453,8 @@
                         </div>
                     ` : '<p style="color: #e74c3c; font-weight: bold;">Maximum 8 drivers per session</p>'}
                 </div>
-            `).join('');
+            `;
+      }).join('');
     }
 
     function addRaceSession() {
