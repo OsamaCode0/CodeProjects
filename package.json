@@ -6,12 +6,18 @@
   "scripts": {
     "start": "cross-env RACE_DURATION=600000 node server.js",
     "dev": "cross-env RACE_DURATION=60000 node server.js",
+    "dev:ngrok": "cross-env RACE_DURATION=60000 node server.js --ngrok",
+    "ngrok": "node ngrok-setup.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "cross-env": "^10.0.0",
+    "ngrok": "^5.0.0-beta.2"
   },
   "keywords": [
     "racetrack",
@@ -20,8 +26,5 @@
     "racing"
   ],
   "author": "Beachside Racetrack",
-  "license": "MIT",
-  "devDependencies": {
-    "cross-env": "^10.0.0"
-  }
+  "license": "MIT"
 }

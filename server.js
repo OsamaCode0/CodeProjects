@@ -4,6 +4,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
 const fs = require('fs').promises;
+const ngrok = require('ngrok');
 
 // Utility function to clean game state before emission
 function cleanGameStateForEmission(state) {
@@ -113,6 +114,43 @@ async function loadGameState() {
       console.error('Error loading game state:', error);
     }
   }
+}
+
+function startRaceTimer() {
+  // Clear any existing timer
+  if (gameState.raceTimer) {
+    clearInterval(gameState.raceTimer);
+  }
+
+  gameState.raceTimer = setInterval(() => {
+    gameState.raceTimeRemaining -= 1000;
+
+    if (gameState.raceTimeRemaining <= 0) {
+      finishRace();
+    } else {
+      io.emit('raceTimer', gameState.raceTimeRemaining);
+    }
+  }, 1000);
+}
+
+function finishRace() {
+  gameState.raceMode = 'finish';
+  gameState.raceTimeRemaining = 0;
+
+  if (gameState.raceTimer) {
+    clearInterval(gameState.raceTimer);
+    gameState.raceTimer = null;
+  }
+
+  // After a short delay, mark race as finished
+  setTimeout(() => {
+    gameState.raceStatus = 'finished';
+    io.emit('gameState', cleanGameStateForEmission(gameState));
+    saveGameState();
+  }, 3000);
+
+  io.emit('gameState', cleanGameStateForEmission(gameState));
+  saveGameState();
 }
 
 // Auto-save interval (every 5 seconds)
@@ -390,48 +428,13 @@ io.on('connection', (socket) => {
   });
 });
 
-function startRaceTimer() {
-  // Clear any existing timer
-  if (gameState.raceTimer) {
-    clearInterval(gameState.raceTimer);
-  }
-
-  gameState.raceTimer = setInterval(() => {
-    gameState.raceTimeRemaining -= 1000;
-
-    if (gameState.raceTimeRemaining <= 0) {
-      finishRace();
-    } else {
-      io.emit('raceTimer', gameState.raceTimeRemaining);
-    }
-  }, 1000);
-}
-
-function finishRace() {
-  gameState.raceMode = 'finish';
-  gameState.raceTimeRemaining = 0;
-
-  if (gameState.raceTimer) {
-    clearInterval(gameState.raceTimer);
-    gameState.raceTimer = null;
-  }
-
-  // After a short delay, mark race as finished
-  setTimeout(() => {
-    gameState.raceStatus = 'finished';
-    io.emit('gameState', cleanGameStateForEmission(gameState));
-    saveGameState();
-  }, 3000);
-
-  io.emit('gameState', cleanGameStateForEmission(gameState));
-  saveGameState();
-}
-
-// Load saved state on server start
+// Load saved state on server start and start server
 loadGameState().then(() => {
   const PORT = process.env.PORT || 3000;
-  server.listen(PORT, () => {
-    console.log(`Beachside Racetrack server running on port ${PORT}`);
+  const HOST = process.env.HOST || '0.0.0.0'; // Listen on all network interfaces
+
+  server.listen(PORT, HOST, async () => {
+    console.log(`Beachside Racetrack server running on ${HOST}:${PORT}`);
     console.log(`Race duration: ${RACE_DURATION / 1000} seconds`);
     console.log('\nAvailable interfaces:');
     console.log(
@@ -451,5 +454,49 @@ loadGameState().then(() => {
       `- Race Countdown (Drivers): http://localhost:${PORT}/race-countdown`
     );
     console.log(`- Race Flags (Drivers): http://localhost:${PORT}/race-flags`);
+
+    console.log('\nTo access from other devices on your network:');
+    console.log(`- Use your computer's IP address instead of localhost`);
+    console.log(
+      `- For example: http://192.168.1.100:${PORT} (replace with your actual IP)`
+    );
+
+    // Add ngrok setup if --ngrok flag is provided
+    if (process.argv.includes('--ngrok')) {
+      if (!process.env.NGROK_AUTHTOKEN) {
+        console.error(
+          '\nError: NGROK_AUTHTOKEN environment variable is not set.'
+        );
+        console.error(
+          'Please get your authtoken from https://dashboard.ngrok.com/get-started/your-authtoken'
+        );
+        console.error(
+          'Then set it: export NGROK_AUTHTOKEN=your_authtoken_here'
+        );
+        return;
+      }
+
+      try {
+        console.log('\nSetting up ngrok tunnel...');
+        await ngrok.authtoken(process.env.NGROK_AUTHTOKEN);
+        const url = await ngrok.connect(PORT);
+
+        console.log('\n✅ Ngrok tunnel established!');
+        console.log('🌐 Public URL:', url);
+        console.log(
+          '\nYou can now access your application from anywhere using this URL.'
+        );
+
+        // Save the URL to a file
+        await fs.writeFile(
+          path.join(__dirname, 'ngrok-url.txt'),
+          `Ngrok URL: ${url}\nGenerated at: ${new Date().toISOString()}\n`
+        );
+
+        console.log('\nURL saved to ngrok-url.txt');
+      } catch (error) {
+        console.error('Error creating ngrok tunnel:', error);
+      }
+    }
   });
 });
