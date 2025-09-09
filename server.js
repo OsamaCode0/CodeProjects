@@ -3,6 +3,7 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
+const fs = require('fs').promises;
 
 // Utility function to clean game state before emission
 function cleanGameStateForEmission(state) {
@@ -54,10 +55,70 @@ let gameState = {
   raceTimeRemaining: 0,
   lapTimes: {}, // carNumber: { laps: [], fastestLap: null, currentLap: 0 }
   raceStartTime: null,
+  lastUpdated: Date.now(),
 };
 
 // Get race duration from environment (10 minutes normal, 1 minute dev)
 const RACE_DURATION = parseInt(process.env.RACE_DURATION) || 600000; // Default 10 minutes
+
+// State persistence
+const STATE_FILE = 'gameState.json';
+
+async function saveGameState() {
+  try {
+    const stateToSave = cleanGameStateForEmission(gameState);
+    stateToSave.lastUpdated = Date.now();
+    await fs.writeFile(STATE_FILE, JSON.stringify(stateToSave, null, 2));
+  } catch (error) {
+    console.error('Error saving game state:', error);
+  }
+}
+
+async function loadGameState() {
+  try {
+    const data = await fs.readFile(STATE_FILE, 'utf8');
+    const loadedState = JSON.parse(data);
+
+    // Calculate time elapsed since last save if race was active
+    if (loadedState.raceStatus === 'active') {
+      const timeElapsed = Date.now() - loadedState.lastUpdated;
+      loadedState.raceTimeRemaining = Math.max(
+        0,
+        loadedState.raceTimeRemaining - timeElapsed
+      );
+
+      // If race time has expired, finish the race
+      if (loadedState.raceTimeRemaining <= 0) {
+        loadedState.raceStatus = 'finished';
+        loadedState.raceMode = 'finish';
+      }
+    }
+
+    // Merge loaded state with current state, preserving non-serializable properties
+    gameState = {
+      ...loadedState,
+      raceTimer: null, // Will be recreated if needed
+    };
+
+    console.log('Game state loaded successfully');
+
+    // If race was active, restart the timer
+    if (loadedState.raceStatus === 'active') {
+      startRaceTimer();
+    }
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      console.log('No saved game state found, starting fresh');
+    } else {
+      console.error('Error loading game state:', error);
+    }
+  }
+}
+
+// Auto-save interval (every 5 seconds)
+setInterval(() => {
+  saveGameState();
+}, 5000);
 
 // Routes
 app.get('/', (req, res) => {
@@ -132,6 +193,7 @@ io.on('connection', (socket) => {
     };
     gameState.raceSessions.push(newSession);
     io.emit('gameState', cleanGameStateForEmission(gameState));
+    saveGameState();
   });
 
   socket.on('removeRaceSession', (sessionId) => {
@@ -142,6 +204,7 @@ io.on('connection', (socket) => {
       gameState.currentRaceIndex = -1;
     }
     io.emit('gameState', cleanGameStateForEmission(gameState));
+    saveGameState();
   });
 
   socket.on('addDriver', (data) => {
@@ -178,6 +241,7 @@ io.on('connection', (socket) => {
           carNumber: assignedCarNumber,
         });
         io.emit('gameState', cleanGameStateForEmission(gameState));
+        saveGameState();
       }
     }
   });
@@ -208,6 +272,7 @@ io.on('connection', (socket) => {
           session.drivers[driverIndex].carNumber = carNumber;
         }
         io.emit('gameState', cleanGameStateForEmission(gameState));
+        saveGameState();
       }
     }
   });
@@ -218,6 +283,7 @@ io.on('connection', (socket) => {
     if (session) {
       session.drivers.splice(driverIndex, 1);
       io.emit('gameState', cleanGameStateForEmission(gameState));
+      saveGameState();
     }
   });
 
@@ -247,6 +313,7 @@ io.on('connection', (socket) => {
       // Start race timer
       startRaceTimer();
       io.emit('gameState', cleanGameStateForEmission(gameState));
+      saveGameState();
     }
   });
 
@@ -254,6 +321,7 @@ io.on('connection', (socket) => {
     if (gameState.raceStatus === 'active' && mode !== 'finish') {
       gameState.raceMode = mode;
       io.emit('gameState', cleanGameStateForEmission(gameState));
+      saveGameState();
     } else if (mode === 'finish') {
       finishRace();
     }
@@ -288,6 +356,7 @@ io.on('connection', (socket) => {
       }
 
       io.emit('gameState', cleanGameStateForEmission(gameState));
+      saveGameState();
     }
   });
 
@@ -311,6 +380,7 @@ io.on('connection', (socket) => {
         }
 
         io.emit('gameState', cleanGameStateForEmission(gameState));
+        saveGameState();
       }
     }
   });
@@ -321,6 +391,11 @@ io.on('connection', (socket) => {
 });
 
 function startRaceTimer() {
+  // Clear any existing timer
+  if (gameState.raceTimer) {
+    clearInterval(gameState.raceTimer);
+  }
+
   gameState.raceTimer = setInterval(() => {
     gameState.raceTimeRemaining -= 1000;
 
@@ -345,31 +420,36 @@ function finishRace() {
   setTimeout(() => {
     gameState.raceStatus = 'finished';
     io.emit('gameState', cleanGameStateForEmission(gameState));
+    saveGameState();
   }, 3000);
 
   io.emit('gameState', cleanGameStateForEmission(gameState));
+  saveGameState();
 }
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Beachside Racetrack server running on port ${PORT}`);
-  console.log(`Race duration: ${RACE_DURATION / 1000} seconds`);
-  console.log('\nAvailable interfaces:');
-  console.log(
-    `- Front Desk (Receptionist): http://localhost:${PORT}/front-desk`
-  );
-  console.log(
-    `- Race Control (Safety Official): http://localhost:${PORT}/race-control`
-  );
-  console.log(
-    `- Lap Line Tracker (Observer): http://localhost:${PORT}/lap-line-tracker`
-  );
-  console.log(
-    `- Leaderboard (Spectators): http://localhost:${PORT}/leaderboard`
-  );
-  console.log(`- Next Race (Drivers): http://localhost:${PORT}/next-race`);
-  console.log(
-    `- Race Countdown (Drivers): http://localhost:${PORT}/race-countdown`
-  );
-  console.log(`- Race Flags (Drivers): http://localhost:${PORT}/race-flags`);
+// Load saved state on server start
+loadGameState().then(() => {
+  const PORT = process.env.PORT || 3000;
+  server.listen(PORT, () => {
+    console.log(`Beachside Racetrack server running on port ${PORT}`);
+    console.log(`Race duration: ${RACE_DURATION / 1000} seconds`);
+    console.log('\nAvailable interfaces:');
+    console.log(
+      `- Front Desk (Receptionist): http://localhost:${PORT}/front-desk`
+    );
+    console.log(
+      `- Race Control (Safety Official): http://localhost:${PORT}/race-control`
+    );
+    console.log(
+      `- Lap Line Tracker (Observer): http://localhost:${PORT}/lap-line-tracker`
+    );
+    console.log(
+      `- Leaderboard (Spectators): http://localhost:${PORT}/leaderboard`
+    );
+    console.log(`- Next Race (Drivers): http://localhost:${PORT}/next-race`);
+    console.log(
+      `- Race Countdown (Drivers): http://localhost:${PORT}/race-countdown`
+    );
+    console.log(`- Race Flags (Drivers): http://localhost:${PORT}/race-flags`);
+  });
 });

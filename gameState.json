@@ -1,0 +1,10 @@
+{
+  "raceSessions": [],
+  "currentRaceIndex": -1,
+  "raceStatus": "waiting",
+  "raceMode": "danger",
+  "raceTimeRemaining": 0,
+  "lapTimes": {},
+  "raceStartTime": 1757454924664,
+  "lastUpdated": 1757455053458
+}
