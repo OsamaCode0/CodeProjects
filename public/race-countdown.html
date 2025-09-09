@@ -288,11 +288,10 @@
       const minutes = Math.floor(timeRemaining / 60000);
       const seconds = Math.floor((timeRemaining % 60000) / 1000);
 
-      const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-      timerElement.textContent = timeString;
+      timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
-      // Add warning animation for last 30 seconds
-      if (timeRemaining <= 30000 && timeRemaining > 0) {
+      // Add warning class when time is low
+      if (timeRemaining <= 60000) { // 1 minute
         timerElement.classList.add('warning');
       } else {
         timerElement.classList.remove('warning');
@@ -302,35 +301,34 @@
     function updateRaceInfo() {
       const raceDetails = document.getElementById('raceDetails');
 
-      if (gameState.currentRaceIndex >= 0 && gameState.currentRaceIndex < gameState.raceSessions.length) {
+      if (gameState.raceSessions.length > 0 && gameState.currentRaceIndex >= 0) {
         const currentSession = gameState.raceSessions[gameState.currentRaceIndex];
-        const sessionNumber = gameState.currentRaceIndex + 1;
-        const driverCount = currentSession.drivers.length;
-
         raceDetails.innerHTML = `
-                    <div class="driver-count">
-                        <strong>Race Session ${sessionNumber}</strong><br>
-                        ${driverCount} driver${driverCount !== 1 ? 's' : ''} participating
-                    </div>
+                    <div class="driver-count">${currentSession.drivers.length} Drivers</div>
                 `;
-        raceDetails.classList.remove('no-race');
+      } else if (gameState.raceSessions.length > 0) {
+        const nextSession = gameState.raceSessions[0];
+        raceDetails.innerHTML = `
+                    <div class="driver-count">Next Race: ${nextSession.drivers.length} Drivers</div>
+                `;
       } else {
-        raceDetails.innerHTML = 'No active race session';
-        raceDetails.classList.add('no-race');
+        raceDetails.innerHTML = '<div class="no-race">No race sessions configured</div>';
       }
     }
 
     function toggleFullscreen() {
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
-          console.log('Fullscreen not supported');
+          console.error('Error attempting to enable fullscreen:', err);
         });
       } else {
-        document.exitFullscreen();
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
       }
     }
 
-    // Initialize when page loads
+    // Initialize socket connection
     initializeSocket();
   </script>
 </body>

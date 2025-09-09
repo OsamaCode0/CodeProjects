@@ -49,7 +49,7 @@ let gameState = {
   raceSessions: [],
   currentRaceIndex: -1,
   raceStatus: 'waiting', // waiting, active, finished
-  raceMode: 'safe', // safe, hazard, danger, finish
+  raceMode: 'danger', // safe, hazard, danger, finish - Start with Danger mode
   raceTimer: null,
   raceTimeRemaining: 0,
   lapTimes: {}, // carNumber: { laps: [], fastestLap: null, currentLap: 0 }
@@ -201,7 +201,7 @@ io.on('connection', (socket) => {
     if (gameState.raceSessions.length > 0) {
       gameState.currentRaceIndex = 0;
       gameState.raceStatus = 'active';
-      gameState.raceMode = 'safe';
+      gameState.raceMode = 'safe'; // Change from danger to safe when race starts
       gameState.raceTimeRemaining = RACE_DURATION;
       gameState.raceStartTime = Date.now();
 
@@ -252,7 +252,7 @@ io.on('connection', (socket) => {
       }
 
       gameState.raceStatus = 'waiting';
-      gameState.raceMode = 'safe';
+      gameState.raceMode = 'danger'; // Change back to danger mode when session ends
       gameState.raceTimeRemaining = 0;
       gameState.lapTimes = {};
 
