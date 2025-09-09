@@ -145,7 +145,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('addDriver', (data) => {
-    const { sessionId, driverName } = data;
+    const { sessionId, driverName, carNumber } = data;
     const session = gameState.raceSessions.find((s) => s.id === sessionId);
 
     if (session && session.drivers.length < 8) {
@@ -153,17 +153,29 @@ io.on('connection', (socket) => {
       const nameExists = session.drivers.some(
         (driver) => driver.name === driverName
       );
-      if (!nameExists) {
-        // Assign next available car number
-        const usedCars = session.drivers.map((d) => d.carNumber);
-        let carNumber = 1;
-        while (usedCars.includes(carNumber)) {
-          carNumber++;
+
+      // If carNumber is provided, check for duplicate car numbers in the same session
+      let carExists = false;
+      if (carNumber) {
+        carExists = session.drivers.some(
+          (driver) => driver.carNumber === carNumber
+        );
+      }
+
+      if (!nameExists && !carExists) {
+        // If no car number provided, auto-assign the next available number
+        let assignedCarNumber = carNumber;
+        if (!assignedCarNumber) {
+          const usedCars = session.drivers.map((d) => d.carNumber);
+          assignedCarNumber = 1;
+          while (usedCars.includes(assignedCarNumber)) {
+            assignedCarNumber++;
+          }
         }
 
         session.drivers.push({
           name: driverName,
-          carNumber: carNumber,
+          carNumber: assignedCarNumber,
         });
         io.emit('gameState', cleanGameStateForEmission(gameState));
       }
@@ -171,7 +183,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('updateDriver', (data) => {
-    const { sessionId, driverIndex, driverName } = data;
+    const { sessionId, driverIndex, driverName, carNumber } = data;
     const session = gameState.raceSessions.find((s) => s.id === sessionId);
 
     if (session && session.drivers[driverIndex]) {
@@ -180,8 +192,21 @@ io.on('connection', (socket) => {
         (driver, index) => driver.name === driverName && index !== driverIndex
       );
 
-      if (!nameExists) {
+      // If carNumber is provided, check for duplicate car numbers in the same session
+      let carExists = false;
+      if (carNumber) {
+        carExists = session.drivers.some(
+          (driver, index) =>
+            driver.carNumber === carNumber && index !== driverIndex
+        );
+      }
+
+      if (!nameExists && !carExists) {
         session.drivers[driverIndex].name = driverName;
+        // Only update car number if provided (null means auto-assign)
+        if (carNumber) {
+          session.drivers[driverIndex].carNumber = carNumber;
+        }
         io.emit('gameState', cleanGameStateForEmission(gameState));
       }
     }

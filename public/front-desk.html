@@ -150,6 +150,14 @@
       background: #e67e22;
     }
 
+    .btn-secondary {
+      background: #95a5a6;
+    }
+
+    .btn-secondary:hover {
+      background: #7f8c8d;
+    }
+
     .sessions-list {
       background: rgba(255, 255, 255, 0.95);
       padding: 2rem;
@@ -227,14 +235,24 @@
       display: flex;
       gap: 1rem;
       margin-top: 1rem;
+      flex-wrap: wrap;
     }
 
-    .add-driver-form input {
+    .add-driver-form input,
+    .add-driver-form select {
       flex: 1;
       padding: 0.75rem;
       border: 1px solid #ddd;
       border-radius: 5px;
       font-size: 1rem;
+      min-width: 120px;
+    }
+
+    .car-assignment-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
     }
 
     .empty-state {
@@ -271,7 +289,8 @@
       color: #2193b0;
     }
 
-    .edit-modal input {
+    .edit-modal input,
+    .edit-modal select {
       width: 100%;
       padding: 0.75rem;
       margin-bottom: 1rem;
@@ -332,6 +351,17 @@
     <div class="edit-modal-content">
       <h3>Edit Driver</h3>
       <input type="text" id="editDriverName" placeholder="Driver name" maxlength="50">
+      <select id="editCarNumber">
+        <option value="">Auto-assign car number</option>
+        <option value="1">Car 1</option>
+        <option value="2">Car 2</option>
+        <option value="3">Car 3</option>
+        <option value="4">Car 4</option>
+        <option value="5">Car 5</option>
+        <option value="6">Car 6</option>
+        <option value="7">Car 7</option>
+        <option value="8">Car 8</option>
+      </select>
       <div class="edit-modal-buttons">
         <button class="btn btn-danger" onclick="closeEditModal()">Cancel</button>
         <button class="btn" onclick="saveDriverEdit()">Save</button>
@@ -365,6 +395,7 @@
     let gameState = {};
     let currentEditSessionId = null;
     let currentEditDriverIndex = null;
+    let manualCarAssignment = false;
 
     async function authenticate() {
       const key = document.getElementById('accessKey').value;
@@ -421,6 +452,14 @@
       sessionsList.innerHTML = upcomingSessions.map((session, index) => {
         // Calculate the actual index in the original array
         const originalIndex = gameState.raceSessions.indexOf(session);
+
+        // Get used car numbers in this session
+        const usedCars = session.drivers.map(driver => driver.carNumber);
+
+        // Generate available car options
+        const availableCars = [1, 2, 3, 4, 5, 6, 7, 8].filter(car => !usedCars.includes(car));
+        const carOptions = availableCars.map(car => `<option value="${car}">Car ${car}</option>`).join('');
+
         return `
                 <div class="session-card">
                     <div class="session-header">
@@ -438,7 +477,7 @@
                                         <span>${driver.name}</span>
                                     </div>
                                     <div class="driver-actions">
-                                        <button class="btn btn-edit" onclick="openEditModal(${session.id}, ${driverIndex}, '${driver.name}')">Edit</button>
+                                        <button class="btn btn-edit" onclick="openEditModal(${session.id}, ${driverIndex}, '${driver.name}', ${driver.carNumber})">Edit</button>
                                         <button class="btn btn-danger" onclick="removeDriver(${session.id}, ${driverIndex})">Remove</button>
                                     </div>
                                 </div>
@@ -448,13 +487,28 @@
                     
                     ${session.drivers.length < 8 ? `
                         <div class="add-driver-form">
-                            <input type="text" id="driver-${session.id}" placeholder="Driver name" maxlength="50">
+                            <input type="text" id="driver-name-${session.id}" placeholder="Driver name" maxlength="50">
+                            ${manualCarAssignment ? `
+                                <select id="car-number-${session.id}">
+                                    <option value="">Auto-assign car number</option>
+                                    ${carOptions}
+                                </select>
+                            ` : ''}
                             <button class="btn" onclick="addDriver(${session.id})">Add Driver</button>
+                        </div>
+                        <div class="car-assignment-toggle">
+                            <input type="checkbox" id="toggle-${session.id}" ${manualCarAssignment ? 'checked' : ''} onchange="toggleCarAssignment(${session.id})">
+                            <label for="toggle-${session.id}">Manual car assignment</label>
                         </div>
                     ` : '<p style="color: #e74c3c; font-weight: bold;">Maximum 8 drivers per session</p>'}
                 </div>
             `;
       }).join('');
+    }
+
+    function toggleCarAssignment(sessionId) {
+      manualCarAssignment = !manualCarAssignment;
+      updateUI();
     }
 
     function addRaceSession() {
@@ -470,15 +524,25 @@
     }
 
     function addDriver(sessionId) {
-      const input = document.getElementById(`driver-${sessionId}`);
-      const driverName = input.value.trim();
+      const nameInput = document.getElementById(`driver-name-${sessionId}`);
+      const driverName = nameInput.value.trim();
+
+      let carNumber = null;
+      if (manualCarAssignment) {
+        const carSelect = document.getElementById(`car-number-${sessionId}`);
+        carNumber = carSelect.value ? parseInt(carSelect.value) : null;
+      }
 
       if (driverName && socket) {
         socket.emit('addDriver', {
           sessionId: sessionId,
-          driverName: driverName
+          driverName: driverName,
+          carNumber: carNumber
         });
-        input.value = '';
+        nameInput.value = '';
+        if (manualCarAssignment) {
+          carSelect.value = '';
+        }
       }
     }
 
@@ -491,11 +555,12 @@
       }
     }
 
-    function openEditModal(sessionId, driverIndex, currentName) {
+    function openEditModal(sessionId, driverIndex, currentName, currentCarNumber) {
       currentEditSessionId = sessionId;
       currentEditDriverIndex = driverIndex;
 
       document.getElementById('editDriverName').value = currentName;
+      document.getElementById('editCarNumber').value = currentCarNumber || '';
       document.getElementById('editModal').style.display = 'flex';
     }
 
@@ -507,27 +572,42 @@
 
     function saveDriverEdit() {
       const newName = document.getElementById('editDriverName').value.trim();
+      const newCarNumber = document.getElementById('editCarNumber').value ?
+        parseInt(document.getElementById('editCarNumber').value) : null;
 
       if (newName && socket && currentEditSessionId !== null && currentEditDriverIndex !== null) {
-        // We need to update the driver name in the session
+        // We need to update the driver name and car number in the session
         const session = gameState.raceSessions.find(s => s.id === currentEditSessionId);
         if (session && session.drivers[currentEditDriverIndex]) {
-          // Check if the new name is already used in this session
+          // Check for duplicate names in the same session
           const nameExists = session.drivers.some(
             (driver, index) => driver.name === newName && index !== currentEditDriverIndex
           );
 
-          if (!nameExists) {
-            session.drivers[currentEditDriverIndex].name = newName;
-            // Emit the updated state to all clients
+          // Check for duplicate car numbers in the same session (if manually assigning)
+          let carExists = false;
+          if (newCarNumber) {
+            carExists = session.drivers.some(
+              (driver, index) => driver.carNumber === newCarNumber && index !== currentEditDriverIndex
+            );
+          }
+
+          if (!nameExists && !carExists) {
+            // Emit the updated driver information
             socket.emit('updateDriver', {
               sessionId: currentEditSessionId,
               driverIndex: currentEditDriverIndex,
-              driverName: newName
+              driverName: newName,
+              carNumber: newCarNumber
             });
             closeEditModal();
           } else {
-            alert('A driver with this name already exists in this session.');
+            if (nameExists) {
+              alert('A driver with this name already exists in this session.');
+            }
+            if (carExists) {
+              alert('This car number is already assigned to another driver in this session.');
+            }
           }
         }
       }
@@ -535,13 +615,13 @@
 
     // Handle Enter key in driver input fields
     document.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter' && e.target.id.startsWith('driver-')) {
-        const sessionId = parseInt(e.target.id.split('-')[1]);
+      if (e.key === 'Enter' && e.target.id.startsWith('driver-name-')) {
+        const sessionId = parseInt(e.target.id.split('-')[2]);
         addDriver(sessionId);
       }
 
       // Handle Enter key in edit modal
-      if (e.key === 'Enter' && e.target.id === 'editDriverName') {
+      if (e.key === 'Enter' && (e.target.id === 'editDriverName' || e.target.id === 'editCarNumber')) {
         saveDriverEdit();
       }
     });
