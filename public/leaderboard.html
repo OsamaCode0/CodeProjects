@@ -320,11 +320,20 @@
         // Show current/active race
         raceToShow = gameState.raceSessions[gameState.currentRaceIndex];
         raceTitle = `Race Session ${gameState.currentRaceIndex + 1}`;
-      } else if (gameState.raceSessions.length > 0 && gameState.currentRaceIndex >= 0) {
+      } else if (gameState.raceSessions.length > 0) {
         // Show last completed race
-        const lastRaceIndex = gameState.raceSessions.length - 1;
-        raceToShow = gameState.raceSessions[lastRaceIndex];
-        raceTitle = `Race Session ${lastRaceIndex + 1} (Completed)`;
+        let lastCompletedIndex = -1;
+        for (let i = gameState.raceSessions.length - 1; i >= 0; i--) {
+          if (gameState.raceSessions[i].completed) {
+            lastCompletedIndex = i;
+            break;
+          }
+        }
+
+        if (lastCompletedIndex !== -1) {
+          raceToShow = gameState.raceSessions[lastCompletedIndex];
+          raceTitle = `Race Session ${lastCompletedIndex + 1} (Completed)`;
+        }
       }
 
       title.textContent = raceTitle || 'No Race Data';

@@ -429,7 +429,10 @@
         startBtn.style.display = 'inline-block';
         endBtn.style.display = 'none';
         modeControls.style.display = 'none';
-        startBtn.disabled = gameState.raceSessions.length === 0;
+
+        // Check if there are any uncompleted sessions to start
+        const hasUncompletedSessions = gameState.raceSessions.some(session => !session.completed);
+        startBtn.disabled = !hasUncompletedSessions;
       } else if (gameState.raceStatus === 'active') {
         startBtn.style.display = 'none';
         endBtn.style.display = 'none';
@@ -461,23 +464,29 @@
       } else if (gameState.currentRaceIndex >= gameState.raceSessions.length) {
         raceInfo.innerHTML = '<div class="empty-state">All race sessions completed.</div>';
       } else {
-        const nextSession = gameState.raceSessions[0];
-        raceInfo.innerHTML = `
-                    <h4>Next Race Session</h4>
-                    <div class="drivers-grid">
-                        ${nextSession.drivers.map(driver => `
-                            <div class="driver-card">
-                                <div class="car-number">${driver.carNumber}</div>
-                                <div>${driver.name}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
+        // Find first uncompleted session
+        const firstUncompletedIndex = gameState.raceSessions.findIndex(session => !session.completed);
+        if (firstUncompletedIndex !== -1) {
+          const nextSession = gameState.raceSessions[firstUncompletedIndex];
+          raceInfo.innerHTML = `
+                        <h4>Next Race Session (Session ${firstUncompletedIndex + 1})</h4>
+                        <div class="drivers-grid">
+                            ${nextSession.drivers.map(driver => `
+                                <div class="driver-card">
+                                    <div class="car-number">${driver.carNumber}</div>
+                                    <div>${driver.name}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+        } else {
+          raceInfo.innerHTML = '<div class="empty-state">All race sessions completed.</div>';
+        }
       }
     }
 
     function startRace() {
-      if (socket && gameState.raceSessions.length > 0) {
+      if (socket) {
         socket.emit('startRace');
       }
     }

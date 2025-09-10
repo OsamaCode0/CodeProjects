@@ -227,6 +227,7 @@ io.on('connection', (socket) => {
     const newSession = {
       id: Date.now(),
       drivers: [],
+      completed: false,
       createdAt: new Date(),
     };
     gameState.raceSessions.push(newSession);
@@ -235,21 +236,30 @@ io.on('connection', (socket) => {
   });
 
   socket.on('removeRaceSession', (sessionId) => {
-    gameState.raceSessions = gameState.raceSessions.filter(
-      (session) => session.id !== sessionId
+    const sessionIndex = gameState.raceSessions.findIndex(
+      (session) => session.id === sessionId
     );
-    if (gameState.currentRaceIndex >= gameState.raceSessions.length) {
-      gameState.currentRaceIndex = -1;
+
+    if (sessionIndex !== -1) {
+      // If we're removing the current or a future session, adjust currentRaceIndex
+      if (sessionIndex <= gameState.currentRaceIndex) {
+        gameState.currentRaceIndex = Math.max(
+          -1,
+          gameState.currentRaceIndex - 1
+        );
+      }
+
+      gameState.raceSessions.splice(sessionIndex, 1);
+      io.emit('gameState', cleanGameStateForEmission(gameState));
+      saveGameState();
     }
-    io.emit('gameState', cleanGameStateForEmission(gameState));
-    saveGameState();
   });
 
   socket.on('addDriver', (data) => {
     const { sessionId, driverName, carNumber } = data;
     const session = gameState.raceSessions.find((s) => s.id === sessionId);
 
-    if (session && session.drivers.length < 8) {
+    if (session && session.drivers.length < 8 && !session.completed) {
       // Check for duplicate names in the same session
       const nameExists = session.drivers.some(
         (driver) => driver.name === driverName
@@ -288,7 +298,7 @@ io.on('connection', (socket) => {
     const { sessionId, driverIndex, driverName, carNumber } = data;
     const session = gameState.raceSessions.find((s) => s.id === sessionId);
 
-    if (session && session.drivers[driverIndex]) {
+    if (session && session.drivers[driverIndex] && !session.completed) {
       // Check for duplicate names in the same session
       const nameExists = session.drivers.some(
         (driver, index) => driver.name === driverName && index !== driverIndex
@@ -318,7 +328,7 @@ io.on('connection', (socket) => {
   socket.on('removeDriver', (data) => {
     const { sessionId, driverIndex } = data;
     const session = gameState.raceSessions.find((s) => s.id === sessionId);
-    if (session) {
+    if (session && !session.completed) {
       session.drivers.splice(driverIndex, 1);
       io.emit('gameState', cleanGameStateForEmission(gameState));
       saveGameState();
@@ -328,9 +338,26 @@ io.on('connection', (socket) => {
   // Handle race control
   socket.on('startRace', () => {
     if (gameState.raceSessions.length > 0) {
-      gameState.currentRaceIndex = 0;
+      // If no current race index, find the first uncompleted session
+      if (gameState.currentRaceIndex === -1) {
+        const firstUncompletedIndex = gameState.raceSessions.findIndex(
+          (session) => !session.completed
+        );
+        if (firstUncompletedIndex !== -1) {
+          gameState.currentRaceIndex = firstUncompletedIndex;
+        } else {
+          // All sessions are completed
+          return;
+        }
+      }
+
+      // Make sure the current session isn't already completed
+      if (gameState.raceSessions[gameState.currentRaceIndex].completed) {
+        return;
+      }
+
       gameState.raceStatus = 'active';
-      gameState.raceMode = 'safe'; // Change from danger to safe when race starts
+      gameState.raceMode = 'safe';
       gameState.raceTimeRemaining = RACE_DURATION;
       gameState.raceStartTime = Date.now();
 
@@ -365,24 +392,33 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Handle race session completion
   socket.on('endRaceSession', () => {
     if (gameState.raceStatus === 'finished') {
-      // Instead of removing the session, just move to the next one
-      gameState.currentRaceIndex++;
-
-      // Check if we have more sessions
-      if (gameState.currentRaceIndex < gameState.raceSessions.length) {
-        // More sessions available, go back to waiting state
-        gameState.raceStatus = 'waiting';
-        gameState.raceMode = 'danger';
-      } else {
-        // No more sessions
-        gameState.currentRaceIndex = -1;
-        gameState.raceStatus = 'waiting';
-        gameState.raceMode = 'danger';
+      // Mark the current session as completed
+      if (
+        gameState.currentRaceIndex >= 0 &&
+        gameState.currentRaceIndex < gameState.raceSessions.length
+      ) {
+        gameState.raceSessions[gameState.currentRaceIndex].completed = true;
       }
 
+      // Find the next uncompleted session
+      const nextSessionIndex = gameState.raceSessions.findIndex(
+        (session, index) =>
+          index > gameState.currentRaceIndex && !session.completed
+      );
+
+      if (nextSessionIndex !== -1) {
+        // There's another session to run
+        gameState.currentRaceIndex = nextSessionIndex;
+        gameState.raceStatus = 'waiting';
+      } else {
+        // No more sessions to run
+        gameState.currentRaceIndex = -1;
+        gameState.raceStatus = 'waiting';
+      }
+
+      gameState.raceMode = 'danger';
       gameState.raceTimeRemaining = 0;
       gameState.lapTimes = {};
 

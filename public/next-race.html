@@ -263,21 +263,25 @@
       // Determine what to show based on race state
       let nextRaceIndex = -1;
 
-      if (gameState.raceStatus === 'waiting' && gameState.raceSessions.length > 0) {
-        // Show next race (first session)
-        nextRaceIndex = 0;
+      if (gameState.raceStatus === 'waiting') {
+        // Find first uncompleted session
+        nextRaceIndex = gameState.raceSessions.findIndex(session => !session.completed);
         raceAnnouncement.style.display = 'none';
-      } else if (gameState.raceStatus === 'active' && gameState.currentRaceIndex + 1 < gameState.raceSessions.length) {
-        // Show upcoming race (next session after current)
-        nextRaceIndex = gameState.currentRaceIndex + 1;
-        raceAnnouncement.style.display = 'none';
-      } else if (gameState.raceStatus === 'finished' && gameState.currentRaceIndex + 1 < gameState.raceSessions.length) {
-        // Show next race with announcement to proceed to paddock
-        nextRaceIndex = gameState.currentRaceIndex + 1;
-        raceAnnouncement.style.display = 'block';
+      } else if (gameState.raceStatus === 'active' || gameState.raceStatus === 'finished') {
+        // Find next uncompleted session after current
+        nextRaceIndex = gameState.raceSessions.findIndex(
+          (session, index) => index > gameState.currentRaceIndex && !session.completed
+        );
+
+        // Show announcement if race is finished and there's a next race
+        if (gameState.raceStatus === 'finished' && nextRaceIndex !== -1) {
+          raceAnnouncement.style.display = 'block';
+        } else {
+          raceAnnouncement.style.display = 'none';
+        }
       }
 
-      if (nextRaceIndex >= 0 && nextRaceIndex < gameState.raceSessions.length) {
+      if (nextRaceIndex !== -1) {
         const nextSession = gameState.raceSessions[nextRaceIndex];
 
         waitingMessage.style.display = 'none';
@@ -304,9 +308,12 @@
         if (gameState.raceSessions.length === 0) {
           document.querySelector('.waiting-title').textContent = '⏳ No Race Sessions Configured';
           document.querySelector('.waiting-message p').textContent = 'Please wait for race configuration';
-        } else if (gameState.currentRaceIndex >= gameState.raceSessions.length) {
-          document.querySelector('.waiting-title').textContent = '🏁 All Races Completed';
-          document.querySelector('.waiting-message p').textContent = 'Thank you for participating!';
+        } else {
+          const completedSessions = gameState.raceSessions.filter(session => session.completed);
+          if (completedSessions.length === gameState.raceSessions.length) {
+            document.querySelector('.waiting-title').textContent = '🏁 All Races Completed';
+            document.querySelector('.waiting-message p').textContent = 'Thank you for participating!';
+          }
         }
       }
     }

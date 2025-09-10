@@ -1,47 +1,49 @@
 {
   "raceSessions": [
     {
-      "id": 1757457404317,
+      "id": 1757504146998,
       "drivers": [
         {
-          "name": "hyue",
+          "name": "Oscar",
           "carNumber": 1
         },
         {
-          "name": "nishida",
+          "name": "Lando",
           "carNumber": 2
         },
         {
-          "name": "hiko",
+          "name": "Charles",
           "carNumber": 3
         }
       ],
-      "createdAt": "2025-09-09T22:36:44.317Z"
+      "completed": true,
+      "createdAt": "2025-09-10T11:35:46.998Z"
     },
     {
-      "id": 1757457425305,
+      "id": 1757504314052,
       "drivers": [
         {
-          "name": "himura",
-          "carNumber": 5
+          "name": "Lewis",
+          "carNumber": 1
         },
         {
-          "name": "seijuro",
-          "carNumber": 4
+          "name": "George",
+          "carNumber": 2
         },
         {
-          "name": "shinomori",
-          "carNumber": 7
+          "name": "Andrea",
+          "carNumber": 3
         }
       ],
-      "createdAt": "2025-09-09T22:37:05.305Z"
+      "completed": true,
+      "createdAt": "2025-09-10T11:38:34.052Z"
     }
   ],
-  "currentRaceIndex": 1,
+  "currentRaceIndex": -1,
   "raceStatus": "waiting",
   "raceMode": "danger",
   "raceTimeRemaining": 0,
   "lapTimes": {},
-  "raceStartTime": 1757499071309,
-  "lastUpdated": 1757502423208
+  "raceStartTime": 1757504548176,
+  "lastUpdated": 1757505458347
 }
