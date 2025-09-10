@@ -365,25 +365,24 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Handle race session completion
   socket.on('endRaceSession', () => {
     if (gameState.raceStatus === 'finished') {
-      // Remove the completed session from the list
-      if (
-        gameState.currentRaceIndex >= 0 &&
-        gameState.currentRaceIndex < gameState.raceSessions.length
-      ) {
-        gameState.raceSessions.splice(gameState.currentRaceIndex, 1);
-      }
+      // Instead of removing the session, just move to the next one
+      gameState.currentRaceIndex++;
 
-      // Move to next session
-      if (gameState.raceSessions.length > 0) {
-        gameState.currentRaceIndex = 0; // Always set to the first session since we removed the completed one
+      // Check if we have more sessions
+      if (gameState.currentRaceIndex < gameState.raceSessions.length) {
+        // More sessions available, go back to waiting state
+        gameState.raceStatus = 'waiting';
+        gameState.raceMode = 'danger';
       } else {
+        // No more sessions
         gameState.currentRaceIndex = -1;
+        gameState.raceStatus = 'waiting';
+        gameState.raceMode = 'danger';
       }
 
-      gameState.raceStatus = 'waiting';
-      gameState.raceMode = 'danger'; // Change back to danger mode when session ends
       gameState.raceTimeRemaining = 0;
       gameState.lapTimes = {};
 

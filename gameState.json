@@ -37,39 +37,11 @@
       "createdAt": "2025-09-09T22:37:05.305Z"
     }
   ],
-  "currentRaceIndex": 0,
-  "raceStatus": "finished",
-  "raceMode": "finish",
+  "currentRaceIndex": 1,
+  "raceStatus": "waiting",
+  "raceMode": "danger",
   "raceTimeRemaining": 0,
-  "lapTimes": {
-    "1": {
-      "laps": [
-        6727,
-        12321
-      ],
-      "fastestLap": 5594,
-      "currentLap": 2,
-      "driverName": "hyue"
-    },
-    "2": {
-      "laps": [
-        4497,
-        10421
-      ],
-      "fastestLap": 4497,
-      "currentLap": 2,
-      "driverName": "nishida"
-    },
-    "3": {
-      "laps": [
-        5480,
-        7931
-      ],
-      "fastestLap": 2451,
-      "currentLap": 2,
-      "driverName": "hiko"
-    }
-  },
-  "raceStartTime": 1757457464896,
-  "lastUpdated": 1757457949927
+  "lapTimes": {},
+  "raceStartTime": 1757499071309,
+  "lastUpdated": 1757502423208
 }
