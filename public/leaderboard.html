@@ -312,6 +312,13 @@
       const content = document.getElementById('leaderboardContent');
       const title = document.getElementById('leaderboardTitle');
 
+      // Only show data when race is active
+      if (gameState.raceStatus == 'waiting') {
+        content.innerHTML = '<div class="empty-state">No race data available</div>';
+        title.textContent = 'Race Coming Soon';
+        return;
+      }
+
       // Determine which race to show
       let raceToShow = null;
       let raceTitle = '';
@@ -336,7 +343,7 @@
         }
       }
 
-      title.textContent = raceTitle || 'No Race Data';
+      title.textContent = raceTitle || 'Race Coming Soon';
 
       if (!raceToShow || raceToShow.drivers.length === 0) {
         content.innerHTML = '<div class="empty-state">No race data available</div>';
