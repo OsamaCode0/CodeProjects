@@ -62,6 +62,16 @@ let gameState = {
 // Get race duration from environment (10 minutes normal, 1 minute dev)
 const RACE_DURATION = parseInt(process.env.RACE_DURATION) || 600000; // Default 10 minutes
 
+// Helper function to check for duplicate driver names (case-insensitive)
+function hasDuplicateDriverName(session, driverName, excludeIndex = -1) {
+  const normalizedNewName = driverName.toLowerCase().trim();
+  return session.drivers.some(
+    (driver, index) =>
+      index !== excludeIndex &&
+      driver.name.toLowerCase().trim() === normalizedNewName
+  );
+}
+
 // State persistence
 const STATE_FILE = 'gameState.json';
 
@@ -260,10 +270,15 @@ io.on('connection', (socket) => {
     const session = gameState.raceSessions.find((s) => s.id === sessionId);
 
     if (session && session.drivers.length < 8 && !session.completed) {
-      // Check for duplicate names in the same session
-      const nameExists = session.drivers.some(
-        (driver) => driver.name === driverName
-      );
+      // Check for duplicate names in the same session (case-insensitive)
+      if (hasDuplicateDriverName(session, driverName)) {
+        // Emit an error event to the specific client
+        socket.emit(
+          'driverError',
+          'A driver with this name already exists in this session.'
+        );
+        return;
+      }
 
       // If carNumber is provided, check for duplicate car numbers in the same session
       let carExists = false;
@@ -273,7 +288,7 @@ io.on('connection', (socket) => {
         );
       }
 
-      if (!nameExists && !carExists) {
+      if (!carExists) {
         // If no car number provided, auto-assign the next available number
         let assignedCarNumber = carNumber;
         if (!assignedCarNumber) {
@@ -285,11 +300,16 @@ io.on('connection', (socket) => {
         }
 
         session.drivers.push({
-          name: driverName,
+          name: driverName.trim(),
           carNumber: assignedCarNumber,
         });
         io.emit('gameState', cleanGameStateForEmission(gameState));
         saveGameState();
+      } else {
+        socket.emit(
+          'driverError',
+          'This car number is already assigned to another driver in this session.'
+        );
       }
     }
   });
@@ -299,10 +319,14 @@ io.on('connection', (socket) => {
     const session = gameState.raceSessions.find((s) => s.id === sessionId);
 
     if (session && session.drivers[driverIndex] && !session.completed) {
-      // Check for duplicate names in the same session
-      const nameExists = session.drivers.some(
-        (driver, index) => driver.name === driverName && index !== driverIndex
-      );
+      // Check for duplicate names in the same session (case-insensitive)
+      if (hasDuplicateDriverName(session, driverName, driverIndex)) {
+        socket.emit(
+          'driverError',
+          'A driver with this name already exists in this session.'
+        );
+        return;
+      }
 
       // If carNumber is provided, check for duplicate car numbers in the same session
       let carExists = false;
@@ -313,14 +337,19 @@ io.on('connection', (socket) => {
         );
       }
 
-      if (!nameExists && !carExists) {
-        session.drivers[driverIndex].name = driverName;
+      if (!carExists) {
+        session.drivers[driverIndex].name = driverName.trim();
         // Only update car number if provided (null means auto-assign)
         if (carNumber) {
           session.drivers[driverIndex].carNumber = carNumber;
         }
         io.emit('gameState', cleanGameStateForEmission(gameState));
         saveGameState();
+      } else {
+        socket.emit(
+          'driverError',
+          'This car number is already assigned to another driver in this session.'
+        );
       }
     }
   });
@@ -498,37 +527,21 @@ loadGameState().then(() => {
 
     // Add ngrok setup if --ngrok flag is provided
     if (process.argv.includes('--ngrok')) {
-      if (!process.env.NGROK_AUTHTOKEN) {
-        console.error(
-          '\nError: NGROK_AUTHTOKEN environment variable is not set.'
-        );
-        console.error(
-          'Please get your authtoken from https://dashboard.ngrok.com/get-started/your-authtoken'
-        );
-        console.error(
-          'Then set it: export NGROK_AUTHTOKEN=your_authtoken_here'
-        );
-        return;
-      }
-
       try {
-        console.log('\nSetting up ngrok tunnel...');
-        await ngrok.authtoken(process.env.NGROK_AUTHTOKEN);
-        const url = await ngrok.connect(PORT);
-
-        console.log('\n✅ Ngrok tunnel established!');
-        console.log('🌐 Public URL:', url);
-        console.log(
-          '\nYou can now access your application from anywhere using this URL.'
-        );
-
-        // Save the URL to a file
-        await fs.writeFile(
-          path.join(__dirname, 'ngrok-url.txt'),
-          `Ngrok URL: ${url}\nGenerated at: ${new Date().toISOString()}\n`
-        );
-
-        console.log('\nURL saved to ngrok-url.txt');
+        const url = await ngrok.connect({
+          addr: PORT,
+          authtoken: process.env.NGROK_AUTHTOKEN, // Optional: if you have an ngrok account
+        });
+        console.log('\nngrok tunnel created:');
+        console.log(`- Public URL: ${url}`);
+        console.log('\nShare this URL to allow access from anywhere:');
+        console.log(`- Front Desk: ${url}/front-desk`);
+        console.log(`- Race Control: ${url}/race-control`);
+        console.log(`- Lap Line Tracker: ${url}/lap-line-tracker`);
+        console.log(`- Leaderboard: ${url}/leaderboard`);
+        console.log(`- Next Race: ${url}/next-race`);
+        console.log(`- Race Countdown: ${url}/race-countdown`);
+        console.log(`- Race Flags: ${url}/race-flags`);
       } catch (error) {
         console.error('Error creating ngrok tunnel:', error);
       }

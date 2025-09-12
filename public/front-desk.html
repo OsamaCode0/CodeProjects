@@ -333,135 +333,140 @@
   </style>
 </head>
 
-body>
-<!-- Authentication Overlay -->
-<div id="authOverlay" class="auth-overlay">
-  <div class="auth-modal">
-    <h2>Front Desk Access</h2>
-    <p>Enter your receptionist access key:</p>
-    <input type="password" id="accessKey" placeholder="Access Key">
-    <br>
-    <button onclick="authenticate()">Access Interface</button>
-    <div id="authError" class="error-message"></div>
-  </div>
-</div>
-
-<!-- Edit Driver Modal -->
-<div id="editModal" class="edit-modal">
-  <div class="edit-modal-content">
-    <h3>Edit Driver</h3>
-    <input type="text" id="editDriverName" placeholder="Driver name" maxlength="50">
-    <select id="editCarNumber">
-      <option value="">Auto-assign car number</option>
-      <option value="1">Car 1</option>
-      <option value="2">Car 2</option>
-      <option value="3">Car 3</option>
-      <option value="4">Car 4</option>
-      <option value="5">Car 5</option>
-      <option value="6">Car 6</option>
-      <option value="7">Car 7</option>
-      <option value="8">Car 8</option>
-    </select>
-    <div class="edit-modal-buttons">
-      <button class="btn btn-danger" onclick="closeEditModal()">Cancel</button>
-      <button class="btn" onclick="saveDriverEdit()">Save</button>
+<body>
+  <!-- Authentication Overlay -->
+  <div id="authOverlay" class="auth-overlay">
+    <div class="auth-modal">
+      <h2>Front Desk Access</h2>
+      <p>Enter your receptionist access key:</p>
+      <input type="password" id="accessKey" placeholder="Access Key">
+      <br>
+      <button onclick="authenticate()">Access Interface</button>
+      <div id="authError" class="error-message"></div>
     </div>
   </div>
-</div>
 
-<!-- Main Content -->
-<div id="mainContent" class="main-content">
-  <div class="header">
-    <h1>Front Desk</h1>
-    <p class="subtitle">Race Session Management</p>
-  </div>
-
-  <div class="controls">
-    <h2>Race Session Controls</h2>
-    <button class="btn" onclick="addRaceSession()">Add New Race Session</button>
-  </div>
-
-  <div class="sessions-list">
-    <h2>Upcoming Race Sessions</h2>
-    <div id="sessionsList">
-      <!-- Sessions will be populated here -->
+  <!-- Edit Driver Modal -->
+  <div id="editModal" class="edit-modal">
+    <div class="edit-modal-content">
+      <h3>Edit Driver</h3>
+      <input type="text" id="editDriverName" placeholder="Driver name" maxlength="50">
+      <select id="editCarNumber">
+        <option value="">Auto-assign car number</option>
+        <option value="1">Car 1</option>
+        <option value="2">Car 2</option>
+        <option value="3">Car 3</option>
+        <option value="4">Car 4</option>
+        <option value="5">Car 5</option>
+        <option value="6">Car 6</option>
+        <option value="7">Car 7</option>
+        <option value="8">Car 8</option>
+      </select>
+      <div class="edit-modal-buttons">
+        <button class="btn btn-danger" onclick="closeEditModal()">Cancel</button>
+        <button class="btn" onclick="saveDriverEdit()">Save</button>
+      </div>
     </div>
   </div>
-</div>
 
-<script src="/socket.io/socket.io.js"></script>
-<script>
-  let socket;
-  let gameState = {};
-  let currentEditSessionId = null;
-  let currentEditDriverIndex = null;
-  let manualCarAssignment = false;
+  <!-- Main Content -->
+  <div id="mainContent" class="main-content">
+    <div class="header">
+      <h1>Front Desk</h1>
+      <p class="subtitle">Race Session Management</p>
+    </div>
 
-  async function authenticate() {
-    const key = document.getElementById('accessKey').value;
-    const errorDiv = document.getElementById('authError');
+    <div class="controls">
+      <h2>Race Session Controls</h2>
+      <button class="btn" onclick="addRaceSession()">Add New Race Session</button>
+    </div>
 
-    try {
-      const response = await fetch('/authenticate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          key: key,
-          interface: 'front-desk'
-        })
+    <div class="sessions-list">
+      <h2>Upcoming Race Sessions</h2>
+      <div id="sessionsList">
+        <!-- Sessions will be populated here -->
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    let socket;
+    let gameState = {};
+    let currentEditSessionId = null;
+    let currentEditDriverIndex = null;
+    let manualCarAssignment = false;
+
+    async function authenticate() {
+      const key = document.getElementById('accessKey').value;
+      const errorDiv = document.getElementById('authError');
+
+      try {
+        const response = await fetch('/authenticate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            key: key,
+            interface: 'front-desk'
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          document.getElementById('authOverlay').style.display = 'none';
+          document.getElementById('mainContent').style.display = 'block';
+          initializeSocket();
+        } else {
+          errorDiv.textContent = 'Invalid access key. Please try again.';
+        }
+      } catch (error) {
+        errorDiv.textContent = 'Authentication failed. Please try again.';
+      }
+    }
+
+    function initializeSocket() {
+      socket = io();
+
+      socket.on('gameState', (state) => {
+        gameState = state;
+        updateUI();
       });
 
-      const result = await response.json();
+      // Listen for driver errors
+      socket.on('driverError', (errorMessage) => {
+        alert('Error: ' + errorMessage);
+      });
+    }
 
-      if (result.success) {
-        document.getElementById('authOverlay').style.display = 'none';
-        document.getElementById('mainContent').style.display = 'block';
-        initializeSocket();
-      } else {
-        errorDiv.textContent = 'Invalid access key. Please try again.';
+    function updateUI() {
+      const sessionsList = document.getElementById('sessionsList');
+
+      // Filter to show only upcoming sessions (not completed and after current race)
+      const upcomingSessions = gameState.raceSessions.filter((session, index) => {
+        return !session.completed &&
+          (gameState.currentRaceIndex === -1 || index > gameState.currentRaceIndex);
+      });
+
+      if (upcomingSessions.length === 0) {
+        sessionsList.innerHTML = '<div class="empty-state">No upcoming race sessions</div>';
+        return;
       }
-    } catch (error) {
-      errorDiv.textContent = 'Authentication failed. Please try again.';
-    }
-  }
 
-  function initializeSocket() {
-    socket = io();
+      sessionsList.innerHTML = upcomingSessions.map((session, index) => {
+        // Calculate the actual index in the original array
+        const originalIndex = gameState.raceSessions.indexOf(session);
 
-    socket.on('gameState', (state) => {
-      gameState = state;
-      updateUI();
-    });
-  }
+        // Get used car numbers in this session
+        const usedCars = session.drivers.map(driver => driver.carNumber);
 
-  function updateUI() {
-    const sessionsList = document.getElementById('sessionsList');
+        // Generate available car options
+        const availableCars = [1, 2, 3, 4, 5, 6, 7, 8].filter(car => !usedCars.includes(car));
+        const carOptions = availableCars.map(car => `<option value="${car}">Car ${car}</option>`).join('');
 
-    // Filter to show only upcoming sessions (not completed and after current race)
-    const upcomingSessions = gameState.raceSessions.filter((session, index) => {
-      return !session.completed &&
-        (gameState.currentRaceIndex === -1 || index > gameState.currentRaceIndex);
-    });
-
-    if (upcomingSessions.length === 0) {
-      sessionsList.innerHTML = '<div class="empty-state">No upcoming race sessions</div>';
-      return;
-    }
-
-    sessionsList.innerHTML = upcomingSessions.map((session, index) => {
-      // Calculate the actual index in the original array
-      const originalIndex = gameState.raceSessions.indexOf(session);
-
-      // Get used car numbers in this session
-      const usedCars = session.drivers.map(driver => driver.carNumber);
-
-      // Generate available car options
-      const availableCars = [1, 2, 3, 4, 5, 6, 7, 8].filter(car => !usedCars.includes(car));
-      const carOptions = availableCars.map(car => `<option value="${car}">Car ${car}</option>`).join('');
-
-      return `
+        return `
                 <div class="session-card">
                     <div class="session-header">
                         <div class="session-title">Race Session ${originalIndex + 1}</div>
@@ -470,20 +475,20 @@ body>
                     
                     <div class="drivers-list">
                         ${session.drivers.length === 0 ?
-          '<div class="empty-state">No drivers assigned yet.</div>' :
-          session.drivers.map((driver, driverIndex) => `
+            '<div class="empty-state">No drivers assigned yet.</div>' :
+            session.drivers.map((driver, driverIndex) => `
                                 <div class="driver-item">
                                     <div class="driver-info">
                                         <div class="car-number">${driver.carNumber}</div>
                                         <span>${driver.name}</span>
                                     </div>
                                     <div class="driver-actions">
-                                        <button class="btn btn-edit" onclick="openEditModal(${session.id}, ${driverIndex}, '${driver.name}', ${driver.carNumber})">Edit</button>
+                                        <button class="btn btn-edit" onclick="openEditModal(${session.id}, ${driverIndex}, '${driver.name.replace(/'/g, "\\'")}', ${driver.carNumber})">Edit</button>
                                         <button class="btn btn-danger" onclick="removeDriver(${session.id}, ${driverIndex})">Remove</button>
                                     </div>
                                 </div>
                             `).join('')
-        }
+          }
                     </div>
                     
                     ${session.drivers.length < 8 ? `
@@ -504,143 +509,116 @@ body>
                     ` : '<p style="color: #e74c3c; font-weight: bold;">Maximum 8 drivers per session</p>'}
                 </div>
             `;
-    }).join('');
-  }
-
-  function toggleCarAssignment(sessionId) {
-    manualCarAssignment = !manualCarAssignment;
-    updateUI();
-  }
-
-  function addRaceSession() {
-    if (socket) {
-      socket.emit('addRaceSession');
-    }
-  }
-
-  function removeRaceSession(sessionId) {
-    if (socket && confirm('Are you sure you want to remove this race session?')) {
-      socket.emit('removeRaceSession', sessionId);
-    }
-  }
-
-  function addDriver(sessionId) {
-    const nameInput = document.getElementById(`driver-name-${sessionId}`);
-    const driverName = nameInput.value.trim();
-
-    let carNumber = null;
-    if (manualCarAssignment) {
-      const carSelect = document.getElementById(`car-number-${sessionId}`);
-      carNumber = carSelect.value ? parseInt(carSelect.value) : null;
+      }).join('');
     }
 
-    if (driverName && socket) {
-      socket.emit('addDriver', {
-        sessionId: sessionId,
-        driverName: driverName,
-        carNumber: carNumber
-      });
-      nameInput.value = '';
+    function toggleCarAssignment(sessionId) {
+      manualCarAssignment = !manualCarAssignment;
+      updateUI();
+    }
+
+    function addRaceSession() {
+      if (socket) {
+        socket.emit('addRaceSession');
+      }
+    }
+
+    function removeRaceSession(sessionId) {
+      if (socket && confirm('Are you sure you want to remove this race session?')) {
+        socket.emit('removeRaceSession', sessionId);
+      }
+    }
+
+    function addDriver(sessionId) {
+      const nameInput = document.getElementById(`driver-name-${sessionId}`);
+      const driverName = nameInput.value.trim();
+
+      let carNumber = null;
       if (manualCarAssignment) {
-        carSelect.value = '';
+        const carSelect = document.getElementById(`car-number-${sessionId}`);
+        carNumber = carSelect.value ? parseInt(carSelect.value) : null;
       }
-    }
-  }
 
-  function removeDriver(sessionId, driverIndex) {
-    if (socket && confirm('Are you sure you want to remove this driver?')) {
-      socket.emit('removeDriver', {
-        sessionId: sessionId,
-        driverIndex: driverIndex
-      });
-    }
-  }
-
-  function openEditModal(sessionId, driverIndex, currentName, currentCarNumber) {
-    currentEditSessionId = sessionId;
-    currentEditDriverIndex = driverIndex;
-
-    document.getElementById('editDriverName').value = currentName;
-    document.getElementById('editCarNumber').value = currentCarNumber || '';
-    document.getElementById('editModal').style.display = 'flex';
-  }
-
-  function closeEditModal() {
-    document.getElementById('editModal').style.display = 'none';
-    currentEditSessionId = null;
-    currentEditDriverIndex = null;
-  }
-
-  function saveDriverEdit() {
-    const newName = document.getElementById('editDriverName').value.trim();
-    const newCarNumber = document.getElementById('editCarNumber').value ?
-      parseInt(document.getElementById('editCarNumber').value) : null;
-
-    if (newName && socket && currentEditSessionId !== null && currentEditDriverIndex !== null) {
-      // We need to update the driver name and car number in the session
-      const session = gameState.raceSessions.find(s => s.id === currentEditSessionId);
-      if (session && session.drivers[currentEditDriverIndex]) {
-        // Check for duplicate names in the same session
-        const nameExists = session.drivers.some(
-          (driver, index) => driver.name === newName && index !== currentEditDriverIndex
-        );
-
-        // Check for duplicate car numbers in the same session (if manually assigning)
-        let carExists = false;
-        if (newCarNumber) {
-          carExists = session.drivers.some(
-            (driver, index) => driver.carNumber === newCarNumber && index !== currentEditDriverIndex
-          );
-        }
-
-        if (!nameExists && !carExists) {
-          // Emit the updated driver information
-          socket.emit('updateDriver', {
-            sessionId: currentEditSessionId,
-            driverIndex: currentEditDriverIndex,
-            driverName: newName,
-            carNumber: newCarNumber
-          });
-          closeEditModal();
-        } else {
-          if (nameExists) {
-            alert('A driver with this name already exists in this session.');
-          }
-          if (carExists) {
-            alert('This car number is already assigned to another driver in this session.');
-          }
+      if (driverName && socket) {
+        socket.emit('addDriver', {
+          sessionId: sessionId,
+          driverName: driverName,
+          carNumber: carNumber
+        });
+        nameInput.value = '';
+        if (manualCarAssignment) {
+          carSelect.value = '';
         }
       }
     }
-  }
 
-  // Handle Enter key in driver input fields
-  document.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && e.target.id.startsWith('driver-name-')) {
-      const sessionId = parseInt(e.target.id.split('-')[2]);
-      addDriver(sessionId);
+    function removeDriver(sessionId, driverIndex) {
+      if (socket && confirm('Are you sure you want to remove this driver?')) {
+        socket.emit('removeDriver', {
+          sessionId: sessionId,
+          driverIndex: driverIndex
+        });
+      }
     }
 
-    // Handle Enter key in edit modal
-    if (e.key === 'Enter' && (e.target.id === 'editDriverName' || e.target.id === 'editCarNumber')) {
-      saveDriverEdit();
-    }
-  });
+    function openEditModal(sessionId, driverIndex, currentName, currentCarNumber) {
+      currentEditSessionId = sessionId;
+      currentEditDriverIndex = driverIndex;
 
-  // Handle Enter key in access key input
-  document.getElementById('accessKey').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      authenticate();
+      document.getElementById('editDriverName').value = currentName;
+      document.getElementById('editCarNumber').value = currentCarNumber || '';
+      document.getElementById('editModal').style.display = 'flex';
     }
-  });
 
-  // Close modal when clicking outside
-  document.getElementById('editModal').addEventListener('click', (e) => {
-    if (e.target.id === 'editModal') {
-      closeEditModal();
+    function closeEditModal() {
+      document.getElementById('editModal').style.display = 'none';
+      currentEditSessionId = null;
+      currentEditDriverIndex = null;
     }
-  });
-</script>
+
+    function saveDriverEdit() {
+      const newName = document.getElementById('editDriverName').value.trim();
+      const newCarNumber = document.getElementById('editCarNumber').value ?
+        parseInt(document.getElementById('editCarNumber').value) : null;
+
+      if (newName && socket && currentEditSessionId !== null && currentEditDriverIndex !== null) {
+        socket.emit('updateDriver', {
+          sessionId: currentEditSessionId,
+          driverIndex: currentEditDriverIndex,
+          driverName: newName,
+          carNumber: newCarNumber
+        });
+        closeEditModal();
+      }
+    }
+
+    // Handle Enter key in driver input fields
+    document.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && e.target.id.startsWith('driver-name-')) {
+        const sessionId = parseInt(e.target.id.split('-')[2]);
+        addDriver(sessionId);
+      }
+
+      // Handle Enter key in edit modal
+      if (e.key === 'Enter' && (e.target.id === 'editDriverName' || e.target.id === 'editCarNumber')) {
+        saveDriverEdit();
+      }
+    });
+
+    // Handle Enter key in access key input
+    document.getElementById('accessKey').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        authenticate();
+      }
+    });
+
+    // Close modal when clicking outside
+    document.getElementById('editModal').addEventListener('click', (e) => {
+      if (e.target.id === 'editModal') {
+        closeEditModal();
+      }
+    });
+  </script>
 </body>
 
 </html>
