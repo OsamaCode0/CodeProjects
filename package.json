@@ -4,9 +4,9 @@
   "description": "Real-time racetrack management system for Beachside Racetrack",
   "main": "server.js",
   "scripts": {
-    "start": "cross-env RACE_DURATION=600000 node server.js",
-    "dev": "cross-env RACE_DURATION=60000 node server.js",
-    "dev:ngrok": "cross-env RACE_DURATION=60000 node server.js --ngrok",
+    "start": "cross-env RACE_DURATION=600000 PORT=3000 node server.js",
+    "dev": "cross-env RACE_DURATION=60000 PORT=3001 node server.js",
+    "dev:ngrok": "cross-env RACE_DURATION=60000 PORT=3001 node server.js --ngrok",
     "ngrok": "node ngrok-setup.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
