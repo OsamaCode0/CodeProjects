@@ -241,8 +241,7 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    let socket;
-    let gameState = {};
+    let sessionJustEnded = false;
 
     function initializeSocket() {
       socket = io();
@@ -250,6 +249,18 @@
       socket.on('gameState', (state) => {
         gameState = state;
         updateUI();
+      });
+
+      // Listen for the specific session ended event
+      socket.on('raceSessionEnded', () => {
+        sessionJustEnded = true;
+        updateUI();
+
+        // Reset the flag after a delay (so announcement shows for a reasonable time)
+        setTimeout(() => {
+          sessionJustEnded = false;
+          updateUI();
+        }, 300000); // Show for 5 min
       });
     }
 
@@ -260,25 +271,30 @@
       const raceTitle = document.getElementById('raceTitle');
       const driversGrid = document.getElementById('driversGrid');
 
+      // Reset announcement unless session just ended
+      if (!sessionJustEnded) {
+        raceAnnouncement.style.display = 'none';
+      }
+
       // Determine what to show based on race state
       let nextRaceIndex = -1;
 
       if (gameState.raceStatus === 'waiting') {
         // Find first uncompleted session
         nextRaceIndex = gameState.raceSessions.findIndex(session => !session.completed);
-        raceAnnouncement.style.display = 'none';
       } else if (gameState.raceStatus === 'active' || gameState.raceStatus === 'finished') {
         // Find next uncompleted session after current
-        nextRaceIndex = gameState.raceSessions.findIndex(
-          (session, index) => index > gameState.currentRaceIndex && !session.completed
-        );
-
-        // Show announcement if race is finished and there's a next race
-        if (gameState.raceStatus === 'finished' && nextRaceIndex !== -1) {
-          raceAnnouncement.style.display = 'none';
-        } else {
-          raceAnnouncement.style.display = 'block';
+        for (let i = gameState.currentRaceIndex + 1; i < gameState.raceSessions.length; i++) {
+          if (!gameState.raceSessions[i].completed) {
+            nextRaceIndex = i;
+            break;
+          }
         }
+      }
+
+      // Show announcement only when sessionJustEnded flag is true
+      if (sessionJustEnded && nextRaceIndex !== -1) {
+        raceAnnouncement.style.display = 'block';
       }
 
       if (nextRaceIndex !== -1) {
@@ -291,11 +307,11 @@
 
         if (nextSession.drivers.length > 0) {
           driversGrid.innerHTML = nextSession.drivers.map(driver => `
-                        <div class="driver-card">
-                            <div class="car-number">${driver.carNumber}</div>
-                            <div class="driver-name">${driver.name}</div>
-                        </div>
-                    `).join('');
+        <div class="driver-card">
+          <div class="car-number">${driver.carNumber}</div>
+          <div class="driver-name">${driver.name}</div>
+        </div>
+      `).join('');
         } else {
           driversGrid.innerHTML = '<div class="empty-state">No drivers assigned yet</div>';
         }
@@ -313,6 +329,9 @@
           if (completedSessions.length === gameState.raceSessions.length) {
             document.querySelector('.waiting-title').textContent = '🏁 All Races Completed';
             document.querySelector('.waiting-message p').textContent = 'Thank you for participating!';
+          } else if (gameState.raceStatus === 'active') {
+            document.querySelector('.waiting-title').textContent = '🏁 Race In Progress';
+            document.querySelector('.waiting-message p').textContent = 'Current race is active';
           }
         }
       }

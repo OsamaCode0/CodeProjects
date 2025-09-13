@@ -458,6 +458,8 @@ io.on('connection', (socket) => {
       }
 
       io.emit('gameState', cleanGameStateForEmission(gameState));
+      // Emit specific event for session ending
+      io.emit('raceSessionEnded');
       saveGameState();
     }
   });
