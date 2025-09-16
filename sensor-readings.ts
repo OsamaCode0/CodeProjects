@@ -8,6 +8,7 @@ const sensorReading1: {type: string, value: number, isCritical? : boolean} = {
 
 const sensorReading2: {type: string, value: number, isCritical? : boolean} = {
 
-  type: 'radiotion',
+  type: 'radiation',
   value: 150,
 }
+
