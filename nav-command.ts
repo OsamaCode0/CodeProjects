@@ -1,31 +1,27 @@
-
-
-type TimeStamp = {
+type Timestamp = {
   timestamp: Date;
 }
 
 type Destination = {
   planetName: string;
   sector: string;
-} & TimeStamp;
+} & Timestamp;
 
 type WarpDrive = {
   warpFactor: number;
-} & TimeStamp;
+} & Timestamp;
 
-type NavigationCommand = Destination | WarpDrive;
+type NavigationCommand = Destination | WarpDrive; 
 
-
-
-let destination: Destination = {
+const destination: Destination = {
   planetName: "Mars",
   sector: "Beta",
   timestamp: new Date(),
 }
 
-let warpdrive = {
+const warpDrive: WarpDrive = {  
   warpFactor: 5,
   timestamp: new Date(),
 }
 
-const navigationCommand: NavigationCommand = warpdrive;
+const navigationCommand: NavigationCommand = warpDrive;
