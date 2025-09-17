@@ -1,8 +1,5 @@
+type TelemetryCallback = (sensorReading: number, time: number) => void;
 
-
-
-const TelemetryCallback = (sensorReading: number, time: number) => void;
-
-function logTelemetry(data: number, timestamp: number): void {
-    console.log(`Data: ${data}, Timestamp: ${timestamp}`)
-}
+const logTelemetry: TelemetryCallback = (data, timestamp) => {
+  console.log(`Data: ${data}, Timestamp: ${timestamp}`);
+};
