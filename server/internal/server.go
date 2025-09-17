@@ -1,7 +1,10 @@
-//file for starting the server
-package server
+// file for starting the server
+package internal
 
-import "github.com/gin-gonic/gin"
+import (
+	"log"
+	"github.com/gin-gonic/gin"
+)
 
 func SetupRouter() *gin.Engine {
 	router := gin.Default()
@@ -12,12 +15,21 @@ func SetupRouter() *gin.Engine {
 		c.JSON(200, gin.H{"status":"ok"})
 	})
 
+	router.POST("/users", Register)
+
 	return router
 }
 
 func StartServer(){
 	LoadConfig()
-	ConnectDB()
+	err := ConnectDB()
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	defer DB.Close()
+
 	router := SetupRouter()
 	router.Run(":" + Cfg.Port)
 }

@@ -1,19 +1,24 @@
 // file for connecting db
-package server
+package internal
 
 import (
 	"context"
 	"log"
-
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func ConnectDB() (*pgxpool.Pool, error){
+
+
+var DB *pgxpool.Pool
+
+func ConnectDB() error{
 	pool, err := pgxpool.New(context.Background(), Cfg.DatabaseURL)	
 	 if err != nil {
 		log.Println("Can't connect to a DB", err)
-        return nil, err
+        return err
     }
 	log.Println("DB connected")
-    return pool, nil
+	DB = pool
+	
+    return nil
 }

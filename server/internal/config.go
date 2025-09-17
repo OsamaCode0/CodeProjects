@@ -1,5 +1,5 @@
 // file for loading server/.env and saving it into struct in order to use after
-package server
+package internal
 
 import (
 	"log"
