@@ -9,12 +9,16 @@ let thrusters: Thrusters = {
      main: {name: 'main', powerLevel: 0}, 
 }
 
-function setThrusterPower(thruster: string, powerLevel: number): void {
-  if (powerLevel < 0 && powerLevel > 100) {
+function setThrusterPower(thruster: keyof Thrusters, powerLevel: number): string {
+  if (powerLevel < 0 || powerLevel > 100) {
     throw new Error('Power level must be between 0 and 100');
   }
   if (thruster in thrusters) {
-    thrusters[thruster as keyof Thrusters].powerLevel = powerLevel;
+    thrusters[thruster].powerLevel = powerLevel;
+        return `${thrusters[thruster].name}: ${powerLevel}% output`; 
+
+  } else  {
+        throw new Error(`Invalid thruster designation: ${thruster}`);  // PROPER ERROR
   }
 
 }
