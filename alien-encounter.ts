@@ -1,10 +1,9 @@
 
 
-type AlienContact = {
-  name: string,
-  greeting?: string
-  weapon?: string
-}
+type FriendlyAlien = { name: string; greeting: string };
+type HostileAlien = { name: string; weapon: string };
+type AlienContact = FriendlyAlien | HostileAlien;
+
 
 function handleEncounter (contact: AlienContact) {
 
