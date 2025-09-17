@@ -30,10 +30,10 @@ function getComponentInfo(component: Component): string {
     }
   }
 
-  // If the object does not match known types, return unknown
-  return "Unknown Object Component";
-  
-  if (typeof component !== 'string' && typeof component !== 'number') {
+   if (typeof component !== 'string' && typeof component !== 'number') {
       return "Invalid Component Type";
   }
+  // If the object does not match known types, return unknown
+  return "Unknown Object Component";
+
 }
