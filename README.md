@@ -15,8 +15,7 @@ JWT_SECRET=supersecretkey123
 CORS_ORIGIN=http://localhost:3033
 
 
-sudo service postgresql stop (do not forget to stop your db before shutting down the pc)
-If you installed Postgres as a service (most Linux setups)
+
 
 
 .gitignore

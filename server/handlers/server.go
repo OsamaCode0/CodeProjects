@@ -2,8 +2,10 @@
 package handlers
 
 import (
-	"github.com/gin-gonic/gin"
+	"matchme-server/middleware"
 	"matchme-server/services"
+
+	"github.com/gin-gonic/gin"
 )
 
 func SetupRouter() *gin.Engine {
@@ -13,6 +15,11 @@ func SetupRouter() *gin.Engine {
 
 	router.POST("/users/register", services.Register)
 	router.POST("/users/login", services.Login)
+
+	
+	auth := router.Group("/")
+	auth.Use(middleware.RequireSession())//the func will always run before anything with auth
+	auth.GET("/me/debug", services.PatchMeProfile)
 
 	return router
 }
@@ -24,3 +31,10 @@ func SetupRouter() *gin.Engine {
 //GET  /users/:id/bio
 //GET  /recommendations
 //GET  /connections
+//POST /me/children → add a child
+
+//PATCH /me/children/:childId → update one child
+
+//DELETE /me/children/:childId → remove
+
+//GET /me/children → list (to prefill UI)
