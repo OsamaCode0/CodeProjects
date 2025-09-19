@@ -1,4 +1,4 @@
-package internal
+package services
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"matchme-server/structs"
+	"matchme-server/internal"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -25,7 +26,7 @@ func Login(c *gin.Context) {
 	}
 
 	var id, pwHash string
-	err := DB.QueryRow(context.Background(),
+	err := internal.DB.QueryRow(context.Background(),
 		`SELECT id, password_hash FROM users WHERE email=$1`, input.Email).Scan(&id, &pwHash)
 
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -67,7 +68,7 @@ func Login(c *gin.Context) {
 	}
 
 // Store the **hash** of the refresh token (not the plain token) for 30 days
-	_, err = DB.Exec(context.Background(),
+	_, err = internal.DB.Exec(context.Background(),
 		`INSERT INTO tokens (user_id, token_hash) VALUES ($1,$2)`,
 		id, hash)
 	if err != nil {
@@ -89,7 +90,7 @@ func makeAccessToken(userID string) (string, error) {
 		"exp": time.Now().Add(15 * time.Minute).Unix(),
 	}
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).
-		SignedString([]byte(Cfg.JWTSecret))
+		SignedString([]byte(internal.Cfg.JWTSecret))
 }
 
 

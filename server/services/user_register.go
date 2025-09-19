@@ -1,10 +1,11 @@
-package internal
+package services
 
 import (
 	"context"
 	"errors"
 	"log"
 	"matchme-server/structs"
+	"matchme-server/internal"
 	"regexp"
 	"strings"
 	"time"
@@ -49,7 +50,7 @@ func Register(c *gin.Context) {
 
 	hashedPassword, err := hashPassword(input.Password)
 	if err != nil {
-		c.JSON(400, structs.ErrorResponse{
+		c.JSON(500, structs.ErrorResponse{
 			Field:   "password",
 			Message: "password hashing failed",
 		})
@@ -63,7 +64,7 @@ func Register(c *gin.Context) {
 
 	var id string
 	var createdAt time.Time
-	err = DB.QueryRow(context.Background(), q, input.Email, hashedPassword).Scan(&id, &createdAt)
+	err = internal.DB.QueryRow(context.Background(), q, input.Email, hashedPassword).Scan(&id, &createdAt)
 	if err != nil {
 		c.JSON(500, structs.ErrorResponse{
 			Message:  "insert to DB failed",
@@ -85,7 +86,7 @@ func isValidEmail(email string) bool {
 func isUniqEmail(email string) bool {
 	const q = `SELECT NOT EXISTS (SELECT 1 FROM users WHERE email = $1);`
 	var unique bool
-	err := DB.QueryRow(context.Background(), q, email).Scan(&unique)
+	err := internal.DB.QueryRow(context.Background(), q, email).Scan(&unique)
 	if err != nil {
 		log.Println("db error:", err)
 		return false
