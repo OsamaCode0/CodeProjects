@@ -1,0 +1,59 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS citext;
+
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email CITEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,   -- store bcrypt/argon2 hash
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS tokens (
+  id         uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id    uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash text NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS parent_profiles (
+  user_id              UUID PRIMARY KEY
+                          REFERENCES users(id) ON DELETE CASCADE,
+  name                 TEXT        NOT NULL,
+  gender               TEXT,
+  about                TEXT,
+  language_codes       TEXT[]      NOT NULL DEFAULT '{}',   -- e.g. {'fr','en','ru'}
+  address_city         TEXT,
+  preferred_distance_km INTEGER    CHECK (preferred_distance_km BETWEEN 0 AND 200),
+  created_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at           TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE user_photos (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  url TEXT NOT NULL,
+  is_main BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- ensure only one main photo per user
+CREATE UNIQUE INDEX uniq_main_photo_per_user
+ON user_photos(user_id)
+WHERE is_main = true;
+
+
+
+CREATE TABLE IF NOT EXISTS children (
+  id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
+  name            TEXT NOT NULL,
+  birthdate       DATE,           
+  gender          TEXT,              
+  about_short     TEXT,
+
+  interests       TEXT[] NOT NULL DEFAULT '{}',
+  activity_level  TEXT,              
+  limitations     TEXT[] NOT NULL DEFAULT '{}',
+  allergies       TEXT[] NOT NULL DEFAULT '{}',
+  play_styles     TEXT[] NOT NULL DEFAULT '{}'
+);

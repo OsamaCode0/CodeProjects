@@ -71,7 +71,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(201, gin.H{"id": id, "created_at": createdAt})
+	c.JSON(201, gin.H{"id": id, "email": input.Email, "created_at": createdAt})
 }
 
 
@@ -112,4 +112,13 @@ func hashPassword(password string) (string, error) {
 		return "", errors.New("password hashing failed")
 	}
 	return string(hashed), nil
+}
+
+func IsCorrectPassword(hashed, password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hashed), []byte(password))
+	if err != nil {
+		log.Println("wrong password")
+		return false		
+	}
+	return true
 }

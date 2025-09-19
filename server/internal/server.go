@@ -11,11 +11,8 @@ func SetupRouter() *gin.Engine {
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-	router.GET("/healthz", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status":"ok"})
-	})
-
-	router.POST("/users", Register)
+	router.POST("/users/register", Register)
+	router.POST("/users/login", Login)
 
 	return router
 }
