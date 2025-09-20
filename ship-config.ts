@@ -8,7 +8,7 @@ interface ShipConfig {
 
 type PartialShipConfig = Partial<ShipConfig>
 
-type ReadOnlyShipConfig = Readonly<ShipConfig>
+type ReadonlyShipConfig = Readonly<ShipConfig>
 
 
 const initialConfig: ShipConfig = {
@@ -22,4 +22,4 @@ const configUpdate: PartialShipConfig = {
   maxSpeed: 500
 }
 
-const readOnlyConfig: ReadOnlyShipConfig = initialConfig;
+const readOnlyConfig: ReadonlyShipConfig = initialConfig;
