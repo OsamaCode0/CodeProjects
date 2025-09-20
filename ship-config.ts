@@ -1,31 +1,25 @@
 
 
-interface shipConfig {
+interface ShipConfig {
   engineType: string;
   maxSpeed: number;
   shieldCapacity: number;
 } 
 
-type partialShipConfig = Partial<shipConfig>
+type PartialShipConfig = Partial<ShipConfig>
 
-type readOnlyShipConfig = Readonly<shipConfig>
+type ReadOnlyShipConfig = Readonly<ShipConfig>
 
 
-const initialConfig: shipConfig = {
+const initialConfig: ShipConfig = {
   engineType: "Benzine",
   maxSpeed: 300,
   shieldCapacity: 0
 }
 
-const configUpdate: partialShipConfig = {
-
+const configUpdate: PartialShipConfig = {
   engineType: "Electric",
-  maxSpeed: 500,
-  shieldCapacity: 100
+  maxSpeed: 500
 }
 
-const readOnlyConfig: readOnlyShipConfig = {
-  engineType: "Benzine",
-  maxSpeed: 300,
-  shieldCapacity: 0
-}
+const readOnlyConfig: ReadOnlyShipConfig = initialConfig;
