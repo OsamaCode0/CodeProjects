@@ -1,10 +1,12 @@
-let form = document.getElementById('fuelForm') as HTMLFormElement;
-let fuelInput = document.getElementById('fuelInput') as HTMLInputElement; // ✅ Correct ID
-let message = document.getElementById('message') as HTMLParagraphElement;
-
-form.addEventListener('submit', function(event: SubmitEvent) { // ✅ Add event type
-    event.preventDefault();
-    let valueFuel = fuelInput.value.trim();
+setTimeout(() => {
+    // Your DOM code here
+    const form = document.getElementById('fuelForm') as HTMLFormElement;
+    const fuelInput = document.getElementById('fuelInput') as HTMLInputElement;
+    const message = document.getElementById('message') as HTMLParagraphElement;
+    
+    form.addEventListener('submit', function(event: SubmitEvent) {
+        event.preventDefault();
+            let valueFuel = fuelInput.value.trim();
     let fuelNumber = Number(valueFuel);
 
     if (valueFuel === '' || isNaN(fuelNumber)) {
@@ -18,3 +20,5 @@ form.addEventListener('submit', function(event: SubmitEvent) { // ✅ Add event 
         message.textContent = "Fuel level set to: " [fuelNumber]
     }
 });
+    },100);
+     // Small delay to ensure DOM is ready
