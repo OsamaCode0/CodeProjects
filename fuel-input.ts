@@ -2,11 +2,11 @@
 
 let form = document.getElementById('fuelForm') as HTMLFormElement;
 
-let fuelInput = document.getElementById('submitFuel') as HTMLInputElement;
+let fuelInput = document.getElementById('fuelInput') as HTMLInputElement;
 
 let message = document.getElementById('message') as HTMLParagraphElement;
 
-form.addEventListener('submit', function(event) {
+form.addEventListener('submit', function(event: SubmitEvent) {
   event.preventDefault()
   let valueFuel = fuelInput.value.trim();
   let fuelNumber = Number(valueFuel);
