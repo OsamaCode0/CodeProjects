@@ -18,6 +18,6 @@ form.addEventListener('submit', function(event: SubmitEvent) {
   if (fuelNumber < 0 || fuelNumber > 100) {
     message.textContent = "Invalid fuel input. Please enter a value between 0 and 100.";
   } else {
-    message.textContent = "Fuel level set to:" [fuelNumber]
+    message.textContent = "Fuel level set to:" + fuelNumber
   }
 })
