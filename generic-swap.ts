@@ -1,3 +1,3 @@
-function swap<a, b>(a: a, b: b): [b, a] {
+function swap<A, B>(a: A, b: B): [B, A] {
   return [b, a];  
 }
