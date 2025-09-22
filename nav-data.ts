@@ -8,16 +8,20 @@ interface NavigationLogEntry {
   notes: string,
 }
 
-type navigationData = Pick<NavigationLogEntry, 'timestamp' | 'coordinates'>
+type NavigationData = Pick<NavigationLogEntry, 'timestamp' | 'coordinates'>
 
-type logSummary = Omit<NavigationLogEntry, 'timestamp' | 'coordinates' | 'speed' | 'event'>
+type LogSummary = Omit<NavigationLogEntry, 'notes'>
 
 
-const navData: navigationData[] = [
-  { timestamp: 1625247600, 
-  coordinates: [34.05, -118.25, 500]}
-]
+const navData: NavigationData = {
+    timestamp: 1625247600,
+    coordinates: [34.05, -118.25, 500]
+}
+  
 
-const logSmry: logSummary[] = [
-  { notes: 'Engine check performed at 250 knots.' }
-]
+const logSmry: LogSummary = {
+  timestamp: 1625247600,
+  coordinates: [34.05, -118.25, 500],
+  speed: 250,
+  event: "Engine Check",
+}
