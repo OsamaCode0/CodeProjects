@@ -1,3 +1,3 @@
-function swap<A, B>(a: A, b: B): [B, A] {
-  return [b, a];  
+function swap<T, U>(a: T, b: U): [U, T] {  // ✅ T and U are conventional
+    return [b, a];
 }
