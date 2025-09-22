@@ -1,3 +1,12 @@
+interface NavigationLogEntry {
+    timestamp: number;
+    coordinates: [number, number, number];
+    speed: number;
+    event: string;
+    notes: string;
+}
+
+
 // ✅ CORRECT TYPE DEFINITIONS
 type NavigationData = Pick<NavigationLogEntry, 'timestamp' | 'coordinates'>;
 type LogSummary = Omit<NavigationLogEntry, 'notes'>;
