@@ -4,12 +4,11 @@ import (
 	"context"
 	"errors"
 	"log"
-	"matchme-server/structs"
+	"matchme-server/database"
 	"matchme-server/internal"
+	"matchme-server/structs"
 	"regexp"
 	"strings"
-	"time"
-
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -57,14 +56,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	const q = 
-	`INSERT INTO users (id, email, password_hash, created_at)
-	VALUES (uuid_generate_v4(), $1, $2, NOW())
-	RETURNING id, created_at`
-
-	var id string
-	var createdAt time.Time
-	err = internal.DB.QueryRow(context.Background(), q, input.Email, hashedPassword).Scan(&id, &createdAt)
+	id, createdAt, err := database.CreateUser(c.Request.Context(), internal.DB, input.Email, hashedPassword)
 	if err != nil {
 		c.JSON(500, structs.ErrorResponse{
 			Message:  "insert to DB failed",
@@ -72,10 +64,13 @@ func Register(c *gin.Context) {
 		return
 	}
 
+
 	c.JSON(201, gin.H{"id": id, "email": input.Email, "created_at": createdAt})
 }
 
 
+
+// herper functions
 
 func isValidEmail(email string) bool {
 	email = strings.TrimSpace(email)

@@ -4,6 +4,7 @@ package handlers
 import (
 	"matchme-server/middleware"
 	"matchme-server/services"
+	"matchme-server/internal"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,14 +19,14 @@ func SetupRouter() *gin.Engine {
 
 	
 	auth := router.Group("/")
-	auth.Use(middleware.RequireSession())//the func will always run before anything with auth
-	auth.GET("/me/debug", services.PatchMeProfile)
+	auth.Use(middleware.AuthRequired(internal.Cfg.JWTSecret))//the func will always run before anything with auth
+	auth.PATCH("/me/profile", services.PatchMeProfile)
 
 	return router
 }
 
 //GET  /me/profile
-//PATCH /me/profile
+//PATCH /me/profile done
 //GET  /users/:id
 //GET  /users/:id/profile
 //GET  /users/:id/bio

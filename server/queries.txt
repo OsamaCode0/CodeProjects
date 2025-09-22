@@ -8,24 +8,34 @@ CREATE TABLE users (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TABLE IF NOT EXISTS tokens (
-  id         uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id    uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  token_hash text NOT NULL UNIQUE
-);
 
 CREATE TABLE IF NOT EXISTS parent_profiles (
   user_id              UUID PRIMARY KEY
                           REFERENCES users(id) ON DELETE CASCADE,
-  name                 TEXT        NOT NULL,
+  name                 TEXT,
   gender               TEXT,
   about                TEXT,
-  language_codes       TEXT[]      NOT NULL DEFAULT '{}',   -- e.g. {'fr','en','ru'}
+  language_codes       TEXT[] DEFAULT '{}',    
   address_city         TEXT,
   preferred_distance_km INTEGER    CHECK (preferred_distance_km BETWEEN 0 AND 200),
   created_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at           TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS trigger AS $$
+BEGIN
+  NEW.updated_at := now();        -- always refresh on UPDATE
+  NEW.created_at := OLD.created_at; -- never let it change
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_parent_profiles_timestamps ON parent_profiles;
+CREATE TRIGGER trg_parent_profiles_timestamps
+BEFORE UPDATE ON parent_profiles
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
 
 CREATE TABLE user_photos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -46,7 +56,7 @@ CREATE TABLE IF NOT EXISTS children (
   id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
-  name            TEXT NOT NULL,
+  name            TEXT,
   birthdate       DATE,           
   gender          TEXT,              
   about_short     TEXT,
