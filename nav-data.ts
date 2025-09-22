@@ -23,6 +23,6 @@ const logSmry: LogSummary = {
     timestamp: 1625247600,
     coordinates: [34.05, -118.25, 500],
     speed: 250,          // ✅ MUST include speed
-    event: "Engine Check" // ✅ MUST include event
+    event: 'Engine Check' // ✅ MUST include event
     // ❌ NO notes here!
 };
