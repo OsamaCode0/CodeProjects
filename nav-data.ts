@@ -1,28 +1,19 @@
-interface NavigationLogEntry {
-  timestamp: number;
-  coordinates: [number, number, number];
-  speed: number;
-  event: string;
-  notes: string;
-}
-
-// ✅ CORRECT: Only pick timestamp and coordinates
+// ✅ CORRECT TYPE DEFINITIONS
 type NavigationData = Pick<NavigationLogEntry, 'timestamp' | 'coordinates'>;
-
-// ✅ CORRECT: Only omit notes (not all other properties)
 type LogSummary = Omit<NavigationLogEntry, 'notes'>;
 
-// ✅ navData should ONLY have timestamp and coordinates (NO extra properties)
+// ✅ CORRECT navData - ONLY timestamp and coordinates
 const navData: NavigationData = {
-  timestamp: 1625247600,
-  coordinates: [34.05, -118.25, 500]
-
+    timestamp: 1625247600,
+    coordinates: [34.05, -118.25, 500]
+    // ❌ NO speed, event, or notes here!
 };
 
+// ✅ CORRECT logSmry - ALL properties EXCEPT notes (MUST include speed and event)
 const logSmry: LogSummary = {
-  timestamp: 1625247600,
-  coordinates: [34.05, -118.25, 500],
-  speed: 250,
-  event: "Engine Check"
-
+    timestamp: 1625247600,
+    coordinates: [34.05, -118.25, 500],
+    speed: 250,          // ✅ MUST include speed
+    event: "Engine Check" // ✅ MUST include event
+    // ❌ NO notes here!
 };
