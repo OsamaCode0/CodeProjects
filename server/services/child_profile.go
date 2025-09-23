@@ -4,31 +4,36 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"log"
 	"matchme-server/database"
 	"matchme-server/internal"
 	"matchme-server/structs"
+	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 // func for updating or filling the profile
 // handlers/me_profile.go
 
-type PatchParentProfileInput struct {
-	Name              *string   `json:"name,omitempty"`
-	Gender            *string   `json:"gender,omitempty"`
-	About             *string   `json:"about,omitempty"`
-	LanguageCodes     *[]string `json:"languageCodes,omitempty"` // pointer to slice
-	AddressCity       *string   `json:"addressCity,omitempty"`
-	PreferredDistance *int      `json:"preferred_distance_km,omitempty"`
+type PatchChildProfileInput struct {
+	Name           *string    `json:"name,omitempty"`
+	Birthday       *time.Time `json:"birthday,omitempty"`
+	Gender         *string    `json:"gender,omitempty"`
+	About_short    *string    `json:"about_short,omitempty"`
+	Interests      *[]string  `json:"intersts"`
+	Activity_level *string    `json:"activity_level"`
+	Limitations    *[]string  `json:"limitations"`
+	Allergies      *[]string  `json:"allergies"`
+	Play_styles    *[]string  `json:"play_styles"`
 }
 
-func PatchMeProfile(c *gin.Context) {
+func PatchMeChild(c *gin.Context) {
 	uid := c.GetString("userID") // set by middleware
-	table := "parent_profiles"
+	table := "child"
 
-	var in PatchParentProfileInput
-	log.Printf("PATCH /me/profile input: %#v", in)
+	var in PatchChildProfileInput 
+	log.Printf("PATCH /me/child input: %#v", in)
 	if err := c.ShouldBindJSON(&in); err != nil {
 		c.JSON(400, structs.ErrorResponse{
 			Message: "invalid json"})
@@ -37,7 +42,7 @@ func PatchMeProfile(c *gin.Context) {
 
 	ctx := context.Background()
 	// Ensure a row exists for this user (if the profile filled for the 1st time)
-	if err := database.EnsureParentProfile(ctx, internal.DB, uid); err != nil {
+	if err := database.EnsureChildProfile(ctx, internal.DB, uid); err != nil {
 		log.Println(err)
 		c.JSON(500, structs.ErrorResponse{
 			Message: "db error (ensure row)",
@@ -48,7 +53,7 @@ func PatchMeProfile(c *gin.Context) {
 	sets := []string{}
 	args := []any{uid}
 	i := 2
-	updatedCols := make([]string, 0, 6)
+	updatedCols := make([]string, 0, 10)
 
 	add := func(col string, v any) {
 		sets = append(sets, fmt.Sprintf("%s=$%d", col, i))
@@ -60,20 +65,29 @@ func PatchMeProfile(c *gin.Context) {
 	if in.Name != nil {
 		add("name", *in.Name)
 	}
+	if in.Birthday != nil {
+		add("birthday", *in.Birthday)
+	}
 	if in.Gender != nil {
 		add("gender", *in.Gender)
 	}
-	if in.About != nil {
-		add("about", *in.About)
+	if in.About_short != nil {
+		add("about_short", *in.About_short)
 	}
-	if in.LanguageCodes != nil {
-		add("language_codes", *in.LanguageCodes) // pgx: []string -> TEXT[]
+	if in.Interests != nil {
+		add("interests", *in.Interests) // pgx: []string -> TEXT[]
 	}
-	if in.AddressCity != nil {
-		add("address_city", *in.AddressCity)
+	if in.Activity_level != nil {
+		add("activity_level", *in.Activity_level)
 	}
-	if in.PreferredDistance != nil {
-		add("preferred_distance_km", *in.PreferredDistance)
+	if in.Limitations != nil {
+		add("limitations", *in.Limitations)
+	}
+	if in.Allergies != nil {
+		add("allergies", *in.Allergies)
+	}
+	if in.Play_styles != nil {
+		add("play_styles", *in.Play_styles)
 	}
 
 	if len(sets) == 0 {
@@ -93,9 +107,10 @@ func PatchMeProfile(c *gin.Context) {
 	)
 
 	if err != nil {
+		log.Println(err)
 		if errors.Is(err, database.ErrProfileNotFound) {
 			c.JSON(404, structs.ErrorResponse{
-				Message: "parent profile not found",
+				Message: "child profile not found",
 			})
 			return
 		}
