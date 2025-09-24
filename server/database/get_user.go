@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"log"
-
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -29,9 +28,9 @@ func GetUserName_photoUrl(ctx context.Context, pool *pgxpool.Pool, id string) (s
 		name = ""
 	}
 
-	err = pool.QueryRow(ctx, `SELECT
-   (SELECT url FROM user_photos WHERE user_id = $2 AND is_main = TRUE LIMIT 1)
-   `, id).Scan(&photo_url)
+	err = pool.QueryRow(ctx, `SELECT COALESCE(
+   (SELECT url FROM user_photos WHERE user_id = $1 AND is_main = TRUE LIMIT 1),''
+   )`, id).Scan(&photo_url)
 	if err != nil {
 		log.Println("url querry: ", err)
 		photo_url = ""

@@ -21,7 +21,7 @@ type UserById struct {
 func GetUserById(c *gin.Context) {
 	var out UserById
 	id := c.Param("id")
-	if !isValidID(id) {
+	if !IsValidID(id) {
 		c.JSON(400, structs.ErrorResponse{
 			Message: "invalid id",
 		})
@@ -52,7 +52,7 @@ func GetUserById(c *gin.Context) {
 
 }
 
-func isValidID(id string) bool {
+func IsValidID(id string) bool {
 	_, err := uuid.Parse(strings.TrimSpace(id))
 	return err == nil
 }

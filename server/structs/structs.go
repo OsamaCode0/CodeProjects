@@ -63,8 +63,7 @@ type ParentProfile struct {
 	UpdatedAt         time.Time `json:"updatedAt"`
 }
 
-type Children struct {
-	ID             string    `json:"id"`
+type Child struct {
 	UserID         string    `json:"userId"`
 	Name           string    `json:"name"`
 	Birthday       time.Time `json:"birthday"`

@@ -6,7 +6,6 @@ import (
 	"matchme-server/internal"
 	"matchme-server/middleware"
 	"matchme-server/services"
-
 	"github.com/gin-gonic/gin"
 )
 
