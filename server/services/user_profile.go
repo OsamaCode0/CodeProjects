@@ -1,7 +1,6 @@
 package services
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -35,15 +34,6 @@ func PatchMeProfile(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
-	// Ensure a row exists for this user (if the profile filled for the 1st time)
-	if err := database.EnsureParentProfile(ctx, internal.DB, uid); err != nil {
-		log.Println(err)
-		c.JSON(500, structs.ErrorResponse{
-			Message: "db error (ensure row)",
-		})
-		return
-	}
 
 	sets := []string{}
 	args := []any{uid}

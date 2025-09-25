@@ -17,30 +17,23 @@ func SetupRouter() *gin.Engine {
 	router.POST("/users/register", services.Register)
 	router.POST("/users/login", services.Login)
 
-	router.GET("/users/:id", endpoints.GetUserById)
-	router.GET("/users/:id/profile", endpoints.GetProfile)
-	router.GET("/users/:id/bio", endpoints.GetBio)
+	router.GET("/users/:id", endpoints.GetNameAndPhoto)
+	router.GET("/users/:id/profile", endpoints.GetUserProfileByID)
+	router.GET("/users/:id/bio", endpoints.GetUserBioByID)
 
 	
 	auth := router.Group("/")
 	auth.Use(middleware.AuthRequired(internal.Cfg.JWTSecret))//the func will always run before anything with auth
 	auth.PATCH("/me/profile", services.PatchMeProfile)
 	auth.PATCH("/me/profile/child", services.PatchMeChild)
+	auth.GET("/me", endpoints.GetMeNameAndPhoto)
+	auth.GET("/me/profile", endpoints.GetMyProfile)
+	auth.GET("/me/bio", endpoints.GetMeBio)
 
 	return router
 }
 
-//GET  /me/profile
-//PATCH /me/profile done
-//GET  /users/:id
-//GET  /users/:id/profile
-//GET  /users/:id/bio
 //GET  /recommendations
 //GET  /connections
-//POST /me/children → add a child
-
-//PATCH /me/children/:childId → update one child
-
-//DELETE /me/children/:childId → remove
-
-//GET /me/children → list (to prefill UI)
+//DELETE /me/child
+//DELETE /me/profile

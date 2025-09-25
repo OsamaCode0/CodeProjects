@@ -10,17 +10,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 var ErrProfileNotFound = errors.New("profile not found")
-// EnsureParentProfile inserts a row for userID if it doesn't exist.
-func EnsureParentProfile(ctx context.Context, pool *pgxpool.Pool, userID string) error {
-	const q = `
-		INSERT INTO parent_profiles (user_id)
-		VALUES ($1)
-		ON CONFLICT (user_id) DO NOTHING
-	`
-	_, err := pool.Exec(ctx, q, userID)
-	return err
-}
-
 // UpdateParentProfileDynamic updates with prebuilt SET clauses and args,
 // and returns a map keyed by the RETURNING column names.
 // args MUST start with userID as $1, and SET placeholders must start at $2.
@@ -62,15 +51,5 @@ func UpdateProfileDynamic(
 		return nil, fmt.Errorf("scan %s: %w", table, err)
 	}
 	return m, nil
-}
-
-func EnsureChildProfile(ctx context.Context, pool *pgxpool.Pool, userID string) error {
-	const q = `
-		INSERT INTO children (user_id)
-		VALUES ($1)
-		ON CONFLICT (user_id) DO NOTHING
-	`
-	_, err := pool.Exec(ctx, q, userID)
-	return err
 }
 

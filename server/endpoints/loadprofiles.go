@@ -11,10 +11,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func LoadProfiles(c *gin.Context) (*structs.ParentProfile, *structs.Child, bool) {
-	id := c.Param("id")
 
-	if !helpers.IsValidID(id) {
+func LoadProfiles(c *gin.Context, id string) (*structs.ParentProfile, *structs.Child, bool) {
+
+	if !helpers.IsValidID(id) { 
+		log.Println(id)
 		c.JSON(400, structs.ErrorResponse{
 			Message: "invalid id",
 		})
@@ -32,11 +33,7 @@ func LoadProfiles(c *gin.Context) (*structs.ParentProfile, *structs.Child, bool)
 	}
 
 	if p == nil {
-		log.Println(err)
-		c.JSON(400, structs.ErrorResponse{
-			Message: "parent profile not found",
-		})
-		return nil, nil, false
+		p = &structs.ParentProfile{}
 	}
 
 	ch, err := database.GetChildProfile(ctx, internal.DB, id)
@@ -49,11 +46,7 @@ func LoadProfiles(c *gin.Context) (*structs.ParentProfile, *structs.Child, bool)
 	}
 
 	if ch == nil {
-		log.Println(err)
-		c.JSON(400, structs.ErrorResponse{
-			Message: "child profile not found",
-		})
-		return nil, nil, false
+		ch = &structs.Child{}
 	}
 	return p, ch, true
 }

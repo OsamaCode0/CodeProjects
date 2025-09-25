@@ -1,12 +1,13 @@
 package services
 
 import (
+	"log"
 	"matchme-server/database"
 	"matchme-server/helpers"
 	"matchme-server/internal"
 	"matchme-server/structs"
-	"github.com/gin-gonic/gin"
 
+	"github.com/gin-gonic/gin"
 )
 
 func Register(c *gin.Context) {
@@ -45,6 +46,7 @@ func Register(c *gin.Context) {
 
 	hashedPassword, err := helpers.HashPassword(input.Password)
 	if err != nil {
+		log.Println(err)
 		c.JSON(500, structs.ErrorResponse{
 			Field:   "password",
 			Message: "password hashing failed",
@@ -54,6 +56,7 @@ func Register(c *gin.Context) {
 
 	id, createdAt, err := database.CreateUser(c.Request.Context(), internal.DB, input.Email, hashedPassword)
 	if err != nil {
+		log.Println(err)
 		c.JSON(500, structs.ErrorResponse{
 			Message:  "insert to DB failed",
 		})

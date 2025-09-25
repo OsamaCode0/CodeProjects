@@ -1,7 +1,9 @@
 package endpoints
 
 import (
+	"matchme-server/structs"
 	"time"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,22 +26,35 @@ type BioRespond struct {
 	Child             ChildBio `json:"child"`
 }
 
-func GetBio(c *gin.Context) {
-	p, ch, ok := LoadProfiles(c)
+// GET /users/:id (bio)
+func GetUserBioByID(c *gin.Context) {
+	serveBio(c, c.Param("id"))
+}
+
+// GET /me (bio) — protect this route with AuthRequired()
+func GetMeBio(c *gin.Context) {
+	id := c.GetString("userID") // guaranteed by AuthRequired()
+	serveBio(c, id)
+}
+
+func serveBio(c *gin.Context, id string) {
+	p, ch, ok := LoadProfiles(c, id)
 
 	if !ok {
-
 		return //json respond already sent in LoadProfiles func
 	}
+	res := buildBioResponse(p, ch)
+	c.JSON(200, res)
+}
 
-	res := BioRespond {
+func buildBioResponse(p *structs.ParentProfile, ch *structs.Child) BioRespond {
+	return BioRespond{
 		ID:                p.UserID,
 		Gender:            p.Gender,
 		Languages:         p.LanguageCodes,
 		AddressCity:       p.AddressCity,
 		PrefferedDistance: p.PreferredDistance,
-
-		Child: ChildBio {
+		Child: ChildBio{
 			Birthday:       ch.Birthday,
 			Gender:         ch.Gender,
 			Interests:      ch.Interests,
@@ -49,6 +64,4 @@ func GetBio(c *gin.Context) {
 			Play_styles:    ch.Play_styles,
 		},
 	}
-
-	c.JSON(200, res)
 }

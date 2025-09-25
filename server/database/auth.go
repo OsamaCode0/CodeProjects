@@ -25,9 +25,30 @@ func CreateUser(ctx context.Context, pool *pgxpool.Pool, email, hashedPassword s
 	if err != nil {
 		return "", time.Time{}, err
 	}
+
+	//we add user_id in table parent_profiles, children in order not to fetch a db error
+	const q2 = `
+		INSERT INTO parent_profiles (user_id)
+		VALUES ($1)
+		ON CONFLICT (user_id) DO NOTHING
+	`
+	_, err = pool.Exec(ctx, q2, id)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	const q3 = `
+		INSERT INTO children (user_id)
+		VALUES ($1)
+		ON CONFLICT (user_id) DO NOTHING
+	`
+	_, err = pool.Exec(ctx, q3, id)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
 	return id, createdAt, nil
 }
-
 
 // for login
 func GetUserByEmail(ctx context.Context, pool *pgxpool.Pool, email string) (string, string, error) {

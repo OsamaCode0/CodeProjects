@@ -2,6 +2,8 @@ package endpoints
 
 import (
 	"matchme-server/helpers"
+	"matchme-server/structs"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,30 +24,47 @@ type ProfileRespond struct {
 	Child       ChildRespond `json:"child"`
 }
 
-func GetProfile(c *gin.Context) {
-	p, ch, ok := LoadProfiles(c)
+
+// GET /users/:id/profile
+func GetUserProfileByID(c *gin.Context) {
+    serveProfile(c, c.Param("id"))
+}
+
+// GET /me/profile
+func GetMyProfile(c *gin.Context) {
+    id := c.GetString("userID")
+    serveProfile(c, id)
+}
+
+
+func serveProfile(c *gin.Context, id string) {
+	p, ch, ok := LoadProfiles(c, id)
 
 	if !ok {
-		
-		return//json respond already sent in LoadProfiles func
+		return //json respond already sent in LoadProfiles func
 	}
+
+	res := buildProfileResponse(p, ch)
+	c.JSON(200, res)
+}
+
+
+func buildProfileResponse(p *structs.ParentProfile, ch *structs.Child) ProfileRespond {
 
 	childAge := helpers.ComputeAge(ch.Birthday)
 
-	res := ProfileRespond{
-		ID:           p.UserID,
-		Name:         p.Name,
-		About:        p.About,
-		Languages:    p.LanguageCodes,
-		AddressCity:  p.AddressCity,
+	return ProfileRespond{
+		ID:          p.UserID,
+		Name:        p.Name,
+		About:       p.About,
+		Languages:   p.LanguageCodes,
+		AddressCity: p.AddressCity,
 		Child: ChildRespond{
-			Name: ch.Name,
-			AgeYears: childAge,
-			Gender: ch.Gender,
-			AboutShort: ch.About_short,
+			Name:         ch.Name,
+			AgeYears:     childAge,
+			Gender:       ch.Gender,
+			AboutShort:   ch.About_short,
 			TopInterests: ch.Interests,
 		},
 	}
-
-	c.JSON(200, res)
 }

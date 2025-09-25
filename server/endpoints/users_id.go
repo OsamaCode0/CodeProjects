@@ -16,9 +16,17 @@ type UserById struct {
 	AvatarUrl string `json:"avatarurl"`
 }
 
-func GetUserById(c *gin.Context) {
+func GetNameAndPhoto(c *gin.Context) {
+    serveNameAndPhoto(c, c.Param("id"))
+}
+
+func GetMeNameAndPhoto(c *gin.Context) {
+    id := c.GetString("userID") // guaranteed by AuthRequired()
+    serveNameAndPhoto(c, id)
+}
+
+func serveNameAndPhoto(c *gin.Context, id string) {
 	var out UserById
-	id := c.Param("id")
 	if !helpers.IsValidID(id) {
 		c.JSON(400, structs.ErrorResponse{
 			Message: "invalid id",

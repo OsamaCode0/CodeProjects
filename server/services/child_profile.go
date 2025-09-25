@@ -1,7 +1,6 @@
 package services
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -37,16 +36,6 @@ func PatchMeChild(c *gin.Context) {
 	if err := c.ShouldBindJSON(&in); err != nil {
 		c.JSON(400, structs.ErrorResponse{
 			Message: "invalid json"})
-		return
-	}
-
-	ctx := context.Background()
-	// Ensure a row exists for this user (if the profile filled for the 1st time)
-	if err := database.EnsureChildProfile(ctx, internal.DB, uid); err != nil {
-		log.Println(err)
-		c.JSON(500, structs.ErrorResponse{
-			Message: "db error (ensure row)",
-		})
 		return
 	}
 
