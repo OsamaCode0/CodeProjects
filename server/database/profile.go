@@ -66,7 +66,7 @@ func UpdateProfileDynamic(
 
 func EnsureChildProfile(ctx context.Context, pool *pgxpool.Pool, userID string) error {
 	const q = `
-		INSERT INTO child (user_id)
+		INSERT INTO children (user_id)
 		VALUES ($1)
 		ON CONFLICT (user_id) DO NOTHING
 	`

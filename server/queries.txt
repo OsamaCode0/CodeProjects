@@ -57,13 +57,13 @@ CREATE TABLE children (
   user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
 
   name           TEXT,
-  birthdate      DATE,
+  birthday      DATE,
   gender         TEXT,
   about_short    TEXT,
 
-  interests      TEXT[] NOT NULL DEFAULT '{}',
+  interests      TEXT[] DEFAULT '{}',
   activity_level TEXT,
-  limitations    TEXT[] NOT NULL DEFAULT '{}',
-  allergies      TEXT[] NOT NULL DEFAULT '{}',
-  play_styles    TEXT[] NOT NULL DEFAULT '{}'
+  limitations    TEXT[] DEFAULT '{}',
+  allergies      TEXT[] DEFAULT '{}',
+  play_styles    TEXT[] DEFAULT '{}'
 );

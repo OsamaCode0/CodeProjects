@@ -57,7 +57,7 @@ func GetChildProfile(ctx context.Context, pool *pgxpool.Pool, id string) (*struc
             COALESCE(limitations, '{}'::text[]) AS limitations,
             COALESCE(allergies, '{}'::text[]) AS allergies,
             COALESCE(play_styles, '{}'::text[]) AS play_styles
-        FROM child
+        FROM children
         WHERE user_id = $1
         LIMIT 1`, id)
 	

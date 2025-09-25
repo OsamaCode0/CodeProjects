@@ -18,6 +18,8 @@ func SetupRouter() *gin.Engine {
 	router.POST("/users/login", services.Login)
 
 	router.GET("/users/:id", endpoints.GetUserById)
+	router.GET("/users/:id/profile", endpoints.GetProfile)
+	router.GET("/users/:id/bio", endpoints.GetBio)
 
 	
 	auth := router.Group("/")

@@ -30,7 +30,7 @@ type PatchChildProfileInput struct {
 
 func PatchMeChild(c *gin.Context) {
 	uid := c.GetString("userID") // set by middleware
-	table := "child"
+	table := "children"
 
 	var in PatchChildProfileInput 
 	log.Printf("PATCH /me/child input: %#v", in)

@@ -4,12 +4,10 @@ import (
 	"context"
 	"log"
 	"matchme-server/database"
+	"matchme-server/helpers"
 	"matchme-server/internal"
 	"matchme-server/structs"
-	"strings"
-
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 type UserById struct {
@@ -21,7 +19,7 @@ type UserById struct {
 func GetUserById(c *gin.Context) {
 	var out UserById
 	id := c.Param("id")
-	if !IsValidID(id) {
+	if !helpers.IsValidID(id) {
 		c.JSON(400, structs.ErrorResponse{
 			Message: "invalid id",
 		})
@@ -52,7 +50,3 @@ func GetUserById(c *gin.Context) {
 
 }
 
-func IsValidID(id string) bool {
-	_, err := uuid.Parse(strings.TrimSpace(id))
-	return err == nil
-}
