@@ -21,6 +21,8 @@ func LoadConfig() *Config {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Warning: .env file not found")
+	} else {
+		log.Println(".env read successfully")
 	}
 
 	var c Config	
@@ -30,6 +32,5 @@ func LoadConfig() *Config {
 	c.CORSOrigin = os.Getenv("CORS_ORIGIN")
 
 	Cfg = &c
-	log.Println(".env read succesfully")
 	return Cfg
 }
