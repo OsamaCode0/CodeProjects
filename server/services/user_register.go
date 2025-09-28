@@ -10,36 +10,37 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var CommonErr = "Something went wrong, please, try again later."
+
 func Register(c *gin.Context) {
 	var input structs.RegisterInput
 
 	if err := c.ShouldBindJSON(&input); err != nil {
+		log.Println(err)
 		c.JSON(400, structs.ErrorResponse{
-			Message: "invalid json",
+			Message: CommonErr,
 		})
 		return
 	}
 
 	if !helpers.IsValidEmail(input.Email) {
 		c.JSON(400, structs.ErrorResponse{
-			Field:   "email",
-			Message: "email is invalid",
+			Message: "Email is invalid, please provide a valid email.",
 		})
 		return
 	}
 
 	if !helpers.IsUniqEmail(input.Email) {
 		c.JSON(400, structs.ErrorResponse{
-			Field:   "email",
-			Message: "email already exists",
+			Message: "Email already exists.",
 		})
 		return
 	}
 
 	if !helpers.IsValidPassword(input.Password) {
+		log.Println("invalid password")
 		c.JSON(400, structs.ErrorResponse{
-			Field:   "password",
-			Message: "password is not valid",
+			Message: "Password should be at least 6 symbols, one letter.",
 		})
 		return
 	}
@@ -47,9 +48,8 @@ func Register(c *gin.Context) {
 	hashedPassword, err := helpers.HashPassword(input.Password)
 	if err != nil {
 		log.Println(err)
-		c.JSON(500, structs.ErrorResponse{
-			Field:   "password",
-			Message: "password hashing failed",
+		c.JSON(500, structs.ErrorResponse{			
+			Message: CommonErr,
 		})
 		return
 	}
@@ -58,7 +58,7 @@ func Register(c *gin.Context) {
 	if err != nil {
 		log.Println(err)
 		c.JSON(500, structs.ErrorResponse{
-			Message:  "insert to DB failed",
+			Message:  CommonErr,
 		})
 		return
 	}

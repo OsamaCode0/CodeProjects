@@ -6,7 +6,6 @@ import (
 
 // for frontend. that it will always expect same format
 type ErrorResponse struct {
-	Field   string `json:"field,omitempty"` //omitempty, it won’t appear in the JSON if empty
 	Message string `json:"message"`
 }
 

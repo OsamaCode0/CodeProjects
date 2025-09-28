@@ -1,10 +1,10 @@
 .page-container {
   display: grid;
-  place-items: center; /* shorthand for both horizontal + vertical */
+  place-items: center; 
   height: 100vh;
 }
 
-.register-form {
+.register-form, .login-form {
   justify-content: center;  /* center horizontally */
   align-items: center;      /* center vertically */
   max-width: 400px;
@@ -15,15 +15,13 @@
   background: #fff;
 }
 
-.register-form label {
+.register-form label, .login-form label{
   display: block;
   margin-bottom: 12px;
   font-weight: 500;
 }
 
-.register-form .input {
+.register-form .input, .login-form .input {
   margin-top: 6px;
   margin-bottom: 18px;
 }
-
-

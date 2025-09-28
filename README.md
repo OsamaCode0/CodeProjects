@@ -15,7 +15,10 @@ JWT_SECRET=supersecretkey123
 CORS_ORIGIN=http://localhost:3033
 
 
+Create a .env file inside the client/ directory and add this line.
 
+VITE_API_BASE_URL=http://localhost:8088
+Remember that the port set in both the client and server must match, for example if you change the PORT in server/.env to 3000 then the client should be http://localhost:3000
 
 
 .gitignore

@@ -30,7 +30,7 @@ func PatchMeProfile(c *gin.Context) {
 	log.Printf("PATCH /me/profile input: %#v", in)
 	if err := c.ShouldBindJSON(&in); err != nil {
 		c.JSON(400, structs.ErrorResponse{
-			Message: "invalid json"})
+			Message: CommonErr})
 		return
 	}
 
@@ -90,7 +90,7 @@ func PatchMeProfile(c *gin.Context) {
 			return
 		}
 		c.JSON(500, structs.ErrorResponse{
-			Message: "db scan error",
+			Message: CommonErr,
 		})
 		return
 	}

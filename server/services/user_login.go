@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"log"
 	"matchme-server/database"
 	"matchme-server/helpers"
 	"matchme-server/internal"
@@ -16,7 +17,7 @@ func Login(c *gin.Context) {
 	var input structs.LoginInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(400, structs.ErrorResponse{
-			Message: "invalid json"})
+			Message: CommonErr})
 		return
 	}
 
@@ -31,7 +32,7 @@ func Login(c *gin.Context) {
 	
 	if err != nil {
 		c.JSON(500, structs.ErrorResponse{
-			Message: "db error",
+			Message: CommonErr,
 		})
 		return
 	}
@@ -45,8 +46,9 @@ func Login(c *gin.Context) {
 
 	access, err := helpers.MakeAccessToken(id)
 	if err != nil {
+		log.Println(err)
 		c.JSON(500, structs.ErrorResponse{
-			Message: "token error",
+			Message: CommonErr,
 		})
 		return
 	}

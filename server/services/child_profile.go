@@ -104,7 +104,7 @@ func PatchMeChild(c *gin.Context) {
 			return
 		}
 		c.JSON(500, structs.ErrorResponse{
-			Message: "db scan error",
+			Message: CommonErr,
 		})
 		return
 	}

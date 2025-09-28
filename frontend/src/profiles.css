@@ -1,0 +1,35 @@
+.user-profile {
+  max-width: 600px;      /* Limit width */
+  margin: 0 auto;        /* Center horizontally */
+  padding: 2rem;         /* Space inside */
+  background: #fff;      /* White background */
+  border-radius: 12px;   /* Rounded corners */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+/* Space between fields */
+.user-profile .field {
+  margin-bottom: 1.25rem;
+}
+
+/* Make labels smaller & neat */
+.user-profile .label {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Reduce input size */
+.user-profile .input,
+.user-profile .textarea,
+.user-profile .select select {
+  font-size: 0.9rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+}
+
+/* Submit button styling */
+.user-profile .button.is-primary {
+  width: 100%;
+  font-size: 1rem;
+  font-weight: 600;
+}
