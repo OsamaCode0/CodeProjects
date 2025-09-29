@@ -4,13 +4,15 @@ import "./reg_login.css";
 import axios from "axios";
 import type { ErrorResponse } from "./registerform";
 import { API } from "./registerform";
+import { useNavigate } from "react-router-dom";
 
 type LoginResponse = {
-  id: string;
-  token: string;
+  user_id: string;
+  access_token: string;
 };
 
 export default function LoginForm() {
+  const navigate = useNavigate();
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
 
@@ -29,6 +31,12 @@ export default function LoginForm() {
         password,
       });
       alert("Loged in ✅");
+
+    const data = res.data; 
+    localStorage.setItem("token", data.access_token);
+    localStorage.setItem("userId", data.user_id);
+    //replaces the current entry → the Back button won't go back to the login page you just came from
+      navigate("/profile", { replace: true });
       console.log(res.data);
     } catch (err) {
       if (axios.isAxiosError(err)) {
@@ -36,7 +44,7 @@ export default function LoginForm() {
         if (data?.message) {
           alert(`${data.message}`);
         } else {
-          alert(`Request failed ❌ (${err.response?.status ?? "no status"})`);
+          alert(`Request failed ❌ (${err.response?.status ?? "Please, try again later"})`);
         }
       } else {
         alert("Unexpected error ❌");
@@ -49,7 +57,7 @@ export default function LoginForm() {
     <div className="page-container has-background-light">
       <form className="login-form" onSubmit={handleSubmit}>
         <p className="has-text-right">
-           <Link to="/register">Register</Link> if you do not have an account
+          <Link to="/register">Register</Link> if you do not have an account
         </p>
         <h2 className="title is-4 has-text-centered">
           Welcome to the Match-me-children app!
@@ -82,7 +90,6 @@ export default function LoginForm() {
         <button type="submit" className="button is-primary is-fullwidth">
           Login
         </button>
-        
       </form>
     </div>
   );

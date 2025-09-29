@@ -19,6 +19,8 @@ type PatchParentProfileInput struct {
 	About             *string   `json:"about,omitempty"`
 	LanguageCodes     *[]string `json:"languageCodes,omitempty"` // pointer to slice
 	AddressCity       *string   `json:"addressCity,omitempty"`
+	Lat               *float64  `json:"lat,omitempty"`
+	Lon               *float64  `json:"lon,omitempty"`
 	PreferredDistance *int      `json:"preferred_distance_km,omitempty"`
 }
 
@@ -34,11 +36,10 @@ func PatchMeProfile(c *gin.Context) {
 		return
 	}
 
-
 	sets := []string{}
 	args := []any{uid}
 	i := 2
-	updatedCols := make([]string, 0, 6)
+	updatedCols := make([]string, 0, 8)
 
 	add := func(col string, v any) {
 		sets = append(sets, fmt.Sprintf("%s=$%d", col, i))
@@ -61,6 +62,12 @@ func PatchMeProfile(c *gin.Context) {
 	}
 	if in.AddressCity != nil {
 		add("address_city", *in.AddressCity)
+	}
+	if in.Lat != nil {
+		add("lat", *in.Lat)
+	}
+	if in.Lon != nil {
+		add("lon", *in.Lon)
 	}
 	if in.PreferredDistance != nil {
 		add("preferred_distance_km", *in.PreferredDistance)

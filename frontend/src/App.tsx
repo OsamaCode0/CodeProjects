@@ -2,15 +2,40 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import RegisterForm from "./registerform";
 import LoginForm from "./loginform";
 import UserProfileForm from './userprofile';
+//import { RequireAuth, RequireGuest } from "./protectedRoutes";
 
-export default function App(){
-  return(
-      <Routes>
-        <Route path="/" element={<UserProfileForm />} />
-    
-      <Route path="/login" element={<LoginForm />} />
-      <Route path="/register" element={<RegisterForm />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+  export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to="/login" replace />} />
+
+      <Route
+        path="/login"
+        element={
+         // <RequireGuest>
+            <LoginForm />
+         // </RequireGuest>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+         // <RequireGuest>
+            <RegisterForm />
+          //</RequireGuest>
+        }
+      />
+
+      <Route
+        path="/profile"
+        element={
+          //<RequireAuth>
+            <UserProfileForm />
+          //</RequireAuth>
+        }
+      />
+
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }

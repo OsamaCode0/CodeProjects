@@ -1,9 +1,15 @@
 type Props = {
   maxLanguages?: number; // default = 3
+  languages: string[];
+  onChange: (langs: string[]) => void;
 };
 
-export default function UserLanguagesField({ maxLanguages = 3 }: Props) {
-  // Generate array of indexes [0,1,2]
+export default function UserLanguagesField({
+  maxLanguages = 3,
+  languages,
+  onChange,
+}: Props) {
+  // Always create exactly maxLanguages slots
   const fields = Array.from({ length: maxLanguages }, (_, i) => i);
 
   return (
@@ -11,51 +17,60 @@ export default function UserLanguagesField({ maxLanguages = 3 }: Props) {
       <label className="label">Languages</label>
 
       {fields.map((i) => (
-        <div className="control" style={{ marginTop: i === 0 ? 0 : "0.5rem" }} key={i}>
+        <div
+          className="control"
+          style={{ marginTop: i === 0 ? 0 : "0.5rem" }}
+          key={i}
+        >
           <input
-            name="language"
+            name={`language-${i}`}
             className="input"
             type="text"
             list="languages"
             placeholder="Type a language..."
+            value={languages[i] ?? ""} // 👈 controlled input
+            onChange={(e) => {
+              const updated = [...languages];
+              updated[i] = e.target.value;
+              onChange(updated); // 👈 push changes back up
+            }}
           />
         </div>
       ))}
 
       <datalist id="languages">
-        <option value="EN">English</option>
-        <option value="FR">French</option>
-        <option value="RU">Russian</option>
-        <option value="DE">German</option>
-        <option value="ES">Spanish</option>
-        <option value="IT">Italian</option>
-        <option value="PT">Portuguese</option>
-        <option value="ZH">Chinese (Mandarin)</option>
-        <option value="JA">Japanese</option>
-        <option value="KO">Korean</option>
-        <option value="AR">Arabic</option>
-        <option value="HI">Hindi</option>
-        <option value="BN">Bengali</option>
-        <option value="UR">Urdu</option>
-        <option value="FA">Persian</option>
-        <option value="TR">Turkish</option>
-        <option value="NL">Dutch</option>
-        <option value="PL">Polish</option>
-        <option value="SV">Swedish</option>
-        <option value="FI">Finnish</option>
-        <option value="NO">Norwegian</option>
-        <option value="DA">Danish</option>
-        <option value="EL">Greek</option>
-        <option value="HE">Hebrew</option>
-        <option value="TH">Thai</option>
-        <option value="VI">Vietnamese</option>
-        <option value="MS">Malay</option>
-        <option value="ID">Indonesian</option>
-        <option value="TL">Tagalog</option>
-        <option value="SW">Swahili</option>
+        <option value="English" />
+        <option value="French" />
+        <option value="Russian" />
+        <option value="German" />
+        <option value="Spanish" />
+        <option value="Italian" />
+        <option value="Portuguese" />
+        <option value="Chinese (Mandarin)" />
+        <option value="Japanese" />
+        <option value="Korean" />
+        <option value="Arabic" />
+        <option value="Hindi" />
+        <option value="Bengali" />
+        <option value="Urdu" />
+        <option value="Turkish" />
+        <option value="Dutch" />
+        <option value="Polish" />
+        <option value="Swedish" />
+        <option value="Finnish" />
+        <option value="Norwegian" />
+        <option value="Danish" />
+        <option value="Greek" />
+        <option value="Hebrew" />
+        <option value="Thai" />
+        <option value="Vietnamese" />
+        <option value="Malay" />
+        <option value="Indonesian" />
+        <option value="Tagalog" />
+        <option value="Swahili" />
       </datalist>
 
-      <p className="help">Choose up to {maxLanguages} languages (ISO codes or names).</p>
+      <p className="help">Choose up to {maxLanguages} languages.</p>
     </div>
   );
 }

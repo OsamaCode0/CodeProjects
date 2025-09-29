@@ -22,6 +22,8 @@ type BioRespond struct {
 	Gender            string   `json:"gender"`
 	Languages         []string `json:"languages"`
 	AddressCity       string   `json:"addressCity"`
+	Lat               float64  `json:"lat"`
+	Lon               float64  `json:"lon"`
 	PrefferedDistance int      `json:"prefferedDistance"`
 	Child             ChildBio `json:"child"`
 }
@@ -53,6 +55,8 @@ func buildBioResponse(p *structs.ParentProfile, ch *structs.Child) BioRespond {
 		Gender:            p.Gender,
 		Languages:         p.LanguageCodes,
 		AddressCity:       p.AddressCity,
+		Lat:               p.Lat,
+		Lon:               p.Lon,
 		PrefferedDistance: p.PreferredDistance,
 		Child: ChildBio{
 			Birthday:       ch.Birthday,

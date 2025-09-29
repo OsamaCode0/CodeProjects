@@ -19,6 +19,8 @@ func GetUserProfile(ctx context.Context, pool *pgxpool.Pool, id string) (*struct
             COALESCE(about, '') AS about,
             COALESCE(language_codes, '{}'::text[]) AS language_codes,
             COALESCE(address_city, '') AS address_city,
+            COALESCE(lat, 0.0)                AS lat,
+            COALESCE(lon, 0.0)                AS lon,
             COALESCE(preferred_distance_km, 0) AS preferred_distance_km
         FROM parent_profiles
         WHERE user_id = $1
@@ -31,6 +33,8 @@ func GetUserProfile(ctx context.Context, pool *pgxpool.Pool, id string) (*struct
         &p.About,
         &p.LanguageCodes,
         &p.AddressCity,
+        &p.Lat,
+        &p.Lon,     
         &p.PreferredDistance,
     )
     if err != nil {

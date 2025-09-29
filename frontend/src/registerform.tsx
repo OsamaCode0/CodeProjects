@@ -41,7 +41,7 @@ export default function RegisterForm() {
         password,
       });
       alert("Account created ✅");
-      navigate("/login");
+      navigate("/login", { replace:true });
       console.log(res.data);
     } catch (err) {
       if (axios.isAxiosError(err)) {

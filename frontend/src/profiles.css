@@ -33,3 +33,9 @@
   font-size: 1rem;
   font-weight: 600;
 }
+
+.select select {
+  height: 2.7em;       /* adjust height */
+  padding-left: 0.75em;
+  padding-right: 2em;  /* space for arrow */
+}

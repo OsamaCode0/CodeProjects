@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS parent_profiles (
   about                TEXT,
   language_codes       TEXT[] DEFAULT '{}',    
   address_city         TEXT,
+  lat DOUBLE PRECISION,
+  lon DOUBLE PRECISION,
   preferred_distance_km INTEGER    CHECK (preferred_distance_km BETWEEN 0 AND 200),
   created_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at           TIMESTAMPTZ NOT NULL DEFAULT now()

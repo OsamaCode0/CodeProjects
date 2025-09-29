@@ -19,36 +19,6 @@ type LoginInput struct {
 	Password string `json:"password"`
 }
 
-//CHANGED MY MIND))) FRONTEND WILL DEAL WITH IT
-/*
-type Gender string
-
-const (
-	GenderFemale Gender = "female"
-	GenderMale Gender = "male"
-	GenderPreferNoSay Gender = "prefer_not_to_say"
-	GenderNonBinary Gender = "non_binary"
-)
-
-var CatalogLang = map[string]string{
-	"en": "English",
-	"fr": "French",
-	"ru": "Russian",
-	"es": "Spanish",
-	"de": "German",
-	"fi": "Finnish",
-	"sv": "Swedish",
-	"it": "Italian",
-	"pl": "Polish",
-	"uk": "Ukrainian",
-	"pt": "Portuguese",
-	"nl": "Dutch",
-	"tr": "Turkish",
-	"ar": "Arabic",
-	"zh": "Chinese",
-	"ja": "Japanese",
-	"ko": "Korean",
-}*/
 
 type ParentProfile struct {
 	UserID            string    `json:"userId"`
@@ -57,6 +27,8 @@ type ParentProfile struct {
 	About             string    `json:"about,omitempty"`
 	LanguageCodes     []string  `json:"languageCodes"`
 	AddressCity       string    `json:"addressCity,omitempty"`
+	Lat               float64   `json:"lat,omitempty"`
+	Lon               float64   `json:"lon,omitempty"`
 	PreferredDistance int       `json:"preferredDistanceKm,omitempty"`
 	CreatedAt         time.Time `json:"createdAt"`
 	UpdatedAt         time.Time `json:"updatedAt"`

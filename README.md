@@ -20,6 +20,9 @@ Create a .env file inside the client/ directory and add this line.
 VITE_API_BASE_URL=http://localhost:8088
 Remember that the port set in both the client and server must match, for example if you change the PORT in server/.env to 3000 then the client should be http://localhost:3000
 
+//need to have a key from https://www.geoapify.com/(you can use mine)
+VITE_GEOAPIFY_KEY=0961ffde35ea4983ace9f087df1df71b
+
 
 .gitignore
 server/.env
