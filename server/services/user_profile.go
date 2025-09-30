@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"log"
 	"matchme-server/database"
 	"matchme-server/internal"
 	"matchme-server/structs"
@@ -17,11 +16,11 @@ type PatchParentProfileInput struct {
 	Name              *string   `json:"name,omitempty"`
 	Gender            *string   `json:"gender,omitempty"`
 	About             *string   `json:"about,omitempty"`
-	LanguageCodes     *[]string `json:"languageCodes,omitempty"` // pointer to slice
+	LanguageCodes     *[]string `json:"languages,omitempty"` // pointer to slice
 	AddressCity       *string   `json:"addressCity,omitempty"`
 	Lat               *float64  `json:"lat,omitempty"`
 	Lon               *float64  `json:"lon,omitempty"`
-	PreferredDistance *int      `json:"preferred_distance_km,omitempty"`
+	PreferredDistance *int      `json:"preferredDistance,omitempty"`
 }
 
 func PatchMeProfile(c *gin.Context) {
@@ -29,7 +28,7 @@ func PatchMeProfile(c *gin.Context) {
 	table := "parent_profiles"
 
 	var in PatchParentProfileInput
-	log.Printf("PATCH /me/profile input: %#v", in)
+	//log.Printf("PATCH /me/profile input: %#v", in)
 	if err := c.ShouldBindJSON(&in); err != nil {
 		c.JSON(400, structs.ErrorResponse{
 			Message: CommonErr})

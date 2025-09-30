@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 type Props = {
   maxLanguages?: number; // default = 3
   languages: string[];
@@ -9,36 +11,47 @@ export default function UserLanguagesField({
   languages,
   onChange,
 }: Props) {
-  // Always create exactly maxLanguages slots
-  const fields = Array.from({ length: maxLanguages }, (_, i) => i);
+  const listId = useId();
+
+  // ensure we always render exactly maxLanguages slots
+  const safe = [...languages, ...Array(Math.max(0, maxLanguages - languages.length)).fill("")]
+    .slice(0, maxLanguages);
+
+  const handleChange = (i: number, value: string) => {
+    const next = [...safe];
+    next[i] = value;          
+    onChange(next);
+  };
+
+  const handleBlur = (i: number) => {
+    const trimmed = safe[i].trim();
+    if (trimmed !== safe[i]) {
+      const next = [...safe];
+      next[i] = trimmed;
+      onChange(next);
+    }
+  };
 
   return (
     <div className="field">
       <label className="label">Languages</label>
 
-      {fields.map((i) => (
-        <div
-          className="control"
-          style={{ marginTop: i === 0 ? 0 : "0.5rem" }}
-          key={i}
-        >
+      {Array.from({ length: maxLanguages }, (_, i) => (
+        <div className="control" style={{ marginTop: i === 0 ? 0 : "0.5rem" }} key={i}>
           <input
             name={`language-${i}`}
             className="input"
             type="text"
-            list="languages"
+            list={listId}
             placeholder="Type a language..."
-            value={languages[i] ?? ""} // 👈 controlled input
-            onChange={(e) => {
-              const updated = [...languages];
-              updated[i] = e.target.value;
-              onChange(updated); // 👈 push changes back up
-            }}
+            value={safe[i] ?? ""}
+            onChange={(e) => handleChange(i, e.target.value)}
+            onBlur={() => handleBlur(i)}
           />
         </div>
       ))}
 
-      <datalist id="languages">
+      <datalist id={listId}>
         <option value="English" />
         <option value="French" />
         <option value="Russian" />

@@ -1,0 +1,27 @@
+import { API } from "../registerform";
+
+export async function saveProfile(payload: Record<string, unknown>) {
+  if (Object.keys(payload).length === 0) return; // nothing to update
+
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${API}/me/profile`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`HTTP ${res.status}${text ? `: ${text}` : ""}`);
+  }
+
+  // if your backend returns updated profile, parse it
+  const ct = res.headers.get("content-type") || "";
+  if (ct.includes("application/json")) {
+    return res.json();
+  }
+  return null;
+}

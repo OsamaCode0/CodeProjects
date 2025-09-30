@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import "./cityAutocomplete.css";
+import "../styles/cityAutocomplete.css";
 
 
 type City = { label: string; countryCode?: string; lat: number; lon: number; placeId?: string };

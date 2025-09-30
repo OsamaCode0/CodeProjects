@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import "bulma/css/bulma.min.css";
-import "./reg_login.css";
+import "./styles/reg_login.css";
 import axios from "axios";
 import type { ErrorResponse } from "./registerform";
 import { API } from "./registerform";

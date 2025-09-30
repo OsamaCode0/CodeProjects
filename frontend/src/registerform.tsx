@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import "bulma/css/bulma.min.css";
-import "./reg_login.css";
+import "./styles/reg_login.css";
 import axios from "axios";
 
 export const API = import.meta.env.VITE_API_BASE_URL;

@@ -1,8 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import RegisterForm from "./registerform";
 import LoginForm from "./loginform";
-import UserProfileForm from './userprofile';
-//import { RequireAuth, RequireGuest } from "./protectedRoutes";
+import UserProfileForm from './components/profile/UserProfileForm';
+import { RequireAuth, RequireGuest } from "./protectedRoutes";
 
   export default function App() {
   return (
@@ -12,26 +12,26 @@ import UserProfileForm from './userprofile';
       <Route
         path="/login"
         element={
-         // <RequireGuest>
+          <RequireGuest>
             <LoginForm />
-         // </RequireGuest>
+          </RequireGuest>
         }
       />
       <Route
         path="/register"
         element={
-         // <RequireGuest>
+          <RequireGuest>
             <RegisterForm />
-          //</RequireGuest>
+          </RequireGuest>
         }
       />
 
       <Route
         path="/profile"
         element={
-          //<RequireAuth>
+          <RequireAuth>
             <UserProfileForm />
-          //</RequireAuth>
+          </RequireAuth>
         }
       />
 

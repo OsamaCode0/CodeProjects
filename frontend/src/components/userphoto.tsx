@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "./userPhoto.css";
+import "../styles/userPhoto.css";
 
 type Props = {
   /** how many slots to show */

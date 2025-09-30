@@ -1,58 +1,53 @@
-import { useId, useMemo, useState } from "react";
-import "./preferredDistance.css";
+import { useId, useMemo } from "react";
+import "../styles/preferredDistance.css";
 
 type Props = {
   label?: string;
-  value?: number; // initial value
-  min?: number; // default 0
-  max?: number; // default 150
-  step?: number; // default 1
-  onChange?: (v: number) => void;
+  value: number;          // required now; parent controls it
+  min?: number;
+  max?: number;
+  step?: number;
+  onChange: (v: number) => void; // required
 };
 
 export default function PreferredDistanceField({
   label = "Preferred Radius (km)",
-  value = 10,
+  value,
   min = 0,
   max = 150,
   step = 1,
   onChange,
 }: Props) {
   const id = useId();
-  const [val, setVal] = useState<number>(value);
 
-  const pct = useMemo(() => ((val - min) / (max - min)) * 100, [val, min, max]);
-
-  const handle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const n = Number(e.target.value);
-    setVal(n);
-    onChange?.(n);
-  };
+  const safeMin = Number.isFinite(min) ? min : 0;
+  const safeMax = Number.isFinite(max) && max !== safeMin ? max : safeMin + 1;
+  const clamped = Math.min(Math.max(value, safeMin), safeMax);
+  const pct = useMemo(
+    () => ((clamped - safeMin) / (safeMax - safeMin)) * 100,
+    [clamped, safeMin, safeMax]
+  );
 
   return (
     <div className="field">
-      <label className="label" htmlFor={id}>
-        {label}
-      </label>
-
+      <label className="label" htmlFor={id}>{label}</label>
       <div className="control">
         <input
           id={id}
           className="slider"
           type="range"
-          min={min}
-          max={max}
+          min={safeMin}
+          max={safeMax}
           step={step}
-          value={val}
-          onChange={handle}
-          style={{ ["--pct" as any]: `${pct}%` }} // pct = ((val-min)/(max-min))*150
+          value={clamped}
+          onChange={(e) => onChange(Number(e.target.value))}
+          style={{ ["--pct" as any]: `${pct}%` }}
         />
       </div>
-
       <div className="is-flex is-justify-content-space-between is-align-items-center mt-2">
-        <span className="is-size-7">{min} km</span>
-        <span className="tag is-primary is-light">{val} km</span>
-        <span className="is-size-7">{max} km</span>
+        <span className="is-size-7">{safeMin} km</span>
+        <span className="tag is-primary is-light">{clamped} km</span>
+        <span className="is-size-7">{safeMax} km</span>
       </div>
     </div>
   );
