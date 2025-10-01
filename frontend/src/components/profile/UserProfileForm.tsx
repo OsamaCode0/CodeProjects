@@ -11,7 +11,6 @@ import { saveProfile } from "../../hooks/patchUser";
 import { buildPayload } from "./updateProfile";
 import type { ProfileFields } from "./updateProfile";
 import type { City } from "../../types/profile";
-import BottomPanel from "../bottom";
 
 export default function UserProfileForm() {
   const logout = useLogout();
@@ -222,7 +221,6 @@ export default function UserProfileForm() {
                 onClick={handleSave}>
                 Save changes
               </button>
-               <BottomPanel />
             </div>
           </div>
          

@@ -21,4 +21,16 @@ export type BioResponse = {
   prefferedDistance?: number | null;
 };
 
+export type ChildResponse = {
+  name?: string | null;
+	birthday?: string | null;
+	gender?: string | null;
+	about_short?: string | null;
+	intersts?: string[] | null;
+	activity_level?: string | null;
+	limitations?: string[] | null;
+	allergies?: string[] | null;
+	play_styles?: string[] | null;
+}
+
 export type CombinedMe = MeResponse & BioResponse;

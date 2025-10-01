@@ -1,4 +1,4 @@
-.user-profile {
+.user-profile, .child-profile {
   max-width: 600px;      /* Limit width */
   margin: 0 auto;        /* Center horizontally */
   padding: 2rem;         /* Space inside */
@@ -9,12 +9,12 @@
 }
 
 /* Space between fields */
-.user-profile .field {
+.user-profile .field, .child-profile .field {
   margin-bottom: 1.25rem;
 }
 
 /* Make labels smaller & neat */
-.user-profile .label {
+.user-profile .label, .child-profile .label{
   font-size: 0.9rem;
   font-weight: 600;
 }
@@ -22,14 +22,17 @@
 /* Reduce input size */
 .user-profile .input,
 .user-profile .textarea,
-.user-profile .select select {
+.user-profile .select select,
+.child-profile .input,
+.child-profile .textarea,
+.child-profile .select select {
   font-size: 0.9rem;
   padding: 0.55rem 0.75rem;
   border-radius: 8px;
 }
 
 /* Submit button styling */
-.user-profile .button.is-primary {
+.user-profile .button.is-primary, .child-profile .button.is-primary  {
   width: 100%;
   font-size: 1rem;
   font-weight: 600;
@@ -50,4 +53,8 @@
   position: absolute; top: 24px; right: 330px; 
 
 }
+
+.with-bottom-panel {
+  padding-bottom: 64px; /* matches bottom panel height */
+} 
 

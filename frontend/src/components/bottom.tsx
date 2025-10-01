@@ -1,3 +1,4 @@
+import "../styles/bottomPanel.css";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const IconUser = () => (

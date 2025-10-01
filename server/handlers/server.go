@@ -41,6 +41,7 @@ func SetupRouter() *gin.Engine {
 	auth.GET("/me", endpoints.GetMeNameAndPhoto)
 	auth.GET("/me/profile", endpoints.GetMyProfile)
 	auth.GET("/me/bio", endpoints.GetMeBio)
+	auth.GET("/me/child", endpoints.GetChildProfile)
 
 	return router
 }
