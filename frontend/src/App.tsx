@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import RegisterForm from "./registerform";
 import LoginForm from "./loginform";
 import UserProfileForm from "./components/profile/UserProfileForm";
@@ -7,6 +7,7 @@ import ChildProfileForm from "./components/profile/ChildProfileForm";
 import BottomPanel from "./components/bottom";
 
 export default function App() {
+  const location = useLocation();
    const hideBottomPanel =
     location.pathname === "/login" || location.pathname === "/register";
   return (

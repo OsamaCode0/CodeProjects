@@ -77,7 +77,7 @@ export default function UserProfileForm() {
     if (Object.keys(payload).length === 0) return; // nothing changed
 
     try {
-      await saveProfile(payload);
+      await saveProfile(payload, "/me/profile");
 
       // sync originals after success
       if ("name" in payload) originalName.current = (name ?? "").trim();

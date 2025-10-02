@@ -37,7 +37,7 @@ func SetupRouter() *gin.Engine {
 	auth := router.Group("/")
 	auth.Use(middleware.AuthRequired(internal.Cfg.JWTSecret))//the func will always run before anything with auth
 	auth.PATCH("/me/profile", services.PatchMeProfile)
-	auth.PATCH("/me/profile/child", services.PatchMeChild)
+	auth.PATCH("/me/child", services.PatchMeChild)
 	auth.GET("/me", endpoints.GetMeNameAndPhoto)
 	auth.GET("/me/profile", endpoints.GetMyProfile)
 	auth.GET("/me/bio", endpoints.GetMeBio)

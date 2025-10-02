@@ -26,7 +26,7 @@ export type ChildResponse = {
 	birthday?: string | null;
 	gender?: string | null;
 	about_short?: string | null;
-	intersts?: string[] | null;
+	interests?: string[] | null;
 	activity_level?: string | null;
 	limitations?: string[] | null;
 	allergies?: string[] | null;

@@ -1,13 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import "../styles/cityAutocomplete.css";
 
-
-type City = { label: string; countryCode?: string; lat: number; lon: number; placeId?: string };
+type City = {
+  label: string;
+  countryCode?: string;
+  lat: number;
+  lon: number;
+  placeId?: string;
+};
 
 type Props = {
   country?: string; // ISO-2, default "FI"
-  value: City | null;                         // current selected city from parent
-  onChange: (city: City | null) => void;      // tell parent when user picks/clears
+  value: City | null; // current selected city from parent
+  onChange: (city: City | null) => void; // tell parent when user picks/clears
   placeholder?: string;
   onSelect?: (city: City) => void;
 };
@@ -15,11 +20,10 @@ type Props = {
 export default function CityAutocomplete({
   country = "FI",
   placeholder = "Start typing your city…",
-  value,                
-  onChange,             
-  onSelect,            
+  value,
+  onChange,
+  onSelect,
 }: Props) {
-
   const [query, setQuery] = useState(value?.label ?? "");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -27,9 +31,12 @@ export default function CityAutocomplete({
   const boxRef = useRef<HTMLDivElement>(null);
   const apiKey = import.meta.env.VITE_GEOAPIFY_KEY as string;
 
- 
+  const [touched, setTouched] = useState(false);
+
   useEffect(() => {
     setQuery(value?.label ?? "");
+    setOpen(false);
+    setTouched(false);
   }, [value]);
 
   // Close dropdown when clicking outside
@@ -45,8 +52,10 @@ export default function CityAutocomplete({
   useEffect(() => {
     if (!apiKey) return;
     const q = query?.trim();
-    if (!q) {
+
+    if (!touched || q.length < 2) {
       setItems([]);
+      setOpen(false);
       return;
     }
     setLoading(true);
@@ -68,7 +77,11 @@ export default function CityAutocomplete({
             if (props.result_type && props.result_type !== "city") return null;
             const label =
               props.formatted ||
-              [props.city, props.county || props.state, props.country_code?.toUpperCase()]
+              [
+                props.city,
+                props.county || props.state,
+                props.country_code?.toUpperCase(),
+              ]
                 .filter(Boolean)
                 .join(", ");
             const lat = props.lat ?? f.geometry?.coordinates?.[1];
@@ -76,57 +89,76 @@ export default function CityAutocomplete({
             const cc = (props.country_code || country || "").toUpperCase();
             const placeId = props.place_id || f.properties?.place_id || "";
             if (!label || lat == null || lon == null) return null;
-            return { label, countryCode: cc, lat: Number(lat), lon: Number(lon), placeId };
+            return {
+              label,
+              countryCode: cc,
+              lat: Number(lat),
+              lon: Number(lon),
+              placeId,
+            };
           })
           .filter(Boolean) as City[];
 
         setItems(results);
+        setOpen(touched && results.length > 0);
       } catch {
         setItems([]);
       } finally {
         setLoading(false);
         setOpen(true);
       }
-    }, 300); 
+    }, 300);
 
     return () => clearTimeout(t);
   }, [query, apiKey, country]);
 
- 
   const handlePick = (item: City) => {
     setQuery(item.label);
     setOpen(false);
-    onChange(item); 
-    onSelect?.(item); 
+    setTouched(false);  
+    onChange(item);
+    onSelect?.(item);
   };
 
   return (
     <div className="field" ref={boxRef}>
       <label className="label">City</label>
 
-      <div className={`dropdown ${open && items.length ? "is-active" : ""}`} style={{ width: "100%" }}>
+      <div
+        className={`dropdown ${open && items.length ? "is-active" : ""}`}
+        style={{ width: "100%" }}>
         <div className="dropdown-trigger" style={{ width: "100%" }}>
           <input
             className="input"
             type="text"
-            value={query}                     
+            value={query}
             placeholder={placeholder}
-            onFocus={() => items.length && setOpen(true)}
+            onFocus={() => setOpen(touched && items.length > 0)}
             onChange={(e) => {
               const next = e.target.value;
+              setTouched(true);
               setQuery(next);
-              setOpen(true);
-              // (optional) if you want clearing to also clear selection:
               if (!next.trim()) onChange(null);
+              {
+                onChange(null); // clearing text clears selection
+                setItems([]);
+                setOpen(false);
+              }
             }}
             aria-haspopup="true"
             aria-controls="city-suggestions"
           />
         </div>
 
-        <div className="dropdown-menu" id="city-suggestions" role="menu" style={{ width: "100%" }}>
+        <div
+          className="dropdown-menu"
+          id="city-suggestions"
+          role="menu"
+          style={{ width: "100%" }}>
           <div className="dropdown-content city-dropdown">
-            {loading && <div className="dropdown-item is-size-7">Searching…</div>}
+            {loading && (
+              <div className="dropdown-item is-size-7">Searching…</div>
+            )}
             {!loading && items.length === 0 && query && (
               <div className="dropdown-item is-size-7">No matches</div>
             )}
@@ -138,8 +170,7 @@ export default function CityAutocomplete({
                   onMouseDown={(e) => {
                     e.preventDefault();
                     handlePick(item);
-                  }}
-                >
+                  }}>
                   {item.label}
                 </a>
               ))}
@@ -147,7 +178,9 @@ export default function CityAutocomplete({
         </div>
       </div>
 
-      <p className="help">Type your city. Pick from the list to save coordinates.</p>
+      <p className="help">
+        Type your city. Pick from the list to save coordinates.
+      </p>
     </div>
   );
 }

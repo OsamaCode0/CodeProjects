@@ -7,8 +7,6 @@ import (
 	"matchme-server/database"
 	"matchme-server/internal"
 	"matchme-server/structs"
-	"time"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,10 +15,10 @@ import (
 
 type PatchChildProfileInput struct {
 	Name           *string    `json:"name,omitempty"`
-	Birthday       *time.Time `json:"birthday,omitempty"`
+	Birthday       *string `json:"birthday,omitempty"`
 	Gender         *string    `json:"gender,omitempty"`
 	About_short    *string    `json:"about_short,omitempty"`
-	Interests      *[]string  `json:"intersts"`
+	Interests      *[]string  `json:"interests"`
 	Activity_level *string    `json:"activity_level"`
 	Limitations    *[]string  `json:"limitations"`
 	Allergies      *[]string  `json:"allergies"`
@@ -32,8 +30,9 @@ func PatchMeChild(c *gin.Context) {
 	table := "children"
 
 	var in PatchChildProfileInput 
-	log.Printf("PATCH /me/child input: %#v", in)
+	//log.Printf("PATCH /me/child input: %#v", in)
 	if err := c.ShouldBindJSON(&in); err != nil {
+		log.Println(err)
 		c.JSON(400, structs.ErrorResponse{
 			Message: "invalid json"})
 		return
