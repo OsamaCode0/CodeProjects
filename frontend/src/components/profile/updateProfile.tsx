@@ -33,6 +33,7 @@ export function buildPayload(
   if (current.preferredDistance !== original.preferredDistance)
     payload.preferredDistance = current.preferredDistance;
 
+
   // languages (array)
   if (!arrEqual(current.languages, original.languages)) {
     payload.languages = current.languages;

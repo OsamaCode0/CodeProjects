@@ -29,8 +29,8 @@ export type ChildResponse = {
 	interests?: string[] | null;
 	activity_level?: string | null;
 	limitations?: string[] | null;
-	allergies?: string[] | null;
-	play_styles?: string[] | null;
+	allergies? : string[] | null;
+	play_styles : string[] | null;
 }
 
 export type CombinedMe = MeResponse & BioResponse;

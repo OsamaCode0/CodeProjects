@@ -70,8 +70,7 @@ export default function UserProfileForm() {
       languages: originalLanguages.current,
       city: originalCity.current,
     };
-    console.log("current languages:", languages);
-    console.log("original languages:", originalLanguages.current);
+
 
     const payload = buildPayload(current, original);
     if (Object.keys(payload).length === 0) return; // nothing changed
@@ -131,7 +130,6 @@ export default function UserProfileForm() {
           {/* Photos */}
           <div className="field">
             <UserPhotosField
-              maxSlots={6}
               onChange={(files) => console.log(files)}
             />
           </div>

@@ -1,77 +1,82 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "../styles/userPhoto.css";
 
 type Props = {
-  /** how many slots to show */
-  maxSlots?: number;
-  /** called when any slot changes; gives you the current File list */
-  onChange?: (files: (File | null)[]) => void;
+  /** called when the file changes (null when removed) */
+  onChange?: (file: File | null) => void;
+  /** existing photo URL from backend (optional) */
+  initialUrl?: string | null;
+  /** emoji shown when empty */
+  placeholderEmoji?: string; // e.g. "👤" 
+  name?: string;
 };
 
-export default function UserPhotosField({ maxSlots = 6, onChange }: Props) {
-  const [previews, setPreviews] = useState<(string | null)[]>(
-    Array(maxSlots).fill(null)
-  );
-  const [files, setFiles] = useState<(File | null)[]>(
-    Array(maxSlots).fill(null)
-  );
+export default function UserPhotoField({
+  onChange,
+  initialUrl = null,
+  placeholderEmoji = "👤",
+  name = "photo",
+}: Props) {
+  const [preview, setPreview] = useState<string | null>(initialUrl);
+  const [file, setFile] = useState<File | null>(null);
 
-  const handlePick = (index: number, file: File | null) => {
-    // update files list
-    const nextFiles = [...files];
-    nextFiles[index] = file;
-    setFiles(nextFiles);
-    onChange?.(nextFiles);
+  // keep preview in sync if parent provides/changes initialUrl
+  useEffect(() => {
+    setPreview(initialUrl ?? null);
+    setFile(null);
+  }, [initialUrl]);
 
-    // update preview
-    if (!file) {
-      const nextPreviews = [...previews];
-      nextPreviews[index] = null;
-      setPreviews(nextPreviews);
+  const handlePick = (f: File | null) => {
+    setFile(f);
+    onChange?.(f);
+
+    if (!f) {
+      setPreview(null);
       return;
     }
     const reader = new FileReader();
-    reader.onload = () => {
-      const nextPreviews = [...previews];
-      nextPreviews[index] = reader.result as string;
-      setPreviews(nextPreviews);
-    };
-    reader.readAsDataURL(file);
+    reader.onload = () => setPreview(reader.result as string);
+    reader.readAsDataURL(f);
   };
 
   return (
     <div className="field">
-      <label className="label">User Photos</label>
+      <label className="label">Profile Photo</label>
 
-      <div className="photo-grid">
-        {previews.map((src, i) => (
-          <label key={i} className="photo-slot" title="Click to upload">
-            {src ? <img src={src} alt={`photo-${i}`} /> : <span className="plus">+</span>}
-            <input
-              type="file"
-              accept="image/*"
-              style={{ display: "none" }}
-              onChange={(e) => handlePick(i, e.target.files?.[0] ?? null)}
-            />
-            {src && (
-              <button
-                type="button"
-                className="remove"
-                onClick={(e) => {
-                  e.preventDefault();
-                  handlePick(i, null);
-                }}
-                aria-label="Remove photo"
-                title="Remove photo"
-              >
-                ×
-              </button>
-            )}
-          </label>
-        ))}
-      </div>
+      <label className={`photo-slot ${preview ? "" : "is-empty"}`} title="Click to upload">
+        {preview ? (
+          <img src={preview} alt="profile" />
+        ) : (
+          <span className="placeholder-emoji" role="img" aria-label="Upload photo">
+            {placeholderEmoji}
+          </span>
+        )}
 
-      <p className="help">Click a slot to upload up to {maxSlots} photos.</p>
+        <input
+          type="file"
+          name={name}
+          accept="image/*"
+          style={{ display: "none" }}
+          onChange={(e) => handlePick(e.target.files?.[0] ?? null)}
+        />
+
+        {preview && (
+          <button
+            type="button"
+            className="remove"
+            onClick={(e) => {
+              e.preventDefault();
+              handlePick(null);
+            }}
+            aria-label="Remove photo"
+            title="Remove photo"
+          >
+            ×
+          </button>
+        )}
+      </label>
+
+      <p className="help">Click to upload one image. Use a square photo for best fit.</p>
     </div>
   );
 }

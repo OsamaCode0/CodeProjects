@@ -9,12 +9,12 @@ import { saveProfile } from "../../hooks/patchUser";
 
 export default function ChildProfileForm() {
   const logout = useLogout();
-
   const { data } = useChildProfile();
 
   const [initialized, setInitialized] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  // Local editable state (initialized once data arrives)
+  // ---- Local editable state ----
   const [name, setName] = useState("");
   const [birthday, setBirthday] = useState<string>("");
   const [gender, setGender] = useState("");
@@ -25,7 +25,7 @@ export default function ChildProfileForm() {
   const [allergies, setAllergies] = useState<string[]>([]);
   const [play_styles, setPlay_styles] = useState<string[]>([]);
 
-  // Refs for original values
+  // ---- Refs for originals 
   const originalName = useRef("");
   const originalBirthday = useRef("");
   const originalGender = useRef("");
@@ -36,6 +36,7 @@ export default function ChildProfileForm() {
   const originalAllergies = useRef<string[]>([]);
   const originalPlayStyles = useRef<string[]>([]);
 
+  // Initialize from API once
   useEffect(() => {
     if (!data || initialized) return;
 
@@ -61,7 +62,32 @@ export default function ChildProfileForm() {
     originalPlayStyles.current = data.play_styles ?? [];
   }, [data, initialized]);
 
+  // Quick helper to know if anything changed 
+  const hasChanges =
+    name.trim() !== originalName.current.trim() ||
+    birthday !== originalBirthday.current ||
+    gender !== originalGender.current ||
+    about_short.trim() !== originalAboutShort.current.trim() ||
+    activity_level !== originalActivityLevel.current ||
+    JSON.stringify(interests.map((s) => s.trim()).filter(Boolean)) !==
+      JSON.stringify(
+        originalInterests.current.map((s) => s.trim()).filter(Boolean)
+      ) ||
+    JSON.stringify(limitations.map((s) => s.trim()).filter(Boolean)) !==
+      JSON.stringify(
+        originalLimitations.current.map((s) => s.trim()).filter(Boolean)
+      ) ||
+    JSON.stringify(allergies.map((s) => s.trim()).filter(Boolean)) !==
+      JSON.stringify(
+        originalAllergies.current.map((s) => s.trim()).filter(Boolean)
+      ) ||
+    JSON.stringify(play_styles.map((s) => s.trim()).filter(Boolean)) !==
+      JSON.stringify(
+        originalPlayStyles.current.map((s) => s.trim()).filter(Boolean)
+      );
+
   async function handleSaveChild() {
+    // Build current/original snapshots
     const current: ChildFields = {
       name,
       birthday,
@@ -86,13 +112,15 @@ export default function ChildProfileForm() {
       play_styles: originalPlayStyles.current,
     };
 
+    // Compute payload
     const payload = buildChildPayload(current, original);
     if (Object.keys(payload).length === 0) return;
 
+    setSaving(true);
     try {
       await saveProfile(payload, "/me/child");
 
-      // sync refs after success
+      // Sync refs after success so hasChanges becomes false on next render
       if ("name" in payload) originalName.current = name.trim();
       if ("birthday" in payload) originalBirthday.current = birthday;
       if ("gender" in payload) originalGender.current = gender;
@@ -109,9 +137,10 @@ export default function ChildProfileForm() {
         originalPlayStyles.current = [...play_styles];
     } catch (e) {
       console.error(e);
+    } finally {
+      setSaving(false);
     }
   }
-
   return (
     <section className="section has-background-light">
       <button className="logout button is-dark" onClick={() => logout()}>
@@ -298,8 +327,9 @@ export default function ChildProfileForm() {
               <button
                 className="button is-primary"
                 type="button"
-                onClick={handleSaveChild}>
-                Save changes
+                onClick={handleSaveChild}
+                disabled={!hasChanges || saving}>
+                {saving ? "Saving..." : "Save changes"}
               </button>
             </div>
           </div>

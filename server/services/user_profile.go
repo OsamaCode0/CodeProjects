@@ -72,6 +72,7 @@ func PatchMeProfile(c *gin.Context) {
 		add("preferred_distance_km", *in.PreferredDistance)
 	}
 
+
 	if len(sets) == 0 {
 		c.JSON(400, structs.ErrorResponse{
 			Message: "no fields to update",

@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS parent_profiles (
   lat DOUBLE PRECISION,
   lon DOUBLE PRECISION,
   preferred_distance_km INTEGER    CHECK (preferred_distance_km BETWEEN 0 AND 200),
+  photo_url TEXT;
   created_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at           TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -38,20 +39,6 @@ CREATE TRIGGER trg_parent_profiles_timestamps
 BEFORE UPDATE ON parent_profiles
 FOR EACH ROW
 EXECUTE FUNCTION set_updated_at();
-
-CREATE TABLE user_photos (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  url TEXT,
-  is_main BOOLEAN DEFAULT false,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
--- ensure only one main photo per user
-CREATE UNIQUE INDEX uniq_main_photo_per_user
-ON user_photos(user_id)
-WHERE is_main = true;
-
 
 
 

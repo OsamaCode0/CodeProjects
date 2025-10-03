@@ -15,11 +15,11 @@ type UserById struct {
 	Name      string `json:"name"`
 	AvatarUrl string `json:"avatarurl"`
 }
-
+//GET users/{id}
 func GetNameAndPhoto(c *gin.Context) {
     serveNameAndPhoto(c, c.Param("id"))
 }
-
+//GET me
 func GetMeNameAndPhoto(c *gin.Context) {
     id := c.GetString("userID") // guaranteed by AuthRequired()
     serveNameAndPhoto(c, id)

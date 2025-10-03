@@ -18,7 +18,12 @@ export function useMeProfile() {
   });
 
   useEffect(() => {
-   
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setState((s) => ({ ...s, error: "No token found" }));
+      return;
+    }
+
     let cancelled = false;
     (async () => {
       setState((s) => ({ ...s, loading: true, error: null }));
