@@ -20,7 +20,6 @@ CREATE TABLE IF NOT EXISTS parent_profiles (
   lat DOUBLE PRECISION,
   lon DOUBLE PRECISION,
   preferred_distance_km INTEGER    CHECK (preferred_distance_km BETWEEN 0 AND 200),
-  photo_url TEXT;
   created_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at           TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -55,4 +54,10 @@ CREATE TABLE children (
   limitations    TEXT[] DEFAULT '{}',
   allergies      TEXT[] DEFAULT '{}',
   play_styles    TEXT[] DEFAULT '{}'
+);
+
+CREATE TABLE user_photos (
+    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    photo_public_id TEXT NOT NULL,
+    photo_version   INTEGER NOT NULL
 );

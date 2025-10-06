@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useRef } from "react";
 import "../styles/userPhoto.css";
 
 type Props = {
@@ -7,7 +7,7 @@ type Props = {
   /** existing photo URL from backend (optional) */
   initialUrl?: string | null;
   /** emoji shown when empty */
-  placeholderEmoji?: string; // e.g. "👤" 
+  placeholderEmoji?: string; // e.g. "👤"
   name?: string;
 };
 
@@ -17,17 +17,15 @@ export default function UserPhotoField({
   placeholderEmoji = "👤",
   name = "photo",
 }: Props) {
-  const [preview, setPreview] = useState<string | null>(initialUrl);
-  const [file, setFile] = useState<File | null>(null);
 
-  // keep preview in sync if parent provides/changes initialUrl
-  useEffect(() => {
-    setPreview(initialUrl ?? null);
-    setFile(null);
-  }, [initialUrl]);
+  const normalize = (u?: string | null) =>
+  u && u.trim() !== "" ? u : null;
+
+  const [preview, setPreview] = useState<string | null>(normalize(initialUrl));
+  
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handlePick = (f: File | null) => {
-    setFile(f);
     onChange?.(f);
 
     if (!f) {
@@ -43,21 +41,40 @@ export default function UserPhotoField({
     <div className="field">
       <label className="label">Profile Photo</label>
 
-      <label className={`photo-slot ${preview ? "" : "is-empty"}`} title="Click to upload">
+      <label
+        className={`photo-slot ${preview ? "" : "is-empty"}`}
+        title="Click to upload"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            inputRef.current?.click();
+          }
+        }}>
         {preview ? (
           <img src={preview} alt="profile" />
         ) : (
-          <span className="placeholder-emoji" role="img" aria-label="Upload photo">
+          <span
+            className="placeholder-emoji"
+            role="img"
+            aria-label="Upload photo">
             {placeholderEmoji}
           </span>
         )}
 
         <input
+          ref={inputRef}
           type="file"
           name={name}
           accept="image/*"
           style={{ display: "none" }}
-          onChange={(e) => handlePick(e.target.files?.[0] ?? null)}
+          onChange={(e) => {
+            const f = e.target.files?.[0] ?? null;
+            handlePick(f);
+            // allow selecting the same file again later
+            if (inputRef.current) inputRef.current.value = "";
+          }}
         />
 
         {preview && (
@@ -66,17 +83,20 @@ export default function UserPhotoField({
             className="remove"
             onClick={(e) => {
               e.preventDefault();
+              e.stopPropagation(); // prevent picker opening
               handlePick(null);
+              if (inputRef.current) inputRef.current.value = "";
             }}
             aria-label="Remove photo"
-            title="Remove photo"
-          >
+            title="Remove photo">
             ×
           </button>
         )}
       </label>
 
-      <p className="help">Click to upload one image. Use a square photo for best fit.</p>
+      <p className="help">
+        Click to upload one image. Use a square photo for best fit.
+      </p>
     </div>
   );
 }

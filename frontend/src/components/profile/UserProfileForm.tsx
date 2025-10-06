@@ -1,7 +1,6 @@
 import "bulma/css/bulma.min.css";
 import "../../styles/profiles.css";
 import { useLogout } from "../../auth/useLogout";
-import UserPhotosField from "../userphoto";
 import UserLanguagesField from "../userLanguages";
 import CityAutocomplete from "../cityAutocomplete";
 import PreferredDistanceField from "../preferredDistance";
@@ -11,9 +10,15 @@ import { saveProfile } from "../../hooks/patchUser";
 import { buildPayload } from "./updateProfile";
 import type { ProfileFields } from "./updateProfile";
 import type { City } from "../../types/profile";
+import UserPhotoField from "../userphoto";
+import { uploadAvatar, deleteAvatar } from "../avatar";
 
 export default function UserProfileForm() {
   const logout = useLogout();
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+
   const { loading, error, data, city: loadedCity } = useMeProfile();
 
   const [initialized, setInitialized] = useState(false);
@@ -49,6 +54,10 @@ export default function UserProfileForm() {
     originalLanguages.current = data.languages ?? ["", "", ""];
     setCity(loadedCity ?? null);
     originalCity.current = loadedCity ?? null;
+    setPhotoUrl(
+      data.avatarurl && data.avatarurl.trim() !== "" ? data.avatarurl : null
+    );
+
     setInitialized(true);
   }, [data, loadedCity, initialized]);
 
@@ -70,7 +79,6 @@ export default function UserProfileForm() {
       languages: originalLanguages.current,
       city: originalCity.current,
     };
-
 
     const payload = buildPayload(current, original);
     if (Object.keys(payload).length === 0) return; // nothing changed
@@ -96,6 +104,33 @@ export default function UserProfileForm() {
     }
   }
 
+  async function handlePhotoChange(file: File | null) {
+    setPhotoError(null);
+
+    if (!file) {
+      try {
+        setUploading(true);
+        await deleteAvatar();
+        setPhotoUrl(null);
+      } catch (e: any) {
+        setPhotoError(e?.message ?? "Failed to delete photo");
+      } finally {
+        setUploading(false);
+      }
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const { url } = await uploadAvatar(file);
+      setPhotoUrl(url);
+    } catch (e: any) {
+      setPhotoError(e?.message ?? "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
     <section className="section has-background-light">
       <button className="logout button is-dark" onClick={() => logout()}>
@@ -105,6 +140,7 @@ export default function UserProfileForm() {
         <h1 className="title has-text-centered">Your Profile</h1>
 
         {error && <div className="notification is-danger">{error}</div>}
+        {photoError && <p className="help is-danger">{photoError}</p>}
 
         <form className="user-profile  with-bottom-panel">
           {/* Name */}
@@ -129,9 +165,14 @@ export default function UserProfileForm() {
 
           {/* Photos */}
           <div className="field">
-            <UserPhotosField
-              onChange={(files) => console.log(files)}
+            <UserPhotoField
+              key={photoUrl || "empty"} 
+              initialUrl={photoUrl ?? null} 
+              onChange={handlePhotoChange}
+              placeholderEmoji="👤"
             />
+            {uploading && <p className="help">Uploading…</p>}
+            {error && <p className="help is-danger">{error}</p>}
           </div>
 
           {/* Gender (keep simple/select for now) */}
@@ -221,7 +262,6 @@ export default function UserProfileForm() {
               </button>
             </div>
           </div>
-         
         </form>
       </div>
     </section>

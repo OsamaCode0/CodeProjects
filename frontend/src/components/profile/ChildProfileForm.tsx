@@ -12,7 +12,7 @@ export default function ChildProfileForm() {
   const { data } = useChildProfile();
 
   const [initialized, setInitialized] = useState(false);
-  const [saving, setSaving] = useState(false);
+//  const [saving, setSaving] = useState(false);
 
   // ---- Local editable state ----
   const [name, setName] = useState("");
@@ -62,7 +62,7 @@ export default function ChildProfileForm() {
     originalPlayStyles.current = data.play_styles ?? [];
   }, [data, initialized]);
 
-  // Quick helper to know if anything changed 
+  /*// Quick helper to know if anything changed 
   const hasChanges =
     name.trim() !== originalName.current.trim() ||
     birthday !== originalBirthday.current ||
@@ -84,7 +84,7 @@ export default function ChildProfileForm() {
     JSON.stringify(play_styles.map((s) => s.trim()).filter(Boolean)) !==
       JSON.stringify(
         originalPlayStyles.current.map((s) => s.trim()).filter(Boolean)
-      );
+      );*/
 
   async function handleSaveChild() {
     // Build current/original snapshots
@@ -116,7 +116,7 @@ export default function ChildProfileForm() {
     const payload = buildChildPayload(current, original);
     if (Object.keys(payload).length === 0) return;
 
-    setSaving(true);
+    //setSaving(true);
     try {
       await saveProfile(payload, "/me/child");
 
@@ -137,9 +137,7 @@ export default function ChildProfileForm() {
         originalPlayStyles.current = [...play_styles];
     } catch (e) {
       console.error(e);
-    } finally {
-      setSaving(false);
-    }
+    } 
   }
   return (
     <section className="section has-background-light">
@@ -328,8 +326,8 @@ export default function ChildProfileForm() {
                 className="button is-primary"
                 type="button"
                 onClick={handleSaveChild}
-                disabled={!hasChanges || saving}>
-                {saving ? "Saving..." : "Save changes"}
+                >
+                Save changes
               </button>
             </div>
           </div>

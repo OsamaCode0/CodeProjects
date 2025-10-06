@@ -44,7 +44,8 @@ func SetupRouter() *gin.Engine {
 	auth.GET("/me/bio", endpoints.GetMeBio)
 	auth.GET("/me/child", endpoints.GetChildProfile)
 	auth.GET("/me/cloudinary-sign", endpoints.CloudinarySign)
-	//auth.POST("/me/photo", photoHandler.PostMePhoto)
+	auth.POST("/me/photo", endpoints.PostMePhoto)
+	auth.DELETE("/me/photo", endpoints.DeleteMePhoto)
 
 	return router
 }

@@ -46,3 +46,9 @@ type Child struct {
 	Allergies      []string  `json:"allergies"`
 	Play_styles    []string  `json:"play_styles"`
 }
+
+type UserPhoto struct {
+    UserID  string     `db:"user_id"`
+    PublicID string    `db:"photo_public_id"`
+    Version  int       `db:"photo_version"`
+}

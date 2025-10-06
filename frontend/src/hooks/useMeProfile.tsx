@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { get } from "../api/client";
-import type { MeResponse, City, CombinedMe, BioResponse } from "../types/profile";
+import type { MeResponse, City, CombinedMe, BioResponse, PhotoUrl} from "../types/profile";
 
 type State = {
   loading: boolean;
@@ -28,12 +28,13 @@ export function useMeProfile() {
     (async () => {
       setState((s) => ({ ...s, loading: true, error: null }));
       try {
-        const [profile, bio] = await Promise.all([
+        const [profile, bio, photo] = await Promise.all([
           get<MeResponse>("/me/profile"),
           get<BioResponse>("/me/bio"),
+          get<PhotoUrl>("/me"),
         ]);
 
-        const merged: CombinedMe = { ...profile, ...bio };
+        const merged: CombinedMe = { ...profile, ...bio, ...photo };
 
         const city =
           merged.addressCity

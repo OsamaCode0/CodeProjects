@@ -2,7 +2,10 @@ package database
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
+	"os"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -20,24 +23,46 @@ func EnsureUserExists(ctx context.Context, pool *pgxpool.Pool, id string) (error
 	return nil, true
 }
 
-func GetUserName_photoUrl(ctx context.Context, pool *pgxpool.Pool, id string) (string, string) {
-	var name, photo_url string
+// Returns: name, photoURL (versioned). If no photo, photoURL = "".
+func GetUserNamePhotoURL(ctx context.Context, pool *pgxpool.Pool, userID string) (string, string) {
+	var (
+		name     string
+		publicID *string // nullable
+		version  *int32  // nullable (INT in PG -> int32 here)
+	)
+
 	err := pool.QueryRow(ctx, `
 		SELECT 
-			COALESCE(name, '') AS name,
-			COALESCE(photo_url, '') AS photo_url
-		FROM parent_profiles
-		WHERE user_id = $1
+			COALESCE(pp.name, '') AS name,
+			up.photo_public_id,
+			up.photo_version
+		FROM parent_profiles pp
+		LEFT JOIN user_photos up ON up.user_id = pp.user_id
+		WHERE pp.user_id = $1
 		LIMIT 1
-	`, id).Scan(&name, &photo_url)
+	`, userID).Scan(&name, &publicID, &version)
 
 	if err != nil {
-		if err == pgx.ErrNoRows {
-			// no profile found: return empty values
+		if errors.Is(err, pgx.ErrNoRows) {
 			return "", ""
 		}
-		log.Println("name query error:", err)
+		log.Println("GetUserNamePhotoURL query error:", err)
 		return "", ""
 	}
-	return name, photo_url
+
+	// Build a versioned Cloudinary URL if photo exists
+	photoURL := ""
+	if publicID != nil && version != nil {
+		cloud := os.Getenv("CLOUDINARY_CLOUD_NAME")
+		if cloud == "" {
+			log.Println("CLOUDINARY_CLOUD_NAME not set; returning empty photo URL")
+		} else {
+			photoURL = fmt.Sprintf(
+				"https://res.cloudinary.com/%s/image/upload/c_fill,w_256,h_256,g_face,f_auto,q_auto/v%d/%s",
+				cloud, int(*version), *publicID,
+			)
+		}
+	}
+
+	return name, photoURL
 }

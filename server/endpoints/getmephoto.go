@@ -51,9 +51,9 @@ func serveNameAndPhoto(c *gin.Context, id string) {
 		return
 	}
 
-	out.Name, out.AvatarUrl = database.GetUserName_photoUrl(ctx, internal.DB, id)
+	out.Name, out.AvatarUrl = database.GetUserNamePhotoURL(ctx, internal.DB, id)
 	out.UserID = id
-
+	
 	c.JSON(200, out)
 
 }

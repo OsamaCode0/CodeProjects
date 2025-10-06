@@ -7,6 +7,7 @@ export type MeResponse = {
   lat?: number | null;
   lon?: number | null;
   preferredDistance?:number | null;
+  avatarurl?: string | null;
 };
 
 export type City = {
@@ -21,6 +22,10 @@ export type BioResponse = {
   prefferedDistance?: number | null;
 };
 
+export type PhotoUrl = {
+  photo_url?: string | null;
+}
+
 export type ChildResponse = {
   name?: string | null;
 	birthday?: string | null;
@@ -30,7 +35,7 @@ export type ChildResponse = {
 	activity_level?: string | null;
 	limitations?: string[] | null;
 	allergies? : string[] | null;
-	play_styles : string[] | null;
+	play_styles? : string[] | null;
 }
 
-export type CombinedMe = MeResponse & BioResponse;
+export type CombinedMe = MeResponse & BioResponse & PhotoUrl;
