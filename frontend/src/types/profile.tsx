@@ -36,6 +36,12 @@ export type ChildResponse = {
 	limitations?: string[] | null;
 	allergies? : string[] | null;
 	play_styles? : string[] | null;
+  interests_weight?: number | null;        
+  activity_level_weight?: number | null;   
+  limitations_weight?: number | null;      
+  allergies_weight?: number | null;       
+  play_styles_weight?: number | null;     
+  max_age_difference?: number | null; 
 }
 
 export type CombinedMe = MeResponse & BioResponse & PhotoUrl;

@@ -47,6 +47,16 @@ func CreateUser(ctx context.Context, pool *pgxpool.Pool, email, hashedPassword s
 		return "", time.Time{}, err
 	}
 
+	const q4 = `
+		INSERT INTO matching_preferences (user_id)
+		VALUES ($1)
+		ON CONFLICT (user_id) DO NOTHING
+	`
+	_, err = pool.Exec(ctx, q4, id)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
 	return id, createdAt, nil
 }
 

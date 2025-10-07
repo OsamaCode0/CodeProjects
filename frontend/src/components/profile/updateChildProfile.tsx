@@ -9,6 +9,12 @@ export type ChildFields = {
   limitations: string[];
   allergies: string[];        
   play_styles: string[];
+  interests_weight?: number | null;        
+  activity_level_weight?: number | null;   
+  limitations_weight?: number | null;      
+  allergies_weight?: number | null;       
+  play_styles_weight?: number | null;     
+  max_age_difference?: number | null; 
 };
 
 
@@ -50,6 +56,25 @@ export function buildChildPayload(
   const playNow = arrNormalize(current.play_styles);
   const playOld = arrNormalize(original.play_styles);
   if (!arrEqual(playNow, playOld)) payload.play_styles = playNow;
+
+  if (current.interests_weight !== original.interests_weight)
+  payload.interests_weight = current.interests_weight;
+
+if (current.activity_level_weight !== original.activity_level_weight)
+  payload.activity_level_weight = current.activity_level_weight;
+
+if (current.limitations_weight !== original.limitations_weight)
+  payload.limitations_weight = current.limitations_weight;
+
+if (current.allergies_weight !== original.allergies_weight)
+  payload.allergies_weight = current.allergies_weight;
+
+if (current.play_styles_weight !== original.play_styles_weight)
+  payload.play_styles_weight = current.play_styles_weight;
+
+// NEW: max age difference (>= 0)
+if (current.max_age_difference !== original.max_age_difference)
+  payload.max_age_difference = current.max_age_difference;
 
   return payload;
 }

@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"errors"
+	"log"
 	"matchme-server/structs"
 
 	"github.com/jackc/pgx/v5"
@@ -78,6 +79,7 @@ func GetChildProfile(ctx context.Context, pool *pgxpool.Pool, id string) (*struc
 		&c.Play_styles,
     )
     if err != nil {
+        log.Println(err)
         if errors.Is(err, pgx.ErrNoRows) {
             return nil, nil //not found
         }
@@ -85,4 +87,41 @@ func GetChildProfile(ctx context.Context, pool *pgxpool.Pool, id string) (*struc
     }
 
     return &c, nil
+}
+
+func GetUserMatchingPreferences(ctx context.Context, pool *pgxpool.Pool, userID string) (*structs.PreferencesInput, error) {
+	var p structs.PreferencesInput
+
+	row := pool.QueryRow(ctx, `
+        SELECT
+            user_id::text,
+            COALESCE(interests_weight, 1),
+            COALESCE(activity_level_weight, 2),
+            COALESCE(limitations_weight, 3),
+            COALESCE(allergies_weight, 3),
+            COALESCE(play_styles_weight, 1),
+            COALESCE(max_age_difference, 2)
+        FROM matching_preferences
+        WHERE user_id = $1
+        LIMIT 1
+    `, userID)
+
+	err := row.Scan(
+		&p.UserID,
+		&p.InterestsWeight,
+		&p.ActivityLevelWeight,
+		&p.LimitationsWeight,
+		&p.AllergiesWeight,
+		&p.PlayStylesWeight,
+		&p.MaxAgeDifference,
+	)
+	if err != nil {
+        log.Println(err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil // not found
+		}
+		return nil, err
+	}
+
+	return &p, nil
 }

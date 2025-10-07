@@ -181,7 +181,7 @@ export default function UserProfileForm() {
               Gender
             </label>
             <div className="control">
-              <div className="select is-fullwidth">
+              <div className="select">
                 <select
                   id="gender"
                   name="gender"
@@ -222,7 +222,7 @@ export default function UserProfileForm() {
           </div>
 
           {/* Languages */}
-          <div className="field">
+          <div className="field lang">
             <UserLanguagesField
               maxLanguages={3}
               languages={languages}

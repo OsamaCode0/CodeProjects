@@ -1,4 +1,5 @@
 import { useId } from "react";
+import "../styles/profiles.css";
 
 type Props = {
   maxLanguages?: number; // default = 3

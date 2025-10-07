@@ -1,5 +1,5 @@
 .user-profile, .child-profile {
-  max-width: 600px;      /* Limit width */
+  max-width: 650px;      /* Limit width */
   margin: 0 auto;        /* Center horizontally */
   padding: 2rem;         /* Space inside */
   background: #fff;      /* White background */
@@ -26,6 +26,7 @@
 .child-profile .input,
 .child-profile .textarea,
 .child-profile .select select {
+  height: 2.7em;
   font-size: 0.9rem;
   padding: 0.55rem 0.75rem;
   border-radius: 8px;
@@ -42,6 +43,11 @@
   height: 2.7em;       /* adjust height */
   padding-left: 0.75em;
   padding-right: 2em;  /* space for arrow */
+  width: 180px;
+}
+
+.rate {
+  width: 70px;
 }
 
 .with-bottom-panel {
@@ -58,3 +64,6 @@
   padding-bottom: 64px; /* matches bottom panel height */
 } 
 
+.field.lang{
+  width: 200px;
+}

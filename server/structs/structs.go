@@ -19,7 +19,6 @@ type LoginInput struct {
 	Password string `json:"password"`
 }
 
-
 type ParentProfile struct {
 	UserID            string    `json:"userId"`
 	Name              string    `json:"name"`
@@ -48,7 +47,17 @@ type Child struct {
 }
 
 type UserPhoto struct {
-    UserID  string     `db:"user_id"`
-    PublicID string    `db:"photo_public_id"`
-    Version  int       `db:"photo_version"`
+	UserID   string `db:"user_id"`
+	PublicID string `db:"photo_public_id"`
+	Version  int    `db:"photo_version"`
+}
+
+type PreferencesInput struct {
+	UserID              string `db:"user_id"`
+	InterestsWeight     int    `json:"interests_weight,omitempty"`
+	ActivityLevelWeight int    `json:"activity_level_weight,omitempty"`
+	LimitationsWeight   int    `json:"limitations_weight,omitempty"`
+	AllergiesWeight     int    `json:"allergies_weight,omitempty"`
+	PlayStylesWeight    int    `json:"play_styles_weight,omitempty"`
+	MaxAgeDifference    int    `json:"max_age_difference,omitempty"`
 }
