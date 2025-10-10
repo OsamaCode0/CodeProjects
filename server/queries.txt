@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS parent_profiles (
   name                 TEXT,
   gender               TEXT,
   about                TEXT,
-  language_codes       TEXT[] DEFAULT '{}',    
+  languages       TEXT[] DEFAULT '{}',    
   address_city         TEXT,
   lat DOUBLE PRECISION,
   lon DOUBLE PRECISION,
@@ -61,3 +61,128 @@ CREATE TABLE user_photos (
     photo_public_id TEXT NOT NULL,
     photo_version   INTEGER NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS matching_preferences (
+  user_id                 UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  interests_weight        INTEGER DEFAULT 1 CHECK (interests_weight BETWEEN 0 AND 5),
+  activity_level_weight   INTEGER DEFAULT 2 CHECK (activity_level_weight BETWEEN 0 AND 5),
+  limitations_weight      INTEGER DEFAULT 3 CHECK (limitations_weight BETWEEN 0 AND 5), -- higher default for safety
+  allergies_weight        INTEGER DEFAULT 3 CHECK (allergies_weight BETWEEN 0 AND 5),   -- critical for safety
+  play_styles_weight      INTEGER DEFAULT 1 CHECK (play_styles_weight BETWEEN 0 AND 5),
+  max_age_difference      INTEGER DEFAULT 2 CHECK (max_age_difference >= 0)
+);
+
+//for matching, prefilter location
+
+CREATE EXTENSION IF NOT EXISTS postgis;
+
+-- Add a geography point to parent_profiles (WGS84)
+ALTER TABLE parent_profiles
+  ADD COLUMN IF NOT EXISTS geog geography(Point, 4326);
+
+-- Backfill existing rows from (lon, lat)
+UPDATE parent_profiles
+SET geog = CASE
+             WHEN lat IS NOT NULL AND lon IS NOT NULL
+             THEN ST_SetSRID(ST_MakePoint(lon, lat), 4326)::geography
+             ELSE NULL
+           END
+WHERE geog IS NULL;
+
+-- Keep geog in sync on INSERT/UPDATE
+CREATE OR REPLACE FUNCTION set_parent_geog() RETURNS trigger AS $$
+BEGIN
+  IF NEW.lat IS NOT NULL AND NEW.lon IS NOT NULL THEN
+    NEW.geog := ST_SetSRID(ST_MakePoint(NEW.lon, NEW.lat), 4326)::geography;
+  ELSE
+    NEW.geog := NULL;
+  END IF;
+  RETURN NEW;
+END
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_parent_geog ON parent_profiles;
+CREATE TRIGGER trg_parent_geog
+BEFORE INSERT OR UPDATE ON parent_profiles
+FOR EACH ROW EXECUTE FUNCTION set_parent_geog();
+
+-- Spatial index (enables fast ST_DWithin/ ST_Distance)
+CREATE INDEX IF NOT EXISTS parent_profiles_geog_idx
+  ON parent_profiles USING GIST (geog);
+
+
+-- The prefilter function (viewer must have filled parent+child; filters by radius)
+CREATE OR REPLACE FUNCTION prefilter_candidates_postgis(
+  viewer uuid,
+  p_limit  int DEFAULT 500,
+  p_offset int DEFAULT 0
+)
+RETURNS TABLE (
+  candidate_user_id uuid,
+  distance_km      double precision,
+  address_city     text
+)
+LANGUAGE sql
+AS $$
+WITH me_parent AS (
+  SELECT p.user_id, p.geog, p.preferred_distance_km
+  FROM parent_profiles p
+  WHERE p.user_id = viewer
+    AND p.name IS NOT NULL AND btrim(p.name) <> ''
+    AND p.gender IS NOT NULL AND btrim(p.gender) <> ''
+    AND p.about IS NOT NULL AND btrim(p.about) <> ''
+    AND array_length(p.languages,1) IS NOT NULL AND array_length(p.languages,1) > 0
+    AND p.address_city IS NOT NULL AND btrim(p.address_city) <> ''
+    AND p.geog IS NOT NULL
+    AND p.preferred_distance_km IS NOT NULL
+),
+me_child AS (
+  SELECT c.user_id
+  FROM children c
+  WHERE c.user_id = viewer
+    AND c.name        IS NOT NULL AND btrim(c.name) <> ''
+    AND c.birthday    IS NOT NULL
+    AND c.gender      IS NOT NULL AND btrim(c.gender) <> ''
+    AND c.about_short IS NOT NULL AND btrim(c.about_short) <> ''
+    AND array_length(c.interests,1)   IS NOT NULL AND array_length(c.interests,1) > 0
+    AND c.activity_level              IS NOT NULL AND btrim(c.activity_level) <> ''
+    AND array_length(c.allergies,1)   IS NOT NULL AND array_length(c.allergies,1) > 0
+    AND array_length(c.play_styles,1) IS NOT NULL AND array_length(c.play_styles,1) > 0
+),
+me AS (
+  SELECT mp.user_id, mp.geog, mp.preferred_distance_km
+  FROM me_parent mp JOIN me_child mc ON mc.user_id = mp.user_id
+),
+candidates_full AS (
+  SELECT p.user_id, p.address_city, p.geog
+  FROM parent_profiles p
+  JOIN children c ON c.user_id = p.user_id
+  JOIN me ON TRUE
+  WHERE p.user_id <> me.user_id
+    -- parent filled
+    AND p.name IS NOT NULL AND btrim(p.name) <> ''
+    AND p.gender IS NOT NULL AND btrim(p.gender) <> ''
+    AND p.about IS NOT NULL AND btrim(p.about) <> ''
+    AND array_length(p.languages,1) IS NOT NULL AND array_length(p.languages,1) > 0
+    AND p.address_city IS NOT NULL AND btrim(p.address_city) <> ''
+    AND p.geog IS NOT NULL
+    -- child filled
+    AND c.name        IS NOT NULL AND btrim(c.name) <> ''
+    AND c.birthday    IS NOT NULL
+    AND c.gender      IS NOT NULL AND btrim(c.gender) <> ''
+    AND c.about_short IS NOT NULL AND btrim(c.about_short) <> ''
+    AND array_length(c.interests,1)   IS NOT NULL AND array_length(c.interests,1) > 0
+    AND c.activity_level              IS NOT NULL AND btrim(c.activity_level) <> ''
+    AND array_length(c.allergies,1)   IS NOT NULL AND array_length(c.allergies,1) > 0
+    AND array_length(c.play_styles,1) IS NOT NULL AND array_length(c.play_styles,1) > 0
+)
+SELECT
+  cf.user_id AS candidate_user_id,
+  ST_Distance(me.geog, cf.geog) / 1000.0 AS distance_km,
+  cf.address_city
+FROM candidates_full cf
+JOIN me ON TRUE
+WHERE ST_DWithin(me.geog, cf.geog, me.preferred_distance_km * 1000.0)
+ORDER BY distance_km ASC, cf.user_id
+LIMIT p_limit OFFSET p_offset;
+$$;

@@ -407,7 +407,7 @@ export default function ChildProfileForm() {
                     className="input"
                     type="text"
                     name="allergies"
-                    placeholder="e.g. peanuts, pollen"
+                    placeholder="e.g. peanuts, pollen or NONE"
                     value={allergies.join(", ")}
                     onChange={(e) => setAllergies([e.target.value])}
                     onBlur={(e) =>

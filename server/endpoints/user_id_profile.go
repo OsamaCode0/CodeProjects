@@ -57,7 +57,7 @@ func buildProfileResponse(p *structs.ParentProfile, ch *structs.Child) ProfileRe
 		ID:          p.UserID,
 		Name:        p.Name,
 		About:       p.About,
-		Languages:   p.LanguageCodes,
+		Languages:   p.Languages,
 		AddressCity: p.AddressCity,
 		Child: ChildRespond{
 			Name:         ch.Name,

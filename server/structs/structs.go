@@ -24,7 +24,7 @@ type ParentProfile struct {
 	Name              string    `json:"name"`
 	Gender            string    `json:"gender"`
 	About             string    `json:"about,omitempty"`
-	LanguageCodes     []string  `json:"languages"`
+	Languages     []string  `json:"languages"`
 	AddressCity       string    `json:"addressCity,omitempty"`
 	Lat               float64   `json:"lat,omitempty"`
 	Lon               float64   `json:"lon,omitempty"`
@@ -60,4 +60,23 @@ type PreferencesInput struct {
 	AllergiesWeight     int    `json:"allergies_weight,omitempty"`
 	PlayStylesWeight    int    `json:"play_styles_weight,omitempty"`
 	MaxAgeDifference    int    `json:"max_age_difference,omitempty"`
+}
+
+	type UpdatePreferencesInput struct {
+	InterestsWeight       *int `json:"interests_weight,omitempty"`       
+	ActivityLevelWeight   *int `json:"activity_level_weight,omitempty"`  
+	LimitationsWeight     *int `json:"limitations_weight,omitempty"`     
+	AllergiesWeight       *int `json:"allergies_weight,omitempty"`       
+	PlayStylesWeight      *int `json:"play_styles_weight,omitempty"`     
+	LocationWeight        *int `json:"location_weight,omitempty"`        
+	LanguageWeight        *int `json:"language_weight,omitempty"`        
+	MaxAgeDifference      *int `json:"max_age_difference,omitempty"`     
+}
+
+// MatchScore represents the result of matching algorithm for one candidate
+// Contains compatibility scores and mutual compatibility information
+type MatchScore struct {
+	UserID          string  `json:"user_id"`      // ID of the matched user
+	Score           float64 `json:"score"`        // Final compatibility score (0.0 - 1.0)
+	MutualScore     float64 `json:"mutual_score"` // How well current user matches the candidate's preferences
 }

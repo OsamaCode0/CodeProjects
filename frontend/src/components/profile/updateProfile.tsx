@@ -29,6 +29,7 @@ export function buildPayload(
 
   // simple scalars
   if (current.name.trim() !== original.name.trim()) payload.name = current.name.trim();
+  if (current.about.trim() !== original.about.trim()) payload.about = current.about.trim();
   if (current.gender !== original.gender) payload.gender = current.gender;
   if (current.preferredDistance !== original.preferredDistance)
     payload.preferredDistance = current.preferredDistance;

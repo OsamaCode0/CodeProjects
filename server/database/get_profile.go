@@ -18,7 +18,7 @@ func GetUserProfile(ctx context.Context, pool *pgxpool.Pool, id string) (*struct
             COALESCE(name, '') AS name,
             COALESCE(gender, '') AS gender,
             COALESCE(about, '') AS about,
-            COALESCE(language_codes, '{}'::text[]) AS language_codes,
+            COALESCE(languages, '{}'::text[]) AS languages,
             COALESCE(address_city, '') AS address_city,
             COALESCE(lat, 0.0)                AS lat,
             COALESCE(lon, 0.0)                AS lon,
@@ -32,7 +32,7 @@ func GetUserProfile(ctx context.Context, pool *pgxpool.Pool, id string) (*struct
         &p.Name,
         &p.Gender,
         &p.About,
-        &p.LanguageCodes,
+        &p.Languages,
         &p.AddressCity,
         &p.Lat,
         &p.Lon,     
@@ -88,7 +88,7 @@ func GetChildProfile(ctx context.Context, pool *pgxpool.Pool, id string) (*struc
 
     return &c, nil
 }
-
+//GetUserMatchingPreferences(ctx context.Context, pool *pgxpool.Pool, userID string) (*UserMatchingPreferences, error) {
 func GetUserMatchingPreferences(ctx context.Context, pool *pgxpool.Pool, userID string) (*structs.PreferencesInput, error) {
 	var p structs.PreferencesInput
 

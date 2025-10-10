@@ -16,7 +16,7 @@ type PatchParentProfileInput struct {
 	Name              *string   `json:"name,omitempty"`
 	Gender            *string   `json:"gender,omitempty"`
 	About             *string   `json:"about,omitempty"`
-	LanguageCodes     *[]string `json:"languages,omitempty"` // pointer to slice
+	Languages     *[]string `json:"languages,omitempty"` // pointer to slice
 	AddressCity       *string   `json:"addressCity,omitempty"`
 	Lat               *float64  `json:"lat,omitempty"`
 	Lon               *float64  `json:"lon,omitempty"`
@@ -56,8 +56,8 @@ func PatchMeProfile(c *gin.Context) {
 	if in.About != nil {
 		add("about", *in.About)
 	}
-	if in.LanguageCodes != nil {
-		add("language_codes", *in.LanguageCodes) // pgx: []string -> TEXT[]
+	if in.Languages != nil {
+		add("languages", *in.Languages) // pgx: []string -> TEXT[]
 	}
 	if in.AddressCity != nil {
 		add("address_city", *in.AddressCity)

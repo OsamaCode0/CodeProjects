@@ -53,7 +53,7 @@ func buildBioResponse(p *structs.ParentProfile, ch *structs.Child) BioRespond {
 	return BioRespond{
 		ID:                p.UserID,
 		Gender:            p.Gender,
-		Languages:         p.LanguageCodes,
+		Languages:         p.Languages,
 		AddressCity:       p.AddressCity,
 		Lat:               p.Lat,
 		Lon:               p.Lon,
