@@ -186,3 +186,48 @@ WHERE ST_DWithin(me.geog, cf.geog, me.preferred_distance_km * 1000.0)
 ORDER BY distance_km ASC, cf.user_id
 LIMIT p_limit OFFSET p_offset;
 $$;
+
+
+
+CREATE OR REPLACE FUNCTION profile_completion_percent(p_user_id uuid)
+RETURNS numeric AS $$
+DECLARE
+  -- 6 parent fields + 9 child fields = 15
+  total_fields   int := 15;
+  parent_filled  int := 0;
+  child_filled   int := 0;
+BEGIN
+  -- Parent part
+  SELECT 
+      ((name IS NOT NULL AND name <> '')::int) +
+      ((gender IS NOT NULL AND gender <> '')::int) +
+      ((about IS NOT NULL AND about <> '')::int) +
+      ((languages IS NOT NULL AND cardinality(languages) > 0)::int) +
+      ((address_city IS NOT NULL AND address_city <> '')::int) +
+      ((preferred_distance_km IS NOT NULL)::int)
+  INTO parent_filled
+  FROM parent_profiles
+  WHERE user_id = p_user_id;
+
+  parent_filled := COALESCE(parent_filled, 0);
+
+  -- Child part 
+  SELECT 
+      ((name IS NOT NULL AND name <> '')::int) +
+      ((birthday IS NOT NULL)::int) +                          
+      ((gender IS NOT NULL AND gender <> '')::int) +
+      ((about_short IS NOT NULL AND about_short <> '')::int) +
+      ((interests IS NOT NULL AND cardinality(interests) > 0)::int) +
+      ((activity_level IS NOT NULL AND activity_level <> '')::int) +
+      ((limitations IS NOT NULL AND cardinality(limitations) > 0)::int) +
+      ((allergies IS NOT NULL AND cardinality(allergies) > 0)::int) +
+      ((play_styles IS NOT NULL AND cardinality(play_styles) > 0)::int)
+  INTO child_filled
+  FROM children
+  WHERE user_id = p_user_id;
+
+  child_filled := COALESCE(child_filled, 0);
+
+  RETURN ROUND(((parent_filled + child_filled)::numeric / total_fields) * 100.0, 1);
+END;
+$$ LANGUAGE plpgsql STABLE;

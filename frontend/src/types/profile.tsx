@@ -43,5 +43,21 @@ export type ChildResponse = {
   play_styles_weight?: number | null;     
   max_age_difference?: number | null; 
 }
+export type ChildProfile = {
+  name: string;
+  ageYears: number;
+  gender: string;
+  aboutShort: string;
+  topInterests: string[];
+};
+
+export type UserProfile= {
+  id: string;
+  name: string;           // parent name
+  about: string;
+  languages: string[];
+  addressCity: string;
+  child: ChildProfile;    // child.name  
+};
 
 export type CombinedMe = MeResponse & BioResponse & PhotoUrl;

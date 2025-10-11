@@ -16,6 +16,11 @@ const IconStar = () => (
     <path d="m12 2 3 6 7 .9-5 4.8 1.4 6.9L12 17l-6.4 3.6L7 13.7 2 8.9 9 8z"/>
   </svg>
 );
+const IconConnections = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 2a3 3 0 1 1-3 3 3 3 0 0 1 3-3zm7 7a3 3 0 1 1-3 3 3 3 0 0 1 3-3zm-14 0a3 3 0 1 1-3 3 3 3 0 0 1 3-3zm7 7a3 3 0 1 1-3 3 3 3 0 0 1 3-3zm-5.2-1.8 3.4-2m3.6 0 3.4 2m-7 4.8L12 18l2.8 1.7" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
 const IconChat = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true">
     <path d="M4 4h16v12H7l-3 3V4z"/>
@@ -46,6 +51,7 @@ export default function BottomPanel() {
       {Btn("/profile", "Profile", IconUser)}
       {Btn("/child", "Child profile", IconChild)}
       {Btn("/recommendations", "Recommendations", IconStar)}
+      {Btn("/connections", "Connections", IconConnections)}
       {Btn("/chat", "Chat", IconChat)}
     </nav>
   );
