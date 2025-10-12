@@ -48,7 +48,7 @@ func SetupRouter() *gin.Engine {
 	auth.DELETE("/me/photo", endpoints.DeleteMePhoto)
 
 	//for matching
-	auth.GET("/recomendations", services.GetRecommendations)
+	auth.GET("/recommendations", services.GetRecommendations)
 
 	return router
 }

@@ -43,6 +43,10 @@ export type ChildResponse = {
   play_styles_weight?: number | null;     
   max_age_difference?: number | null; 
 }
+
+
+export type CombinedMe = MeResponse & BioResponse & PhotoUrl;
+
 export type ChildProfile = {
   name: string;
   ageYears: number;
@@ -51,8 +55,7 @@ export type ChildProfile = {
   topInterests: string[];
 };
 
-export type UserProfile= {
-  id: string;
+export type UserProfile = {
   name: string;           // parent name
   about: string;
   languages: string[];
@@ -60,4 +63,8 @@ export type UserProfile= {
   child: ChildProfile;    // child.name  
 };
 
-export type CombinedMe = MeResponse & BioResponse & PhotoUrl;
+export type UserPhoto = {
+  avatarurl?: string | null;
+} 
+
+export type CombinedUser = UserProfile & UserPhoto;

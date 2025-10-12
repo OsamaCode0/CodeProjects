@@ -69,16 +69,12 @@ func GetRecommendations(c *gin.Context) {
 	}
 
 	// Return only user IDs as required by REST API specification
-	var recommendations []gin.H
+	var recommendations []string
 	for _, match := range matches {
-		recommendations = append(recommendations, gin.H{
-			"id": match.UserID,
-		})
+		recommendations = append(recommendations,  string(match.UserID))
 	}
 
-	c.JSON(200, gin.H{
-		"recommendations": recommendations,
-	})
+	c.JSON(200,recommendations)
 }
 
 // GetMatchingPreferences handles GET /me/matching-preferences endpoint
