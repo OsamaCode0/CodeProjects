@@ -72,6 +72,27 @@ CREATE TABLE IF NOT EXISTS matching_preferences (
   max_age_difference      INTEGER DEFAULT 2 CHECK (max_age_difference >= 0)
 );
 
+CREATE TABLE user_reactions (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  target_user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reaction text NOT NULL CHECK (reaction IN ('like', 'dislike')),
+  CONSTRAINT user_reactions_no_self CHECK (user_id <> target_user_id),
+  CONSTRAINT user_reactions_user_target_unique UNIQUE (user_id, target_user_id)
+);
+
+drop TABLE matches;
+
+CREATE TABLE matches (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_a uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_b uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  -- prevent a user from matching themselves
+  CONSTRAINT matches_no_self CHECK (user_a <> user_b)
+);
+
+CREATE UNIQUE INDEX matches_pair_unique
+  ON matches (LEAST(user_a, user_b), GREATEST(user_a, user_b));
 //for matching, prefilter location
 
 CREATE EXTENSION IF NOT EXISTS postgis;
@@ -231,3 +252,4 @@ BEGIN
   RETURN ROUND(((parent_filled + child_filled)::numeric / total_fields) * 100.0, 1);
 END;
 $$ LANGUAGE plpgsql STABLE;
+

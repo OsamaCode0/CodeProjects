@@ -46,6 +46,7 @@ func SetupRouter() *gin.Engine {
 	auth.GET("/me/cloudinary-sign", endpoints.CloudinarySign)
 	auth.POST("/me/photo", endpoints.PostMePhoto)
 	auth.DELETE("/me/photo", endpoints.DeleteMePhoto)
+	auth.POST("/recommendations/:targetUserId/reaction", endpoints.PostReaction)
 
 	//for matching
 	auth.GET("/recommendations", services.GetRecommendations)
