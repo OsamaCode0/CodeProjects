@@ -81,7 +81,7 @@ CREATE TABLE user_reactions (
   CONSTRAINT user_reactions_user_target_unique UNIQUE (user_id, target_user_id)
 );
 
-drop TABLE matches;
+
 
 CREATE TABLE matches (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
