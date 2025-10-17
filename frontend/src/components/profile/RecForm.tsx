@@ -1,20 +1,20 @@
 import "bulma/css/bulma.min.css";
 import "../../styles/viewProfile.css";
-import { showToast } from "../toast";
-
 import { useState } from "react";
 import { useLogout } from "../../auth/useLogout";
-import { useRecommendations } from "../../hooks/useRecommend";
+import { useRecCon } from "../../hooks/useRecCon";
 import { loadNextProfile } from "../../hooks/loadNextProfile";
 import { reactToUser } from "../../hooks/postReaction";
 import type { CombinedUser } from "../../types/profile";
 
 type CombinedUserWithId = CombinedUser & { id: string };
 
+
 export default function RecommendationsForm() {
+  const route = "/recommendations";
   const logout = useLogout();
 
-  const { loading, error, data } = useRecommendations();
+  const { loading, error, data } = useRecCon(route);
 
   const [ids, setIds] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -22,21 +22,26 @@ export default function RecommendationsForm() {
   const [busyReact, setBusyReact] = useState(false);
   const [nextUser, setNextUser] = useState<CombinedUserWithId | null>(null);
   const [reactError, setReactError] = useState<string | null>(null);
+  const [isLast, setIsLast] = useState(false);
 
   // Prefer the nextUser (after pressing Next), otherwise show the initial one
   const user =
     (nextUser as CombinedUserWithId | null) ??
     (data as CombinedUserWithId | null);
 
-  const handleNext = () =>
+  const handleNext = () =>{
+     if (loadingNext || isLast) return;
     loadNextProfile(
+      route,
       ids,
       currentIndex,
       setIds,
       setNextUser,
       setCurrentIndex,
-      setLoadingNext
+      setLoadingNext,
+      setIsLast
     );
+  }
 
   async function handleReaction(kind: "like" | "dislike") {
     if (!user || busyReact || loadingNext) return;
@@ -48,10 +53,7 @@ export default function RecommendationsForm() {
     handleNext();
 
     try {
-      const res = await reactToUser(prevUser.id, kind);
-      if (res.is_match) {
-       showToast("🎉 It's a match!");
-      }
+      await reactToUser(route, prevUser.id, kind);
     } catch (e: any) {
       setReactError(e?.message ?? "Failed to send reaction");
     } finally {
@@ -66,26 +68,25 @@ export default function RecommendationsForm() {
           Log out
         </button>
 
-        <div className="buttons" style={{ gap: "0.5rem", marginLeft: "0.5rem" }}>
+        <div
+          className="buttons"
+          style={{ gap: "0.5rem", marginLeft: "0.5rem" }}>
           <button
             className={`button is-light ${busyReact ? "is-loading" : ""}`}
             disabled={busyReact || loadingNext || !user}
-            onClick={() => handleReaction("dislike")}
-          >
+            onClick={() => handleReaction("dislike")}>
             Dismiss
           </button>
           <button
             className={`button is-primary ${busyReact ? "is-loading" : ""}`}
             disabled={busyReact || loadingNext || !user}
-            onClick={() => handleReaction("like")}
-          >
-            Like
+            onClick={() => handleReaction("like")}>
+            Connect
           </button>
           <button
             className={`button is-link ${loadingNext ? "is-loading" : ""}`}
             onClick={handleNext}
-            disabled={loadingNext}
-          >
+           disabled={loadingNext || isLast}>
             Next
           </button>
         </div>
@@ -93,7 +94,9 @@ export default function RecommendationsForm() {
         <h1 className="title has-text-centered">Your recommendations</h1>
 
         <div className="user-profile with-bottom-panel">
-          {loading && <p className="loading-text">Loading recommendations...</p>}
+          {loading && (
+            <p className="loading-text">Loading recommendations...</p>
+          )}
           {error && <p className="error-text">{error}</p>}
           {reactError && <p className="error-text">{reactError}</p>}
           {!loading && !error && !user && <p>No recommendations found.</p>}
@@ -116,18 +119,21 @@ export default function RecommendationsForm() {
                   <p className="parent-city">{user.addressCity}</p>
                   {user.about && <p className="parent-about">{user.about}</p>}
 
-                  {Array.isArray(user.languages) && user.languages.length > 0 && (
-                    <>
-                      <p className="has-text-weight-semibold mb-1">Languages</p>
-                      <div className="tags mb-3">
-                        {user.languages.map((lang) => (
-                          <span key={lang} className="tag is-info is-light">
-                            {lang.toUpperCase()}
-                          </span>
-                        ))}
-                      </div>
-                    </>
-                  )}
+                  {Array.isArray(user.languages) &&
+                    user.languages.length > 0 && (
+                      <>
+                        <p className="has-text-weight-semibold mb-1">
+                          Languages
+                        </p>
+                        <div className="tags mb-3">
+                          {user.languages.map((lang) => (
+                            <span key={lang} className="tag is-info is-light">
+                              {lang.toUpperCase()}
+                            </span>
+                          ))}
+                        </div>
+                      </>
+                    )}
                 </div>
               </article>
 

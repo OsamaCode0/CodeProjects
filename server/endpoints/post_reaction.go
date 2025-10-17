@@ -26,7 +26,7 @@ func PostReaction(c *gin.Context) {
 	}
 
 	ctx := context.Background()
-	isMatch, err := database.UpsertReaction(ctx, internal.DB, userID, targetID, database.Reaction(req.Reaction))
+	err:= database.UpsertReaction(ctx, internal.DB, userID, targetID, database.Reaction(req.Reaction))
 	if err != nil {
 		log.Println(err)
 		c.JSON(500, structs.ErrorResponse{
@@ -36,7 +36,6 @@ func PostReaction(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"reaction": req.Reaction,
-		"is_match": isMatch,
 	})
 
 }

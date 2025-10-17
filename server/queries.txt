@@ -77,19 +77,11 @@ CREATE TABLE user_reactions (
   user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   target_user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   reaction text NOT NULL CHECK (reaction IN ('like', 'dislike')),
+  ADD COLUMN is_match boolean NOT NULL DEFAULT false,
   CONSTRAINT user_reactions_no_self CHECK (user_id <> target_user_id),
   CONSTRAINT user_reactions_user_target_unique UNIQUE (user_id, target_user_id)
 );
 
-
-
-CREATE TABLE matches (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_a uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  user_b uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  -- prevent a user from matching themselves
-  CONSTRAINT matches_no_self CHECK (user_a <> user_b)
-);
 
 CREATE UNIQUE INDEX matches_pair_unique
   ON matches (LEAST(user_a, user_b), GREATEST(user_a, user_b));
@@ -252,4 +244,38 @@ BEGIN
   RETURN ROUND(((parent_filled + child_filled)::numeric / total_fields) * 100.0, 1);
 END;
 $$ LANGUAGE plpgsql STABLE;
+
+
+//FOR UODATING is_match
+
+CREATE OR REPLACE FUNCTION update_is_match()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- When the current user likes someone
+  IF NEW.reaction = 'like' THEN
+    -- Check if the target has already liked this user
+    UPDATE user_reactions
+    SET is_match = true
+    WHERE user_id = NEW.target_user_id
+      AND target_user_id = NEW.user_id
+      AND reaction = 'like';
+
+    -- If the reverse "like" exists, mark this one as a match too
+    IF EXISTS (
+      SELECT 1 FROM user_reactions
+      WHERE user_id = NEW.target_user_id
+        AND target_user_id = NEW.user_id
+        AND reaction = 'like'
+    ) THEN
+      NEW.is_match := true;
+    END IF;
+  ELSE
+    -- If it's a dislike, make sure match is false
+    NEW.is_match := false;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 

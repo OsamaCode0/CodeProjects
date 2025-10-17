@@ -10,7 +10,7 @@ type State = {
   data: CombinedUserWithId | null;
 };
 
-export function useRecommendations() {
+export function useRecCon(route: string) {
   const [state, setState] = useState<State>({
     loading: false,
     error: null,
@@ -23,7 +23,7 @@ export function useRecommendations() {
     (async () => {
       setState({ loading: true, error: null, data: null });
       try {
-        const ids = await get<string[]>("/recommendations"); 
+        const ids = await get<string[]>(route); 
 
         if (!ids || ids.length === 0) {
           if (!cancelled) setState({ loading: false, error: null, data: null });

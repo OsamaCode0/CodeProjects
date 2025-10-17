@@ -5,7 +5,8 @@ import UserProfileForm from "./components/profile/UserProfileForm";
 import { RequireAuth, RequireGuest } from "./protectedRoutes";
 import ChildProfileForm from "./components/profile/ChildProfileForm";
 import BottomPanel from "./components/bottom";
-import RecommendationsForm from "./components/profile/RecommendationsForm";
+import RecommendationsForm from "./components/profile/RecForm";
+import ConnectionsForm from "./components/profile/ConForm";
 
 export default function App() {
   const location = useLocation();
@@ -56,6 +57,15 @@ export default function App() {
         element={
           <RequireAuth>
             <RecommendationsForm />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/connections"
+        element={
+          <RequireAuth>
+            <ConnectionsForm  />
           </RequireAuth>
         }
       />
