@@ -6,11 +6,12 @@ import { useRecCon } from "../../hooks/useRecCon";
 import { loadNextProfile } from "../../hooks/loadNextProfile";
 import { reactToUser } from "../../hooks/postReaction";
 import type { CombinedUser } from "../../types/profile";
+import { Link } from "react-router-dom";
 
 type CombinedUserWithId = CombinedUser & { id: string };
 
 
-export default function ConnectionsForm() {
+export default function ConnectionsReqForm() {
   const route = "/connections/requests";
   const logout = useLogout();
 
@@ -63,6 +64,12 @@ export default function ConnectionsForm() {
 
   return (
     <section className="section has-background-light">
+      <Link
+              to="/connections"
+              className="button is-link is-light mt-3"
+            >
+              View connections
+            </Link>
       <div className="recommendations-container">
         <button className="button is-dark logout" onClick={() => logout()}>
           Log out
