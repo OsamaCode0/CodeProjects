@@ -10,7 +10,7 @@ import (
 type ChildBio struct {
 	Birthday       time.Time `json:"birthday"`
 	Gender         string    `json:"gender"`
-	Interests      []string  `json:"intersts"`
+	Interests      []string  `json:"interests"`
 	Activity_level string    `json:"activity_level"`
 	Limitations    []string  `json:"limitations"`
 	Allergies      []string  `json:"allergies"`

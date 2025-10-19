@@ -39,7 +39,7 @@ type Child struct {
 	Birthday       time.Time `json:"birthday"`
 	Gender         string    `json:"gender"`
 	About_short    string    `json:"about_short"`
-	Interests      []string  `json:"intersts"`
+	Interests      []string  `json:"interests"`
 	Activity_level string    `json:"activity_level"`
 	Limitations    []string  `json:"limitations"`
 	Allergies      []string  `json:"allergies"`

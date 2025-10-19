@@ -1,0 +1,255 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS citext;
+
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email CITEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,   -- store bcrypt/argon2 hash
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+
+CREATE TABLE IF NOT EXISTS parent_profiles (
+  user_id              UUID PRIMARY KEY
+                          REFERENCES users(id) ON DELETE CASCADE,
+  name                 TEXT,
+  gender               TEXT,
+  about                TEXT,
+  languages       TEXT[] DEFAULT '{}',    
+  address_city         TEXT,
+  lat DOUBLE PRECISION,
+  lon DOUBLE PRECISION,
+  preferred_distance_km INTEGER    CHECK (preferred_distance_km BETWEEN 0 AND 200),
+  created_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at           TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS trigger AS $$
+BEGIN
+  NEW.updated_at := now();        -- always refresh on UPDATE
+  NEW.created_at := OLD.created_at; -- never let it change
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_parent_profiles_timestamps ON parent_profiles;
+CREATE TRIGGER trg_parent_profiles_timestamps
+BEFORE UPDATE ON parent_profiles
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
+
+
+
+CREATE TABLE children (
+  user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+
+  name           TEXT,
+  birthday      DATE,
+  gender         TEXT,
+  about_short    TEXT,
+
+  interests      TEXT[] DEFAULT '{}',
+  activity_level TEXT,
+  limitations    TEXT[] DEFAULT '{}',
+  allergies      TEXT[] DEFAULT '{}',
+  play_styles    TEXT[] DEFAULT '{}'
+);
+
+CREATE TABLE user_photos (
+    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    photo_public_id TEXT NOT NULL,
+    photo_version   INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS matching_preferences (
+  user_id                 UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  interests_weight        INTEGER DEFAULT 1 CHECK (interests_weight BETWEEN 0 AND 5),
+  activity_level_weight   INTEGER DEFAULT 2 CHECK (activity_level_weight BETWEEN 0 AND 5),
+  limitations_weight      INTEGER DEFAULT 3 CHECK (limitations_weight BETWEEN 0 AND 5), -- higher default for safety
+  allergies_weight        INTEGER DEFAULT 3 CHECK (allergies_weight BETWEEN 0 AND 5),   -- critical for safety
+  play_styles_weight      INTEGER DEFAULT 1 CHECK (play_styles_weight BETWEEN 0 AND 5),
+  max_age_difference      INTEGER DEFAULT 2 CHECK (max_age_difference >= 0)
+);
+
+CREATE TABLE user_reactions (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  target_user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reaction text NOT NULL CHECK (reaction IN ('like', 'dislike')),
+  CONSTRAINT user_reactions_no_self CHECK (user_id <> target_user_id),
+  CONSTRAINT user_reactions_user_target_unique UNIQUE (user_id, target_user_id)
+);
+
+
+
+CREATE TABLE matches (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_a uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_b uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  -- prevent a user from matching themselves
+  CONSTRAINT matches_no_self CHECK (user_a <> user_b)
+);
+
+CREATE UNIQUE INDEX matches_pair_unique
+  ON matches (LEAST(user_a, user_b), GREATEST(user_a, user_b));
+//for matching, prefilter location
+
+CREATE EXTENSION IF NOT EXISTS postgis;
+
+-- Add a geography point to parent_profiles (WGS84)
+ALTER TABLE parent_profiles
+  ADD COLUMN IF NOT EXISTS geog geography(Point, 4326);
+
+-- Backfill existing rows from (lon, lat)
+UPDATE parent_profiles
+SET geog = CASE
+             WHEN lat IS NOT NULL AND lon IS NOT NULL
+             THEN ST_SetSRID(ST_MakePoint(lon, lat), 4326)::geography
+             ELSE NULL
+           END
+WHERE geog IS NULL;
+
+-- Keep geog in sync on INSERT/UPDATE
+CREATE OR REPLACE FUNCTION set_parent_geog() RETURNS trigger AS $$
+BEGIN
+  IF NEW.lat IS NOT NULL AND NEW.lon IS NOT NULL THEN
+    NEW.geog := ST_SetSRID(ST_MakePoint(NEW.lon, NEW.lat), 4326)::geography;
+  ELSE
+    NEW.geog := NULL;
+  END IF;
+  RETURN NEW;
+END
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_parent_geog ON parent_profiles;
+CREATE TRIGGER trg_parent_geog
+BEFORE INSERT OR UPDATE ON parent_profiles
+FOR EACH ROW EXECUTE FUNCTION set_parent_geog();
+
+-- Spatial index (enables fast ST_DWithin/ ST_Distance)
+CREATE INDEX IF NOT EXISTS parent_profiles_geog_idx
+  ON parent_profiles USING GIST (geog);
+
+
+-- The prefilter function (viewer must have filled parent+child; filters by radius)
+CREATE OR REPLACE FUNCTION prefilter_candidates_postgis(
+  viewer uuid,
+  p_limit  int DEFAULT 500,
+  p_offset int DEFAULT 0
+)
+RETURNS TABLE (
+  candidate_user_id uuid,
+  distance_km      double precision,
+  address_city     text
+)
+LANGUAGE sql
+AS $$
+WITH me_parent AS (
+  SELECT p.user_id, p.geog, p.preferred_distance_km
+  FROM parent_profiles p
+  WHERE p.user_id = viewer
+    AND p.name IS NOT NULL AND btrim(p.name) <> ''
+    AND p.gender IS NOT NULL AND btrim(p.gender) <> ''
+    AND p.about IS NOT NULL AND btrim(p.about) <> ''
+    AND array_length(p.languages,1) IS NOT NULL AND array_length(p.languages,1) > 0
+    AND p.address_city IS NOT NULL AND btrim(p.address_city) <> ''
+    AND p.geog IS NOT NULL
+    AND p.preferred_distance_km IS NOT NULL
+),
+me_child AS (
+  SELECT c.user_id
+  FROM children c
+  WHERE c.user_id = viewer
+    AND c.name        IS NOT NULL AND btrim(c.name) <> ''
+    AND c.birthday    IS NOT NULL
+    AND c.gender      IS NOT NULL AND btrim(c.gender) <> ''
+    AND c.about_short IS NOT NULL AND btrim(c.about_short) <> ''
+    AND array_length(c.interests,1)   IS NOT NULL AND array_length(c.interests,1) > 0
+    AND c.activity_level              IS NOT NULL AND btrim(c.activity_level) <> ''
+    AND array_length(c.allergies,1)   IS NOT NULL AND array_length(c.allergies,1) > 0
+    AND array_length(c.play_styles,1) IS NOT NULL AND array_length(c.play_styles,1) > 0
+),
+me AS (
+  SELECT mp.user_id, mp.geog, mp.preferred_distance_km
+  FROM me_parent mp JOIN me_child mc ON mc.user_id = mp.user_id
+),
+candidates_full AS (
+  SELECT p.user_id, p.address_city, p.geog
+  FROM parent_profiles p
+  JOIN children c ON c.user_id = p.user_id
+  JOIN me ON TRUE
+  WHERE p.user_id <> me.user_id
+    -- parent filled
+    AND p.name IS NOT NULL AND btrim(p.name) <> ''
+    AND p.gender IS NOT NULL AND btrim(p.gender) <> ''
+    AND p.about IS NOT NULL AND btrim(p.about) <> ''
+    AND array_length(p.languages,1) IS NOT NULL AND array_length(p.languages,1) > 0
+    AND p.address_city IS NOT NULL AND btrim(p.address_city) <> ''
+    AND p.geog IS NOT NULL
+    -- child filled
+    AND c.name        IS NOT NULL AND btrim(c.name) <> ''
+    AND c.birthday    IS NOT NULL
+    AND c.gender      IS NOT NULL AND btrim(c.gender) <> ''
+    AND c.about_short IS NOT NULL AND btrim(c.about_short) <> ''
+    AND array_length(c.interests,1)   IS NOT NULL AND array_length(c.interests,1) > 0
+    AND c.activity_level              IS NOT NULL AND btrim(c.activity_level) <> ''
+    AND array_length(c.allergies,1)   IS NOT NULL AND array_length(c.allergies,1) > 0
+    AND array_length(c.play_styles,1) IS NOT NULL AND array_length(c.play_styles,1) > 0
+)
+SELECT
+  cf.user_id AS candidate_user_id,
+  ST_Distance(me.geog, cf.geog) / 1000.0 AS distance_km,
+  cf.address_city
+FROM candidates_full cf
+JOIN me ON TRUE
+WHERE ST_DWithin(me.geog, cf.geog, me.preferred_distance_km * 1000.0)
+ORDER BY distance_km ASC, cf.user_id
+LIMIT p_limit OFFSET p_offset;
+$$;
+
+
+
+CREATE OR REPLACE FUNCTION profile_completion_percent(p_user_id uuid)
+RETURNS numeric AS $$
+DECLARE
+  -- 6 parent fields + 9 child fields = 15
+  total_fields   int := 15;
+  parent_filled  int := 0;
+  child_filled   int := 0;
+BEGIN
+  -- Parent part
+  SELECT 
+      ((name IS NOT NULL AND name <> '')::int) +
+      ((gender IS NOT NULL AND gender <> '')::int) +
+      ((about IS NOT NULL AND about <> '')::int) +
+      ((languages IS NOT NULL AND cardinality(languages) > 0)::int) +
+      ((address_city IS NOT NULL AND address_city <> '')::int) +
+      ((preferred_distance_km IS NOT NULL)::int)
+  INTO parent_filled
+  FROM parent_profiles
+  WHERE user_id = p_user_id;
+
+  parent_filled := COALESCE(parent_filled, 0);
+
+  -- Child part 
+  SELECT 
+      ((name IS NOT NULL AND name <> '')::int) +
+      ((birthday IS NOT NULL)::int) +                          
+      ((gender IS NOT NULL AND gender <> '')::int) +
+      ((about_short IS NOT NULL AND about_short <> '')::int) +
+      ((interests IS NOT NULL AND cardinality(interests) > 0)::int) +
+      ((activity_level IS NOT NULL AND activity_level <> '')::int) +
+      ((limitations IS NOT NULL AND cardinality(limitations) > 0)::int) +
+      ((allergies IS NOT NULL AND cardinality(allergies) > 0)::int) +
+      ((play_styles IS NOT NULL AND cardinality(play_styles) > 0)::int)
+  INTO child_filled
+  FROM children
+  WHERE user_id = p_user_id;
+
+  child_filled := COALESCE(child_filled, 0);
+
+  RETURN ROUND(((parent_filled + child_filled)::numeric / total_fields) * 100.0, 1);
+END;
+$$ LANGUAGE plpgsql STABLE;
+
