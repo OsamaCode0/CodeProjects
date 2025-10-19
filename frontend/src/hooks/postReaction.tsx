@@ -1,12 +1,13 @@
 import { API } from "../registerform";
 
 export async function reactToUser(
+  route: string,
   userId: string,
   reaction: "like" | "dislike"
 ) {
   const token = localStorage.getItem("token");
 
-  const res = await fetch(`${API}/recommendations/${userId}/reaction`, {
+  const res = await fetch(`${API}${route}/${userId}/reaction`, {
     method: "POST",
    headers: {
       "Content-Type": "application/json",
@@ -21,5 +22,5 @@ export async function reactToUser(
     throw new Error(text || `HTTP ${res.status} ${res.statusText}`);
   }
 
-  return res.json() as Promise<{ reaction: string; is_match: boolean }>;
+  return res.json() as Promise<{ reaction: string }>;
 }

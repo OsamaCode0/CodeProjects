@@ -39,17 +39,22 @@ func SetupRouter() *gin.Engine {
 	auth.Use(middleware.AuthRequired(internal.Cfg.JWTSecret)) //the func will always run before anything with auth
 	auth.PATCH("/me/profile", services.PatchMeProfile)
 	auth.PATCH("/me/child", services.PatchMeChild)
+
 	auth.GET("/me", endpoints.GetMeNameAndPhoto)
 	auth.GET("/me/profile", endpoints.GetMyProfile)
 	auth.GET("/me/bio", endpoints.GetMeBio)
 	auth.GET("/me/child", endpoints.GetChildProfile)
 	auth.GET("/me/cloudinary-sign", endpoints.CloudinarySign)
+	
 	auth.POST("/me/photo", endpoints.PostMePhoto)
 	auth.DELETE("/me/photo", endpoints.DeleteMePhoto)
 	auth.POST("/recommendations/:targetUserId/reaction", endpoints.PostReaction)
+	auth.POST("/connections/requests/:targetUserId/reaction", endpoints.PostReaction)
 
 	//for matching
 	auth.GET("/recommendations", services.GetRecommendations)
+	auth.GET("/connections/requests", services.GetRequests)
+	auth.GET("/connections", services.GetConnections)
 
 	return router
 }

@@ -61,7 +61,7 @@ play_styles_pool AS (
 -- Parents (all Helsinki; deterministic small jitter so points aren’t identical)
 , insert_parents AS (
   INSERT INTO parent_profiles (
-    user_id, name, gender, about, language_codes,
+    user_id, name, gender, about, languages,
     address_city, lat, lon, preferred_distance_km
   )
   SELECT
@@ -69,7 +69,7 @@ play_styles_pool AS (
     pn.arr[ ((b.i - 1) % cardinality(pn.arr)) + 1 ]                                        AS name,
     CASE WHEN (b.i % 2)=0 THEN 'female' ELSE 'male' END                                     AS gender,
     'Perheellinen Suomessa. Pitää ulkoilusta ja tapahtumista.'                              AS about,
-    ARRAY['Finnish']::text[]                                                                AS language_codes,
+    ARRAY['Finnish']::text[]                                                                AS languages,
     'Helsinki'                                                                              AS address_city,
     60.1699 + (((b.i % 5) - 2) * 0.002)                                                     AS lat,
     24.9384 + (((b.i % 7) - 3) * 0.003)                                                     AS lon,

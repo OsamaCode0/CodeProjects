@@ -1,8 +1,8 @@
-.user-profile, .child-profile {
+.user-profile, .child-profile, .columns {
   max-width: 650px;      /* Limit width */
   margin: 0 auto;        /* Center horizontally */
   padding: 2rem;         /* Space inside */
-  background: #fff;      /* White background */
+  background: white;      /* White background */
   border-radius: 12px;   /* Rounded corners */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Subtle shadow */
   position: relative;
@@ -66,4 +66,13 @@
 
 .field.lang{
   width: 200px;
+}
+
+.buttons-container {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.button.con {
+  width: 100px;
 }
