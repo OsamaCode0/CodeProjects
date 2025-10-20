@@ -251,31 +251,48 @@ $$ LANGUAGE plpgsql STABLE;
 CREATE OR REPLACE FUNCTION update_is_match()
 RETURNS TRIGGER AS $$
 BEGIN
-  -- When the current user likes someone
-  IF NEW.reaction = 'like' THEN
-    -- Check if the target has already liked this user
-    UPDATE user_reactions
-    SET is_match = true
-    WHERE user_id = NEW.target_user_id
-      AND target_user_id = NEW.user_id
-      AND reaction = 'like';
+  -- Only act when: inserting OR reaction changed
+  IF TG_OP = 'UPDATE' AND NEW.reaction IS NOT DISTINCT FROM OLD.reaction THEN
+    RETURN NEW;
+  END IF;
 
-    -- If the reverse "like" exists, mark this one as a match too
+  IF NEW.reaction = 'like' THEN
+    -- If the other user already liked me, it's a match on both sides
     IF EXISTS (
-      SELECT 1 FROM user_reactions
+      SELECT 1
+      FROM user_reactions
       WHERE user_id = NEW.target_user_id
         AND target_user_id = NEW.user_id
         AND reaction = 'like'
     ) THEN
-      NEW.is_match := true;
+      NEW.is_match := TRUE;
+
+      -- set reverse row's is_match = TRUE as well
+      UPDATE user_reactions
+      SET is_match = TRUE
+      WHERE user_id = NEW.target_user_id
+        AND target_user_id = NEW.user_id
+        AND reaction = 'like';
+    ELSE
+      NEW.is_match := FALSE; -- liked, but not mutual yet
     END IF;
-  ELSE
-    -- If it's a dislike, make sure match is false
-    NEW.is_match := false;
+
+  ELSIF NEW.reaction = 'dislike' THEN
+    -- Current row is not a match
+    NEW.is_match := FALSE;
+
+    -- Also clear the reverse row's match flag, if it exists
+    UPDATE user_reactions
+    SET is_match = FALSE
+    WHERE user_id = NEW.target_user_id
+      AND target_user_id = NEW.user_id;
   END IF;
 
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-
+CREATE TRIGGER trg_update_is_match
+BEFORE INSERT OR UPDATE OF reaction ON user_reactions
+FOR EACH ROW
+EXECUTE FUNCTION update_is_match();

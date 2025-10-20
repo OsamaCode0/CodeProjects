@@ -3,6 +3,7 @@ import "../../styles/viewProfile.css";
 import { useLogout } from "../../auth/useLogout";
 import { useCon } from "../../hooks/useCon";
 import { Link } from "react-router-dom";
+import { disconnectUser } from "../../hooks/postDisconnect";
 
 export default function ConnectionsForm() {
   const logout = useLogout();
@@ -41,7 +42,13 @@ export default function ConnectionsForm() {
                       <strong>Age:</strong> {p.child.ageYears}
                     </p>
                     <div className="buttons-container mt-3">
-                      <button className="button con is-danger">Disconnect</button>
+                      <button 
+                      className="button con is-danger"
+                      onClick={()=> { disconnectUser(p.id) 
+                        .then(() => window.location.reload()) // 👈 reload after success
+                        .catch((err) => console.error("Disconnect failed:", err));
+                      }}
+                      >Disconnect</button>
                       <button className="button con is-success">Chat</button>
                     </div>
                   </article>
