@@ -1,0 +1,110 @@
+import { useEffect, useRef, useState } from 'react';
+
+const WS_URL = import.meta.env.VITE_API_BASE_URL?.replace('http', 'ws') || 'ws://localhost:8088';
+
+interface WebSocketMessage {
+  type: string;
+  chat_id?: string;
+  message_id?: string;
+  sender_id?: string;
+  content?: string;
+  created_at?: string;
+  data?: any;
+}
+
+type MessageHandler = (message: WebSocketMessage) => void;
+
+export const useWebSocket = () => {
+  const [isConnected, setIsConnected] = useState(false);
+  const wsRef = useRef<WebSocket | null>(null);
+  const handlersRef = useRef<Map<string, MessageHandler[]>>(new Map());
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
+
+  const connect = () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    const ws = new WebSocket(`${WS_URL}/ws?token=${token}`);
+
+    ws.onopen = () => {
+      console.log('WebSocket connected');
+      setIsConnected(true);
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const message: WebSocketMessage = JSON.parse(event.data);
+        console.log('WebSocket message received:', message);
+
+        // Call all handlers for this message type
+        const handlers = handlersRef.current.get(message.type) || [];
+        handlers.forEach(handler => handler(message));
+
+        // Also call wildcard handlers
+        const wildcardHandlers = handlersRef.current.get('*') || [];
+        wildcardHandlers.forEach(handler => handler(message));
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket disconnected');
+      setIsConnected(false);
+      wsRef.current = null;
+
+      // Reconnect after 3 seconds
+      reconnectTimeoutRef.current = setTimeout(() => {
+        console.log('Attempting to reconnect...');
+        connect();
+      }, 3000);
+    };
+
+    wsRef.current = ws;
+  };
+
+  const disconnect = () => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+    }
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+  };
+
+  const send = (message: WebSocketMessage) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(message));
+    } else {
+      console.warn('WebSocket is not connected');
+    }
+  };
+
+  const on = (type: string, handler: MessageHandler) => {
+    const handlers = handlersRef.current.get(type) || [];
+    handlers.push(handler);
+    handlersRef.current.set(type, handlers);
+
+    // Return cleanup function
+    return () => {
+      const currentHandlers = handlersRef.current.get(type) || [];
+      const index = currentHandlers.indexOf(handler);
+      if (index > -1) {
+        currentHandlers.splice(index, 1);
+        handlersRef.current.set(type, currentHandlers);
+      }
+    };
+  };
+
+  useEffect(() => {
+    connect();
+    return () => disconnect();
+  }, []);
+
+  return { isConnected, send, on };
+};
