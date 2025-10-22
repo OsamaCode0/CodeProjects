@@ -54,8 +54,9 @@ func (c *Client) ReadPump() {
 
 		// Handle typing indicator
 		if msg.Type == "typing" {
-			c.hub.Broadcast <- &msg  // ЗАГЛАВНАЯ B
-		}
+		// Broadcast to the recipient
+			c.hub.Broadcast <- &msg
+}
 	}
 }
 

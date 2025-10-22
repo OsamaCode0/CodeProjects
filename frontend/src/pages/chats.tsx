@@ -31,12 +31,15 @@ export default function Chats() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const typingDebounceRef = useRef<NodeJS.Timeout>();
 
   const token = localStorage.getItem("token");
   const myUserId = localStorage.getItem("userId");
   
-  const { isConnected, on } = useWebSocket();
+  const { isConnected, on, send } = useWebSocket();
   const isOnline = useOnlineStatus(selectedUserId);
 
   useEffect(() => {
@@ -79,9 +82,35 @@ export default function Chats() {
     return unsubscribe;
   }, [selected, on]);
 
+  // Listen for typing indicator
+  useEffect(() => {
+    const unsubscribe = on('typing', (msg) => {
+      if (msg.chat_id === selected && msg.sender_id !== myUserId) {
+        setIsTyping(true);
+        
+        // Clear existing timeout
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current);
+        }
+        
+        // Stop showing typing after 3 seconds
+        typingTimeoutRef.current = setTimeout(() => {
+          setIsTyping(false);
+        }, 3000);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, [selected, myUserId, on]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, isTyping]);
 
   const loadConnections = async () => {
     try {
@@ -143,6 +172,35 @@ export default function Chats() {
     } catch (error) {
       console.error('Failed to mark as read:', error);
     }
+  };
+
+  const sendTypingIndicator = () => {
+    if (!selected || !selectedUserId || !isConnected) return;
+    
+    send({
+      type: 'typing',
+      chat_id: selected,
+      sender_id: myUserId || '',
+      data: {
+        recipient_id: selectedUserId
+      }
+    });
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewMessage(e.target.value);
+    
+    // Debounce typing indicator - send every 2 seconds while typing
+    if (typingDebounceRef.current) {
+      clearTimeout(typingDebounceRef.current);
+    }
+    
+    // Send typing indicator
+    sendTypingIndicator();
+    
+    typingDebounceRef.current = setTimeout(() => {
+      // User stopped typing (no action needed)
+    }, 2000);
   };
 
   const sendMessage = async () => {
@@ -260,6 +318,16 @@ export default function Chats() {
                     </div>
                   ))
                 )}
+                {isTyping && (
+                  <div className="typing-indicator">
+                    <div className="typing-dots">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                    <span className="typing-text">{selectedName} is typing...</span>
+                  </div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
 
@@ -268,7 +336,7 @@ export default function Chats() {
                   type="text"
                   className="message-input"
                   value={newMessage}
-                  onChange={e => setNewMessage(e.target.value)}
+                  onChange={handleInputChange}
                   onKeyPress={handleKeyPress}
                   placeholder="Type a message..."
                 />

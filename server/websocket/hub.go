@@ -50,15 +50,17 @@ func (h *Hub) Run() {
 			}
 			h.mu.Unlock()
 
-		case message := <-h.Broadcast:
-			h.mu.RLock()
-			// Send to specific user if needed
-			if message.Type == "new_message" && message.ChatID != "" {
-				// This will be handled in SendToUsers
-			}
-			h.mu.RUnlock()
+case message := <-h.Broadcast:
+	h.mu.RLock()
+	// Handle typing indicator - send to specific recipient
+	if message.Type == "typing" && message.Data != nil {
+		if recipientID, ok := message.Data["recipient_id"].(string); ok {
+			h.SendToUser(recipientID, message)
 		}
 	}
+	h.mu.RUnlock()
+	}
+}
 }
 
 func (h *Hub) SendToUser(userID string, message *Message) {
