@@ -17,8 +17,7 @@ type disconnectReq struct {
 // POST /api/reactions/disconnect
 func PostDisconnect(c *gin.Context) {
 	userID := c.GetString("userID")
-	log.Printf("=== PostDisconnect called ===")
-	log.Printf("UserID: %s", userID)
+	
 
 	var req disconnectReq
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -28,8 +27,6 @@ func PostDisconnect(c *gin.Context) {
 		})
 		return
 	}
-
-	log.Printf("Target User ID: %s", req.TargetUserID)
 
 	if req.TargetUserID == "" || req.TargetUserID == userID {
 		log.Printf("ERROR: Invalid target_user_id")
@@ -42,7 +39,6 @@ func PostDisconnect(c *gin.Context) {
 	ctx := context.Background()
 
 	// 1. Set reaction to dislike
-	log.Printf("Setting reaction to dislike...")
 	err := database.UpsertReaction(ctx, internal.DB, userID, req.TargetUserID, database.ReactionDislike)
 	if err != nil {
 		log.Printf("ERROR updating reaction: %v", err)
@@ -51,11 +47,9 @@ func PostDisconnect(c *gin.Context) {
 		})
 		return
 	}
-	log.Printf("SUCCESS: Reaction set to dislike")
 
 	// 2. Delete the connection
-	log.Printf("Deleting connection...")
-	result, err := internal.DB.Exec(ctx, `
+	_, err = internal.DB.Exec(ctx, `
 		DELETE FROM connections 
 		WHERE (requester_user_id = $1 AND target_user_id = $2)
 		   OR (requester_user_id = $2 AND target_user_id = $1)
@@ -63,13 +57,10 @@ func PostDisconnect(c *gin.Context) {
 	
 	if err != nil {
 		log.Printf("ERROR deleting connection: %v", err)
-	} else {
-		log.Printf("SUCCESS: Deleted %d connections", result.RowsAffected())
-	}
+	} 
 
 	// 3. Delete the chat
-	log.Printf("Deleting chat...")
-	chatResult, err := internal.DB.Exec(ctx, `
+	_, err = internal.DB.Exec(ctx, `
 		DELETE FROM chats 
 		WHERE (user1_id = $1 AND user2_id = $2)
 		   OR (user1_id = $2 AND user2_id = $1)
@@ -77,11 +68,8 @@ func PostDisconnect(c *gin.Context) {
 	
 	if err != nil {
 		log.Printf("ERROR deleting chat: %v", err)
-	} else {
-		log.Printf("SUCCESS: Deleted %d chats", chatResult.RowsAffected())
-	}
+	} 
 
-	log.Printf("=== PostDisconnect completed successfully ===")
 	c.JSON(200, gin.H{
 		"status":         "ok",
 		"userID":         userID,

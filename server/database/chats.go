@@ -39,8 +39,6 @@ func GetUserChats(ctx context.Context, pool *pgxpool.Pool, userID string) ([]str
 
 // GetChatByID returns a specific chat if the user is a participant
 func GetChatByID(ctx context.Context, pool *pgxpool.Pool, chatID, userID string) (*structs.Chat, error) {
-	log.Printf("=== GetChatByID called ===")
-	log.Printf("ChatID: %s, UserID: %s", chatID, userID)
 	
 	const query = `
 		SELECT id, user1_id, user2_id, created_at 
@@ -56,7 +54,6 @@ func GetChatByID(ctx context.Context, pool *pgxpool.Pool, chatID, userID string)
 		return nil, fmt.Errorf("chat not found or access denied: %w", err)
 	}
 	
-	log.Printf("Chat found: %+v", chat)
 	return &chat, nil
 }
 // GetChatMessages returns messages for a chat with pagination

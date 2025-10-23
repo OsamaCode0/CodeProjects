@@ -31,7 +31,7 @@ export default function ConnectionsForm() {
         alert('Chat not found. Please try again.');
       }
     } catch (err) {
-      console.error('Failed to open chat:', err);
+      //console.error('Failed to open chat:', err);
       alert('Failed to open chat');
     } finally {
       setChatLoading(null);
@@ -39,24 +39,18 @@ export default function ConnectionsForm() {
   };
 
 const handleDisconnect = async (userId: string) => {
-  console.log('=== Disconnect clicked ===');
-  console.log('User ID:', userId);
-  console.log('API:', API);
-  
+    
   if (!confirm('Are you sure you want to disconnect? This will remove the connection and chat history.')) {
     console.log('User cancelled');
     return;
   }
 
-  console.log('User confirmed, sending request...');
   setDisconnecting(userId);
   
   try {
     const token = localStorage.getItem('token');
     const url = `${API}/api/disconnect`;
-    console.log('Full URL:', url);
-    console.log('Token exists:', !!token);
-    
+        
     const res = await fetch(url, {
       method: 'POST',
       headers: {
@@ -66,8 +60,7 @@ const handleDisconnect = async (userId: string) => {
       body: JSON.stringify({ target_user_id: userId })
     });
     
-    console.log('Response status:', res.status);
-    console.log('Response ok:', res.ok);
+   
     
     if (res.ok) {
       alert('Disconnected successfully');

@@ -14,23 +14,13 @@ import (
 func GetUserChats(c *gin.Context) {
 	userID := c.GetString("userID")
 	
-	log.Printf("=== GetUserChats called ===")
-	log.Printf("UserID from context: %s", userID)
-	
 	chats, err := database.GetUserChats(c.Request.Context(), internal.DB, userID)
 	
-	log.Printf("Found %d chats, error: %v", len(chats), err)
-	if len(chats) > 0 {
-		log.Printf("First chat: %+v", chats[0])
-	}
-	
 	if err != nil {
-		log.Printf("ERROR loading chats: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load chats"})
 		return
 	}
 	
-	log.Printf("Returning response with %d chats", len(chats))
 	c.JSON(http.StatusOK, gin.H{"chats": chats})
 }
 
@@ -41,10 +31,6 @@ func GetChatMessages(c *gin.Context) {
 	before := c.DefaultQuery("before", "")
 	limit := 50
 
-	log.Printf("=== GetChatMessages ===")
-	log.Printf("UserID: %s", userID)
-	log.Printf("ChatID: %s", chatID)
-
 	messages, err := database.GetChatMessages(c.Request.Context(), internal.DB, chatID, userID, before, limit)
 	if err != nil {
 		log.Printf("ERROR getting messages: %v", err)
@@ -52,7 +38,6 @@ func GetChatMessages(c *gin.Context) {
 		return
 	}
 
-	log.Printf("SUCCESS: Found %d messages", len(messages))
 	c.JSON(http.StatusOK, gin.H{"messages": messages})
 }
 

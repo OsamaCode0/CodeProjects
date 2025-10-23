@@ -45,11 +45,11 @@ func serveNameAndPhoto(c *gin.Context, id string) {
 	}
 
 	if !Exists {
-		c.JSON(400, structs.ErrorResponse{
-			Message: "user does not exist",
-		})
-		return
-	}
+	c.JSON(404, structs.ErrorResponse{  // Было 400, стало 404
+		Message: "user does not exist",
+	})
+	return
+}
 
 	out.Name, out.AvatarUrl = database.GetUserNamePhotoURL(ctx, internal.DB, id)
 	out.UserID = id

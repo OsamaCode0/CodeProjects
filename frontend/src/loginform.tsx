@@ -39,7 +39,6 @@ export default function LoginForm() {
       setTimeout(() => {
       navigate("/profile", { replace: true });
       }, 100);
-      console.log(res.data);
     } catch (err) {
       if (axios.isAxiosError(err)) {
         const data = err.response?.data as ErrorResponse | undefined;
@@ -50,7 +49,6 @@ export default function LoginForm() {
         }
       } else {
         alert("Unexpected error ❌");
-        console.error(err);
       }
     }
   };
