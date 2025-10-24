@@ -16,6 +16,6 @@ func main() {
 
 	defer internal.DB.Close()
 
-	router := handlers.SetupRouter()
+	router := handlers.SetupRouter(internal.Cfg.IsDevMode, internal.DB)
 	router.Run(":" + internal.Cfg.Port)
 }

@@ -2,8 +2,8 @@
 package handlers
 
 import (
-	
 	"matchme-server/endpoints"
+	"matchme-server/graphsetup"
 	"matchme-server/internal"
 	"matchme-server/middleware"
 	"matchme-server/services"
@@ -11,9 +11,15 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func SetupRouter() *gin.Engine {
+func SetupRouter(IsDevMode bool, db *pgxpool.Pool) *gin.Engine {
+
+	if !IsDevMode {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
@@ -26,6 +32,13 @@ func SetupRouter() *gin.Engine {
 	}))
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
+
+	//to check that REST is working
+	router.GET("/rest/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{"message": "pong!"})
+	})
+
+	graphsetup.RegisterGraphQL(router, IsDevMode, db)
 
 
 	router.POST("/users/register", services.Register)
@@ -60,7 +73,3 @@ func SetupRouter() *gin.Engine {
 	return router
 }
 
-//GET  /recommendations
-//GET  /connections
-//DELETE /me/child
-//DELETE /me/profile

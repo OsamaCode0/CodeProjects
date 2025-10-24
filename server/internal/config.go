@@ -4,6 +4,7 @@ package internal
 import (
 	"log"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -11,9 +12,13 @@ import (
 var Cfg *Config
 
 type Config struct {
+	IsDevMode   bool//for graphql
 	Port        string
 	DatabaseURL string
 	JWTSecret   string
+	Cloud_secret string
+	Cloud_name string
+	Cloud_key string
 	CORSOrigin  string
 }
 
@@ -25,10 +30,22 @@ func LoadConfig() *Config {
 		log.Println(".env read successfully")
 	}
 
-	var c Config	
+	cloud := strings.TrimSpace(os.Getenv("CLOUDINARY_CLOUD_NAME"))
+	if cloud == "" {
+		log.Println("CLOUDINARY_CLOUD_NAME is empty")
+	}
+
+	var c Config
+	mode := os.Getenv("MODE")
+	if mode == "developer"{
+		c.IsDevMode = true
+	}
 	c.Port = os.Getenv("PORT")
 	c.DatabaseURL = os.Getenv("DATABASE_URL")
 	c.JWTSecret = os.Getenv("JWT_SECRET")
+	c.Cloud_secret = os.Getenv("CLOUDINARY_API_SECRET")
+	c.Cloud_name = cloud
+	c.Cloud_key = os.Getenv("CLOUDINARY_API_KEY")
 	c.CORSOrigin = os.Getenv("CORS_ORIGIN")
 
 	Cfg = &c
