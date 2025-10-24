@@ -1,6 +1,5 @@
 import "bulma/css/bulma.min.css";
 import "../../styles/profiles.css";
-import { useLogout } from "../../auth/useLogout";
 import UserLanguagesField from "../userLanguages";
 import CityAutocomplete from "../cityAutocomplete";
 import PreferredDistanceField from "../preferredDistance";
@@ -12,9 +11,11 @@ import type { ProfileFields } from "./updateProfile";
 import type { City } from "../../types/profile";
 import UserPhotoField from "../userphoto";
 import { uploadAvatar, deleteAvatar } from "../avatar";
+import UserHeader from "../UserHeader";
+import "../../styles/UserHeader.css";
+
 
 export default function UserProfileForm() {
-  const logout = useLogout();
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
@@ -133,10 +134,8 @@ export default function UserProfileForm() {
 
   return (
     <section className="section has-background-light">
-      <button className="logout button is-dark" onClick={() => logout()}>
-        Log out
-      </button>
-      <div className="container">
+        <UserHeader />
+          <div className="container">
         <h1 className="title has-text-centered">Your Profile</h1>
 
         {error && <div className="notification is-danger">{error}</div>}

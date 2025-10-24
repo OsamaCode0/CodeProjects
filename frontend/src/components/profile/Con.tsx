@@ -1,14 +1,14 @@
 import "bulma/css/bulma.min.css";
 import "../../styles/viewProfile.css";
-import { useLogout } from "../../auth/useLogout";
 import { useCon } from "../../hooks/useCon";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import UserHeader from "../UserHeader";
+import "../../styles/UserHeader.css";
 
 const API = import.meta.env.VITE_API_BASE_URL;
 
 export default function ConnectionsForm() {
-  const logout = useLogout();
   const navigate = useNavigate();
   const { loading, error, data } = useCon();
   const [chatLoading, setChatLoading] = useState<string | null>(null);
@@ -83,9 +83,8 @@ const handleDisconnect = async (userId: string) => {
       <Link to="/connections/requests" className="button is-link is-light mt-3">
         View connection requests
       </Link>
-      <button className="button is-dark logout" onClick={() => logout()}>
-        Log out
-      </button>
+      <UserHeader />
+
       <div className="container">
         <div className="recommendations-container">
           <h1 className="title has-text-centered">Your connections</h1>

@@ -1,19 +1,19 @@
 import "bulma/css/bulma.min.css";
 import "../../styles/viewProfile.css";
 import { useState } from "react";
-import { useLogout } from "../../auth/useLogout";
 import { useRecCon } from "../../hooks/useRecCon";
 import { loadNextProfile } from "../../hooks/loadNextProfile";
 import { reactToUser } from "../../hooks/postReaction";
 import type { CombinedUser } from "../../types/profile";
 import { Link } from "react-router-dom";
+import UserHeader from "../UserHeader";
+import "../../styles/UserHeader.css";
 
 type CombinedUserWithId = CombinedUser & { id: string };
 
 
 export default function ConnectionsReqForm() {
   const route = "/connections/requests";
-  const logout = useLogout();
 
   const { loading, error, data } = useRecCon(route);
 
@@ -71,9 +71,8 @@ export default function ConnectionsReqForm() {
               View connections
             </Link>
       <div className="recommendations-container">
-        <button className="button is-dark logout" onClick={() => logout()}>
-          Log out
-        </button>
+        <UserHeader />
+
 
         <div
           className="buttons"

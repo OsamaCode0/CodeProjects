@@ -25,6 +25,31 @@ func GetMeNameAndPhoto(c *gin.Context) {
     serveNameAndPhoto(c, id)
 }
 
+// GET /me/email - returns only the authenticated user's email
+func GetMyEmail(c *gin.Context) {
+	userID := c.GetString("userID")
+	
+	ctx := context.Background()
+	
+	var email string
+	err := internal.DB.QueryRow(ctx, 
+		"SELECT email FROM users WHERE id = $1", 
+		userID,
+	).Scan(&email)
+	
+	if err != nil {
+		log.Println(err)
+		c.JSON(500, structs.ErrorResponse{
+			Message: "failed to get email",
+		})
+		return
+	}
+	
+	c.JSON(200, gin.H{
+		"email": email,
+	})
+}
+
 func serveNameAndPhoto(c *gin.Context, id string) {
 	var out UserById
 	if !helpers.IsValidID(id) {

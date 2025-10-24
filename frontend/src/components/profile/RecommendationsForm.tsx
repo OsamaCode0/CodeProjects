@@ -3,16 +3,16 @@ import "../../styles/viewProfile.css";
 import { showToast } from "../toast";
 
 import { useState } from "react";
-import { useLogout } from "../../auth/useLogout";
 import { useRecommendations } from "../../hooks/useRecommend";
 import { loadNextProfile } from "../../hooks/loadNextProfile";
 import { reactToUser } from "../../hooks/postReaction";
 import type { CombinedUser } from "../../types/profile";
+import UserHeader from "../UserHeader";
+import "../../styles/UserHeader.css";
 
 type CombinedUserWithId = CombinedUser & { id: string };
 
 export default function RecommendationsForm() {
-  const logout = useLogout();
 
   const { loading, error, data } = useRecommendations();
 
@@ -62,9 +62,8 @@ export default function RecommendationsForm() {
   return (
     <section className="section has-background-light">
       <div className="recommendations-container">
-        <button className="button is-dark logout" onClick={() => logout()}>
-          Log out
-        </button>
+        <UserHeader />
+
 
         <div className="buttons" style={{ gap: "0.5rem", marginLeft: "0.5rem" }}>
           <button

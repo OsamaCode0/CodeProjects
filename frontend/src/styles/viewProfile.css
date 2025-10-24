@@ -83,3 +83,27 @@
   font-style: italic;
   opacity: 0.7;
 }
+
+@media (max-width: 768px) {
+  .recommendations-container {
+    padding: 1rem;
+  }
+  
+  .buttons {
+    flex-wrap: wrap;
+  }
+  
+  .buttons button {
+    flex: 1 1 45%;
+    min-width: 120px;
+  }
+  
+  .avatar-wrapper {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .column {
+    padding: 0.5rem !important;
+  }
+}

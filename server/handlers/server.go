@@ -48,6 +48,8 @@ func SetupRouter() *gin.Engine {
 	auth.GET("/me/child", endpoints.GetChildProfile)
 	auth.GET("/me/cloudinary-sign", endpoints.CloudinarySign)
 
+	auth.GET("/me/email", endpoints.GetMyEmail) //e-mail for user
+	
 	// Chat endpoints
 	auth.GET("/api/chats", GetUserChats)
 	auth.GET("/api/chats/:chatId/messages", GetChatMessages)

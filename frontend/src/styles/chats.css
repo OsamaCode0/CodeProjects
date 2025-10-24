@@ -423,3 +423,42 @@
   color: #657786;
   font-style: italic;
 }
+
+/* Mobile responsive for chat */
+@media (max-width: 968px) {
+  .chat-container {
+    flex-direction: column;
+    height: auto;
+  }
+  
+  .connections-sidebar {
+    width: 100%;
+    max-height: 200px;
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  
+  .messages-container {
+    width: 100%;
+    height: calc(100vh - 250px);
+  }
+  
+  .connection-item {
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .message-content {
+    max-width: 80%;
+    font-size: 0.9rem;
+  }
+  
+  .message-input {
+    font-size: 0.9rem;
+  }
+  
+  .send-button {
+    padding: 0.5rem 1rem;
+  }
+}

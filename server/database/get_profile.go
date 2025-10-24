@@ -88,24 +88,22 @@ func GetChildProfile(ctx context.Context, pool *pgxpool.Pool, id string) (*struc
 
     return &c, nil
 }
-//GetUserMatchingPreferences(ctx context.Context, pool *pgxpool.Pool, userID string) (*UserMatchingPreferences, error) {
 func GetUserMatchingPreferences(ctx context.Context, pool *pgxpool.Pool, userID string) (*structs.PreferencesInput, error) {
 	var p structs.PreferencesInput
-
 	row := pool.QueryRow(ctx, `
-        SELECT
-            user_id::text,
-            COALESCE(interests_weight, 1),
-            COALESCE(activity_level_weight, 2),
-            COALESCE(limitations_weight, 3),
-            COALESCE(allergies_weight, 3),
-            COALESCE(play_styles_weight, 1),
-            COALESCE(max_age_difference, 2)
-        FROM matching_preferences
-        WHERE user_id = $1
-        LIMIT 1
-    `, userID)
-
+	SELECT
+		user_id::text,
+		COALESCE(interests_weight, 3),
+		COALESCE(activity_level_weight, 3),
+		COALESCE(limitations_weight, 2),
+		COALESCE(allergies_weight, 2),
+		COALESCE(play_styles_weight, 3),
+		COALESCE(max_age_difference, 24)
+	FROM matching_preferences
+	WHERE user_id = $1
+	LIMIT 1
+	`, userID)
+	
 	err := row.Scan(
 		&p.UserID,
 		&p.InterestsWeight,
@@ -115,13 +113,49 @@ func GetUserMatchingPreferences(ctx context.Context, pool *pgxpool.Pool, userID 
 		&p.PlayStylesWeight,
 		&p.MaxAgeDifference,
 	)
+	
 	if err != nil {
-        log.Println(err)
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil // not found
+			// Create default preferences if not found
+			log.Printf("No preferences found for user %s, creating defaults", userID)
+			return createDefaultMatchingPreferences(ctx, pool, userID)
 		}
+		log.Printf("Error getting preferences: %v", err)
 		return nil, err
 	}
+	
+	return &p, nil
+}
 
+// createDefaultMatchingPreferences creates default matching preferences for a user
+func createDefaultMatchingPreferences(ctx context.Context, pool *pgxpool.Pool, userID string) (*structs.PreferencesInput, error) {
+	var p structs.PreferencesInput
+	
+	err := pool.QueryRow(ctx, `
+		INSERT INTO matching_preferences 
+		(user_id, interests_weight, activity_level_weight, limitations_weight, 
+		 allergies_weight, play_styles_weight, max_age_difference)
+		VALUES ($1, 3, 3, 2, 2, 3, 24)
+		ON CONFLICT (user_id) DO UPDATE SET
+			interests_weight = EXCLUDED.interests_weight
+		RETURNING user_id::text, interests_weight, activity_level_weight, 
+		          limitations_weight, allergies_weight, play_styles_weight, 
+		          max_age_difference
+	`, userID).Scan(
+		&p.UserID,
+		&p.InterestsWeight,
+		&p.ActivityLevelWeight,
+		&p.LimitationsWeight,
+		&p.AllergiesWeight,
+		&p.PlayStylesWeight,
+		&p.MaxAgeDifference,
+	)
+	
+	if err != nil {
+		log.Printf("ERROR creating default preferences: %v", err)
+		return nil, err
+	}
+	
+	log.Printf("Created default preferences for user %s", userID)
 	return &p, nil
 }

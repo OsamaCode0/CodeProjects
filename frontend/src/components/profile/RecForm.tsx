@@ -6,13 +6,14 @@ import { useRecCon } from "../../hooks/useRecCon";
 import { loadNextProfile } from "../../hooks/loadNextProfile";
 import { reactToUser } from "../../hooks/postReaction";
 import type { CombinedUser } from "../../types/profile";
+import UserHeader from "../UserHeader";
+import "../../styles/UserHeader.css";
 
 type CombinedUserWithId = CombinedUser & { id: string };
 
 
 export default function RecommendationsForm() {
   const route = "/recommendations";
-  const logout = useLogout();
 
   const { loading, error, data } = useRecCon(route);
 
@@ -62,13 +63,10 @@ export default function RecommendationsForm() {
   }
 
   return (
-    <section className="section has-background-light">
-      <div className="recommendations-container">
-        <button className="button is-dark logout" onClick={() => logout()}>
-          Log out
-        </button>
-
-        <div
+  <section className="section has-background-light">
+    <UserHeader />
+    <div className="recommendations-container">
+      <div
           className="buttons"
           style={{ gap: "0.5rem", marginLeft: "0.5rem" }}>
           <button

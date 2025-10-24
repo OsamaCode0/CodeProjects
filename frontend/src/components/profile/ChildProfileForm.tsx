@@ -1,14 +1,14 @@
 import "bulma/css/bulma.min.css";
 import "../../styles/profiles.css";
-import { useLogout } from "../../auth/useLogout";
 import { useChildProfile } from "../../hooks/useChildProfile";
 import { useState, useEffect, useRef } from "react";
 import { buildChildPayload } from "./updateChildProfile";
 import type { ChildFields } from "./updateChildProfile";
 import { saveProfile } from "../../hooks/patchUser";
+import UserHeader from "../UserHeader";
+import "../../styles/UserHeader.css";
 
 export default function ChildProfileForm() {
-  const logout = useLogout();
   const { data } = useChildProfile();
 
   const [initialized, setInitialized] = useState(false);
@@ -167,10 +167,8 @@ export default function ChildProfileForm() {
   }
   return (
     <section className="section has-background-light">
-      <button className="logout button is-dark" onClick={() => logout()}>
-        Log out
-      </button>
-      <div className="container">
+         <UserHeader />
+           <div className="container">
         <h1 className="title has-text-centered">Child Profile</h1>
 
         <form className="child-profile with-bottom-panel">
