@@ -14,6 +14,7 @@ type CombinedUserWithId = CombinedUser & { id: string };
 
 export default function RecommendationsForm() {
   const route = "/recommendations";
+  const logout = useLogout();
 
   const { loading, error, data } = useRecCon(route);
 
@@ -63,14 +64,18 @@ export default function RecommendationsForm() {
   }
 
   return (
-  <section className="section has-background-light">
-    <UserHeader />
-    <div className="recommendations-container">
-      <div
-          className="buttons"
+    <section className="section has-background-light">
+       <UserHeader />
+      <div className="recommendations-container">
+        <button className="button is-dark logout" onClick={() => logout()}>
+          Log out
+        </button>
+
+        <div
+          className="buttons is-centered"
           style={{ gap: "0.5rem", marginLeft: "0.5rem" }}>
           <button
-            className={`button is-light ${busyReact ? "is-loading" : ""}`}
+            className={`button is-danger ${busyReact ? "is-loading" : ""}`}
             disabled={busyReact || loadingNext || !user}
             onClick={() => handleReaction("dislike")}>
             Dismiss
@@ -93,12 +98,11 @@ export default function RecommendationsForm() {
 
         <div className="user-profile with-bottom-panel">
           {loading && (
-  <p className="loading-text">Loading recommendations...</p>
-)}
-{!loading && reactError && (
-  <p className="error-text">{reactError}</p>
-)}
-{!loading && !error && !user && <p>No recommendations found.</p>}
+            <p className="loading-text">Loading recommendations...</p>
+          )}
+          {error && <p className="error-text">{error}</p>}
+          {reactError && <p className="error-text">{reactError}</p>}
+          {!loading && !error && !user && <p>No recommendations found.</p>}
 
           {user && (
             <div className="box">

@@ -1,9 +1,0 @@
-import "../styles/toast.css";
-
-export function showToast(message: string) {
-  const toast = document.createElement("div");
-  toast.className = "toast";
-  toast.innerText = message;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
-}

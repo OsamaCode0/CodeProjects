@@ -80,7 +80,7 @@ const handleDisconnect = async (userId: string) => {
 
   return (
     <section className="section has-background-light">
-      <Link to="/connections/requests" className="button is-link is-light mt-3">
+      <Link to="/connections/requests" className="button connect is-link is-light">
         View connection requests
       </Link>
       <UserHeader />
@@ -90,11 +90,14 @@ const handleDisconnect = async (userId: string) => {
           <h1 className="title has-text-centered">Your connections</h1>
         </div>
 
+        <div className="container-err">
         {loading && <p>Loading connections…</p>}
-        {error && <p className="has-text-danger">{error}</p>}
+        {error && <p className="error-text">No connections found.</p>}
         {!loading && !error && data.length === 0 && (
           <p>No connections found.</p>
         )}
+        </div>
+        
 
         {!loading && !error && data.length > 0 && (
           <div className="columns is-multiline">

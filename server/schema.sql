@@ -13,10 +13,10 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 -- ============================================
 
 -- Users table
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email CITEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,  -- store bcrypt/argon2 hash
+  password_hash TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -33,11 +33,11 @@ CREATE TABLE IF NOT EXISTS parent_profiles (
   preferred_distance_km INTEGER CHECK (preferred_distance_km BETWEEN 0 AND 200),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  geog geography(Point, 4326)  -- PostGIS geography column for spatial queries
+  geog geography(Point, 4326)
 );
 
 -- Children table
-CREATE TABLE children (
+CREATE TABLE IF NOT EXISTS children (
   user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
   name TEXT,
   birthday DATE,
@@ -51,7 +51,7 @@ CREATE TABLE children (
 );
 
 -- User photos table
-CREATE TABLE user_photos (
+CREATE TABLE IF NOT EXISTS user_photos (
   user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
   photo_public_id TEXT NOT NULL,
   photo_version INTEGER NOT NULL
@@ -62,14 +62,14 @@ CREATE TABLE IF NOT EXISTS matching_preferences (
   user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
   interests_weight INTEGER DEFAULT 1 CHECK (interests_weight BETWEEN 0 AND 5),
   activity_level_weight INTEGER DEFAULT 2 CHECK (activity_level_weight BETWEEN 0 AND 5),
-  limitations_weight INTEGER DEFAULT 3 CHECK (limitations_weight BETWEEN 0 AND 5),  -- higher default for safety
-  allergies_weight INTEGER DEFAULT 3 CHECK (allergies_weight BETWEEN 0 AND 5),      -- critical for safety
+  limitations_weight INTEGER DEFAULT 3 CHECK (limitations_weight BETWEEN 0 AND 5),
+  allergies_weight INTEGER DEFAULT 3 CHECK (allergies_weight BETWEEN 0 AND 5),
   play_styles_weight INTEGER DEFAULT 1 CHECK (play_styles_weight BETWEEN 0 AND 5),
   max_age_difference INTEGER DEFAULT 2 CHECK (max_age_difference >= 0)
 );
 
 -- User reactions table (likes/dislikes and matches)
-CREATE TABLE user_reactions (
+CREATE TABLE IF NOT EXISTS user_reactions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   target_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -79,12 +79,51 @@ CREATE TABLE user_reactions (
   CONSTRAINT user_reactions_user_target_unique UNIQUE (user_id, target_user_id)
 );
 
+-- Chat rooms table
+CREATE TABLE IF NOT EXISTS chats (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user1_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user2_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT chats_different_users CHECK (user1_id <> user2_id)
+);
+
+-- Messages table
+CREATE TABLE IF NOT EXISTS messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  chat_id UUID NOT NULL REFERENCES chats(id) ON DELETE CASCADE,
+  sender_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Connections table
+CREATE TABLE IF NOT EXISTS connections (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  requester_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  target_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status TEXT NOT NULL CHECK (status IN ('pending', 'accepted', 'rejected')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT connections_different_users CHECK (requester_user_id <> target_user_id),
+  CONSTRAINT connections_unique_pair UNIQUE (requester_user_id, target_user_id)
+);
+
+
 -- ============================================
 -- INDEXES
 -- ============================================
 
--- Spatial index for geography column (enables fast ST_DWithin/ST_Distance queries)
 CREATE INDEX IF NOT EXISTS parent_profiles_geog_idx ON parent_profiles USING GIST (geog);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_chats_unique_pair ON chats ((LEAST(user1_id, user2_id)), (GREATEST(user1_id, user2_id)));
+CREATE INDEX IF NOT EXISTS idx_chats_user1 ON chats(user1_id);
+CREATE INDEX IF NOT EXISTS idx_chats_user2 ON chats(user2_id);
+CREATE INDEX IF NOT EXISTS idx_messages_chat_id ON messages(chat_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id);
+CREATE INDEX IF NOT EXISTS idx_connections_requester ON connections(requester_user_id);
+CREATE INDEX IF NOT EXISTS idx_connections_target ON connections(target_user_id);
+CREATE INDEX IF NOT EXISTS idx_connections_status ON connections(status);
+
 
 -- ============================================
 -- FUNCTIONS AND TRIGGERS
@@ -94,8 +133,8 @@ CREATE INDEX IF NOT EXISTS parent_profiles_geog_idx ON parent_profiles USING GIS
 CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS trigger AS $$
 BEGIN
-  NEW.updated_at := now();           -- always refresh on UPDATE
-  NEW.created_at := OLD.created_at;  -- never let it change
+  NEW.updated_at := now();
+  NEW.created_at := OLD.created_at;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -125,7 +164,7 @@ CREATE TRIGGER trg_parent_geog
 BEFORE INSERT OR UPDATE ON parent_profiles
 FOR EACH ROW EXECUTE FUNCTION set_parent_geog();
 
--- Backfill geography for existing rows (run after data import)
+-- Backfill geography for existing rows
 UPDATE parent_profiles
 SET geog = CASE
              WHEN lat IS NOT NULL AND lon IS NOT NULL
@@ -134,12 +173,49 @@ SET geog = CASE
            END
 WHERE geog IS NULL;
 
+-- Function for updating is_match status when users like each other
+CREATE OR REPLACE FUNCTION update_is_match()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- When the current user likes someone
+  IF NEW.reaction = 'like' THEN
+    -- Check if the target has already liked this user
+    UPDATE user_reactions
+    SET is_match = true
+    WHERE user_id = NEW.target_user_id
+      AND target_user_id = NEW.user_id
+      AND reaction = 'like';
+
+    -- If the reverse "like" exists, mark this one as a match too
+    IF EXISTS (
+      SELECT 1 FROM user_reactions
+      WHERE user_id = NEW.target_user_id
+        AND target_user_id = NEW.user_id
+        AND reaction = 'like'
+    ) THEN
+      NEW.is_match := true;
+    END IF;
+  ELSE
+    -- If it's a dislike, make sure match is false
+    NEW.is_match := false;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger for updating is_match automatically
+DROP TRIGGER IF EXISTS trg_update_is_match ON user_reactions;
+CREATE TRIGGER trg_update_is_match
+BEFORE INSERT OR UPDATE ON user_reactions
+FOR EACH ROW
+EXECUTE FUNCTION update_is_match();
+
+
 -- ============================================
 -- MATCHING ALGORITHM FUNCTIONS
 -- ============================================
 
 -- Prefilter function: returns candidates within user's preferred radius
--- Filters out users with incomplete profiles
 CREATE OR REPLACE FUNCTION prefilter_candidates_postgis(
   viewer uuid,
   p_limit int DEFAULT 500,
@@ -187,14 +263,12 @@ candidates_full AS (
   JOIN children c ON c.user_id = p.user_id
   JOIN me ON TRUE
   WHERE p.user_id <> me.user_id
-    -- parent profile must be filled
     AND p.name IS NOT NULL AND btrim(p.name) <> ''
     AND p.gender IS NOT NULL AND btrim(p.gender) <> ''
     AND p.about IS NOT NULL AND btrim(p.about) <> ''
     AND array_length(p.languages,1) IS NOT NULL AND array_length(p.languages,1) > 0
     AND p.address_city IS NOT NULL AND btrim(p.address_city) <> ''
     AND p.geog IS NOT NULL
-    -- child profile must be filled
     AND c.name IS NOT NULL AND btrim(c.name) <> ''
     AND c.birthday IS NOT NULL
     AND c.gender IS NOT NULL AND btrim(c.gender) <> ''
@@ -216,40 +290,36 @@ LIMIT p_limit OFFSET p_offset;
 $$;
 
 -- Profile completion percentage function
--- Returns percentage (0-100) of required fields filled
 CREATE OR REPLACE FUNCTION profile_completion_percent(p_user_id uuid)
 RETURNS numeric AS $$
 DECLARE
-  -- 6 parent fields + 9 child fields = 15 total
   total_fields int := 15;
   parent_filled int := 0;
   child_filled int := 0;
 BEGIN
-  -- Count filled parent profile fields
-  SELECT 
-      ((name IS NOT NULL AND name <> '')::int) +
-      ((gender IS NOT NULL AND gender <> '')::int) +
-      ((about IS NOT NULL AND about <> '')::int) +
-      ((languages IS NOT NULL AND cardinality(languages) > 0)::int) +
-      ((address_city IS NOT NULL AND address_city <> '')::int) +
-      ((preferred_distance_km IS NOT NULL)::int)
+  SELECT
+    ((name IS NOT NULL AND name <> '')::int) +
+    ((gender IS NOT NULL AND gender <> '')::int) +
+    ((about IS NOT NULL AND about <> '')::int) +
+    ((languages IS NOT NULL AND cardinality(languages) > 0)::int) +
+    ((address_city IS NOT NULL AND address_city <> '')::int) +
+    ((preferred_distance_km IS NOT NULL)::int)
   INTO parent_filled
   FROM parent_profiles
   WHERE user_id = p_user_id;
 
   parent_filled := COALESCE(parent_filled, 0);
 
-  -- Count filled child profile fields
-  SELECT 
-      ((name IS NOT NULL AND name <> '')::int) +
-      ((birthday IS NOT NULL)::int) +
-      ((gender IS NOT NULL AND gender <> '')::int) +
-      ((about_short IS NOT NULL AND about_short <> '')::int) +
-      ((interests IS NOT NULL AND cardinality(interests) > 0)::int) +
-      ((activity_level IS NOT NULL AND activity_level <> '')::int) +
-      ((limitations IS NOT NULL AND cardinality(limitations) > 0)::int) +
-      ((allergies IS NOT NULL AND cardinality(allergies) > 0)::int) +
-      ((play_styles IS NOT NULL AND cardinality(play_styles) > 0)::int)
+  SELECT
+    ((name IS NOT NULL AND name <> '')::int) +
+    ((birthday IS NOT NULL)::int) +
+    ((gender IS NOT NULL AND gender <> '')::int) +
+    ((about_short IS NOT NULL AND about_short <> '')::int) +
+    ((interests IS NOT NULL AND cardinality(interests) > 0)::int) +
+    ((activity_level IS NOT NULL AND activity_level <> '')::int) +
+    ((limitations IS NOT NULL AND cardinality(limitations) > 0)::int) +
+    ((allergies IS NOT NULL AND cardinality(allergies) > 0)::int) +
+    ((play_styles IS NOT NULL AND cardinality(play_styles) > 0)::int)
   INTO child_filled
   FROM children
   WHERE user_id = p_user_id;
@@ -259,90 +329,3 @@ BEGIN
   RETURN ROUND(((parent_filled + child_filled)::numeric / total_fields) * 100.0, 1);
 END;
 $$ LANGUAGE plpgsql STABLE;
-
--- Function for updating is_match status when users like each other
-CREATE OR REPLACE FUNCTION update_is_match()
-RETURNS TRIGGER AS $$
-BEGIN
-  -- When the current user likes someone
-  IF NEW.reaction = 'like' THEN
-    -- Check if the target has already liked this user
-    UPDATE user_reactions
-    SET is_match = true
-    WHERE user_id = NEW.target_user_id
-      AND target_user_id = NEW.user_id
-      AND reaction = 'like';
-
-    -- If the reverse "like" exists, mark this one as a match too
-    IF EXISTS (
-      SELECT 1 FROM user_reactions
-      WHERE user_id = NEW.target_user_id
-        AND target_user_id = NEW.user_id
-        AND reaction = 'like'
-    ) THEN
-      NEW.is_match := true;
-    END IF;
-  ELSE
-    -- If it's a dislike, make sure match is false
-    NEW.is_match := false;
-  END IF;
-
-  RETURN NEW;
-END;
-
--- Chat rooms table (automatically created when connection is accepted)
-CREATE TABLE IF NOT EXISTS chats (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user1_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  user2_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  CONSTRAINT chats_different_users CHECK (user1_id <> user2_id)
-);
-
--- Unique index to prevent duplicate chats between same two users (in any order)
-CREATE UNIQUE INDEX IF NOT EXISTS idx_chats_unique_pair 
-  ON chats ((LEAST(user1_id, user2_id)), (GREATEST(user1_id, user2_id)));
-
-CREATE INDEX IF NOT EXISTS idx_chats_user1 ON chats(user1_id);
-CREATE INDEX IF NOT EXISTS idx_chats_user2 ON chats(user2_id);
-
--- Messages table
-CREATE TABLE IF NOT EXISTS messages (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  chat_id UUID NOT NULL REFERENCES chats(id) ON DELETE CASCADE,
-  sender_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  content TEXT NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_messages_chat_id ON messages(chat_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id);
-
--- ============================================
--- CONNECTIONS TABLE
--- ============================================
-
--- Connections table for connection requests between users
-CREATE TABLE IF NOT EXISTS connections (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  requester_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  target_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  status TEXT NOT NULL CHECK (status IN ('pending', 'accepted', 'rejected')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  CONSTRAINT connections_different_users CHECK (requester_user_id <> target_user_id),
-  CONSTRAINT connections_unique_pair UNIQUE (requester_user_id, target_user_id)
-);
-
-CREATE INDEX IF NOT EXISTS idx_connections_requester ON connections(requester_user_id);
-CREATE INDEX IF NOT EXISTS idx_connections_target ON connections(target_user_id);
-CREATE INDEX IF NOT EXISTS idx_connections_status ON connections(status);
-
-$$ LANGUAGE plpgsql;
-
--- Trigger for updating is_match automatically
-DROP TRIGGER IF EXISTS trg_update_is_match ON user_reactions;
-CREATE TRIGGER trg_update_is_match
-BEFORE INSERT OR UPDATE ON user_reactions
-FOR EACH ROW
-EXECUTE FUNCTION update_is_match();

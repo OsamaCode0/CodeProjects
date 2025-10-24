@@ -66,7 +66,7 @@ export default function ConnectionsReqForm() {
     <section className="section has-background-light">
       <Link
               to="/connections"
-              className="button is-link is-light mt-3"
+              className="button connect is-link is-light"
             >
               View connections
             </Link>
@@ -75,10 +75,10 @@ export default function ConnectionsReqForm() {
 
 
         <div
-          className="buttons"
+          className="buttons  is-centered"
           style={{ gap: "0.5rem", marginLeft: "0.5rem" }}>
           <button
-            className={`button is-light ${busyReact ? "is-loading" : ""}`}
+            className={`button is-danger ${busyReact ? "is-loading" : ""}`}
             disabled={busyReact || loadingNext || !user}
             onClick={() => handleReaction("dislike")}>
             Decline
@@ -105,7 +105,7 @@ export default function ConnectionsReqForm() {
           )}
           {error && <p className="error-text">{error}</p>}
           {reactError && <p className="error-text">{reactError}</p>}
-          {!loading && !error && !user && <p>No connection requests found.</p>}
+          {!loading && !error && !user && <p  className="error-text">No connection requests found.</p>}
 
           {user && (
             <div className="box">

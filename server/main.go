@@ -16,6 +16,11 @@ func main() {
 
 	defer internal.DB.Close()
 
+	err = internal.InitializeDB()
+    if err != nil {
+        log.Fatal("Failed to initialize database:", err)
+    }
+
 	router := handlers.SetupRouter()
 	router.Run(":" + internal.Cfg.Port)
 }
