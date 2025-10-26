@@ -62,7 +62,7 @@ func SetupRouter() *gin.Engine {
 	auth.POST("/me/photo", endpoints.PostMePhoto)
 	auth.DELETE("/me/photo", endpoints.DeleteMePhoto)
 	auth.POST("/recommendations/:targetUserId/reaction", endpoints.PostReaction)
-	auth.POST("/connections/requests/:targetUserId/reaction", endpoints.PostReaction)
+	auth.POST("/connections/:connectionId/action", endpoints.PostConnectionAction)
 	auth.POST("/api/disconnect", endpoints.PostDisconnect)
 
 	// For matching

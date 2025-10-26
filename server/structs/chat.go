@@ -8,6 +8,8 @@ type Chat struct {
 	User1ID   string    `json:"user1_id"`
 	User2ID   string    `json:"user2_id"`
 	CreatedAt time.Time `json:"created_at"`
+	UnreadCount int       `json:"unread_count"`
+
 }
 
 // ChatMessage represents a message in a chat

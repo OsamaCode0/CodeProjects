@@ -63,13 +63,13 @@ func GetRecommendations(c *gin.Context) {
 	// Delegate to algorithm service for compatibility calculation
 	matches := CalculateMatchingScores(currentProfile, currentPrefs, candidates, ctx)
 	// Filter out weak matches (below 50% compatibility)
-	var filteredMatches []structs.MatchScore
-	for _, match := range matches {
-	if match.Score >= 0.5 { // Minimum 50% compatibility threshold
-		filteredMatches = append(filteredMatches, match)
-	}
-	}
-	matches = filteredMatches
+	// var filteredMatches []structs.MatchScore
+	//for _, match := range matches {
+	//if match.Score >= 0.5 { // Minimum 50% compatibility threshold
+		//filteredMatches = append(filteredMatches, match)
+	//}
+	//}
+	//matches = filteredMatches
 
 	// Limit results to requested amount
 	if len(matches) > limit {

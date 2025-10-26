@@ -10,30 +10,42 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// GetUserChats returns all chats where the user is a participant
 func GetUserChats(ctx context.Context, pool *pgxpool.Pool, userID string) ([]structs.Chat, error) {
 	const query = `
-		SELECT id, user1_id, user2_id, created_at 
-		FROM chats 
-		WHERE user1_id = $1 OR user2_id = $1 
-		ORDER BY created_at DESC`
-
+		SELECT 
+			c.id, 
+			c.user1_id, 
+			c.user2_id, 
+			c.created_at,
+			COALESCE(
+				(SELECT COUNT(*) 
+				 FROM unread_messages um 
+				 JOIN messages m ON m.id = um.message_id
+				 WHERE um.user_id = $1 AND m.chat_id = c.id),
+				0
+			) as unread_count
+		FROM chats c
+		WHERE c.user1_id = $1 OR c.user2_id = $1 
+		ORDER BY c.created_at DESC`
+	
 	rows, err := pool.Query(ctx, query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query user chats: %w", err)
 	}
 	defer rows.Close()
-
+	
 	var chats []structs.Chat
 	for rows.Next() {
 		var chat structs.Chat
-		err := rows.Scan(&chat.ID, &chat.User1ID, &chat.User2ID, &chat.CreatedAt)
+		var unreadCount int
+		err := rows.Scan(&chat.ID, &chat.User1ID, &chat.User2ID, &chat.CreatedAt, &unreadCount)
 		if err != nil {
 			continue
 		}
+		chat.UnreadCount = unreadCount
 		chats = append(chats, chat)
 	}
-
+	
 	return chats, nil
 }
 
@@ -130,4 +142,19 @@ func SaveChatMessage(ctx context.Context, pool *pgxpool.Pool, chatID, senderID, 
 	}
 
 	return messageID, nil
+}
+
+// MarkChatMessagesAsRead marks all messages in a chat as read for the user
+func MarkChatMessagesAsRead(ctx context.Context, pool *pgxpool.Pool, chatID, userID string) error {
+	const query = `
+		DELETE FROM unread_messages
+		WHERE user_id = $1 
+		  AND message_id IN (
+			SELECT m.id 
+			FROM messages m 
+			WHERE m.chat_id = $2
+		  )`
+	
+	_, err := pool.Exec(ctx, query, userID, chatID)
+	return err
 }

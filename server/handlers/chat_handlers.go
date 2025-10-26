@@ -88,34 +88,29 @@ func SendMessage(c *gin.Context) {
 }
 
 	// MarkMessagesAsRead marks all messages in a chat as read
-	func MarkMessagesAsRead(c *gin.Context) {
+func MarkMessagesAsRead(c *gin.Context) {
 	userID := c.GetString("userID")
 	chatID := c.Param("chatId")
-
+	
 	// Verify user has access to chat
 	_, err := database.GetChatByID(c.Request.Context(), internal.DB, chatID, userID)
 	if err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
 		return
 	}
-
-	// Delete unread entries for this user and chat
-	_, err = internal.DB.Exec(c.Request.Context(), `
-		DELETE FROM unread_messages 
-		WHERE user_id = $1 
-		  AND message_id IN (
-		    SELECT id FROM messages WHERE chat_id = $2
-		  )
-	`, userID, chatID)
-
+	
+	// Mark messages as read (delete from unread_messages table)
+	err = database.MarkChatMessagesAsRead(c.Request.Context(), internal.DB, chatID, userID)
 	if err != nil {
 		log.Printf("Error marking messages as read: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to mark as read"})
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{"status": "success"})
+	
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
+
+	
 // CheckOnlineStatus checks if a user is currently online
 func CheckOnlineStatus(c *gin.Context) {
 	targetUserID := c.Param("id")
