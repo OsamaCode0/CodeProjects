@@ -8,6 +8,7 @@ import type { CombinedUser } from "../../types/profile";
 import { Link } from "react-router-dom";
 import UserHeader from "../UserHeader";
 import "../../styles/UserHeader.css";
+import { acceptOrRejectConnection } from "../../hooks/postConnectionAction";
 
 type CombinedUserWithId = CombinedUser & { id: string };
 
@@ -15,8 +16,7 @@ type CombinedUserWithId = CombinedUser & { id: string };
 export default function ConnectionsReqForm() {
   const route = "/connections/requests";
 
-  const { loading, error, data } = useRecCon(route);
-
+  const { loading, error, data, connectionMap } = useRecCon(route);
   const [ids, setIds] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loadingNext, setLoadingNext] = useState(false);
@@ -44,23 +44,31 @@ export default function ConnectionsReqForm() {
     );
   }
 
-  async function handleReaction(kind: "like" | "dislike") {
-    if (!user || busyReact || loadingNext) return;
-    setBusyReact(true);
-    setReactError(null);
-
-    // optimistic: move to next immediately
-    const prevUser = user;
-    handleNext();
-
-    try {
-      await reactToUser(route, prevUser.id, kind);
-    } catch (e: any) {
-      setReactError(e?.message ?? "Failed to send reaction");
-    } finally {
-      setBusyReact(false);
-    }
+  async function handleReaction(kind: "accept" | "reject") {
+  if (!user || busyReact || loadingNext) return;
+  
+  // Get connection ID from connectionMap
+  const connectionId = connectionMap?.[user.id];
+  if (!connectionId) {
+    setReactError("Connection ID not found");
+    return;
   }
+  
+  setBusyReact(true);
+  setReactError(null);
+
+  // Optimistic: move to next immediately
+  const prevUser = user;
+  handleNext();
+
+  try {
+    await acceptOrRejectConnection(connectionId, kind);
+  } catch (e: any) {
+    setReactError(e?.message ?? `Failed to ${kind} connection`);
+  } finally {
+    setBusyReact(false);
+  }
+}
 
   return (
     <section className="section has-background-light">
@@ -77,18 +85,18 @@ export default function ConnectionsReqForm() {
         <div
           className="buttons  is-centered"
           style={{ gap: "0.5rem", marginLeft: "0.5rem" }}>
-          <button
-            className={`button is-danger ${busyReact ? "is-loading" : ""}`}
-            disabled={busyReact || loadingNext || !user}
-            onClick={() => handleReaction("dislike")}>
-            Decline
-          </button>
-          <button
-            className={`button is-primary ${busyReact ? "is-loading" : ""}`}
-            disabled={busyReact || loadingNext || !user}
-            onClick={() => handleReaction("like")}>
-            Accept
-          </button>
+        <button
+        className={`button is-danger ${busyReact ? "is-loading" : ""}`}
+        disabled={busyReact || loadingNext || !user}
+        onClick={() => handleReaction("reject")}>
+          Decline
+        </button>
+            <button
+              className={`button is-primary ${busyReact ? "is-loading" : ""}`}
+              disabled={busyReact || loadingNext || !user}
+               onClick={() => handleReaction("accept")}>
+           Accept
+            </button>
           <button
             className={`button is-link ${loadingNext ? "is-loading" : ""}`}
             onClick={handleNext}

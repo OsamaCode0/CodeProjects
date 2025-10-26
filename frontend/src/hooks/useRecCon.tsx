@@ -8,6 +8,7 @@ type State = {
   loading: boolean;
   error: string | null;
   data: CombinedUserWithId | null;
+  connectionMap?: Record<string, string>;
 };
 
 export function useRecCon(route: string) {
@@ -23,10 +24,31 @@ export function useRecCon(route: string) {
     (async () => {
       setState({ loading: true, error: null, data: null });
       try {
-        const ids = await get<string[]>(route); 
+        const response = await get<any>(route);
+
+        let ids: string[];
+        let connectionMap: Record<string, string> | undefined;
+
+        // Handle different response formats
+        if (!response) {
+          // Null/undefined response
+          ids = [];
+        } else if (Array.isArray(response)) {
+          // Old format: just array of user IDs (for /recommendations)
+          ids = response;
+        } else if (response.user_ids && Array.isArray(response.user_ids)) {
+          // New format: object with user_ids and connection_map (for /connections/requests)
+          ids = response.user_ids;
+          connectionMap = response.connection_map;
+        } else {
+          // Fallback
+          ids = [];
+        }
 
         if (!ids || ids.length === 0) {
-          if (!cancelled) setState({ loading: false, error: null, data: null });
+          if (!cancelled) {
+            setState({ loading: false, error: null, data: null, connectionMap });
+          }
           return;
         }
 
@@ -40,13 +62,13 @@ export function useRecCon(route: string) {
         const merged: CombinedUserWithId = { id, ...profile, ...photo };
 
         if (!cancelled) {
-          setState({ loading: false, error: null, data: merged });
+          setState({ loading: false, error: null, data: merged, connectionMap });
         }
       } catch (err: any) {
         if (!cancelled) {
           setState({
             loading: false,
-            error: err?.message ?? "Failed to load recommendations",
+            error: err?.message ?? "Failed to load data",
             data: null,
           });
         }
@@ -56,7 +78,7 @@ export function useRecCon(route: string) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [route]);
 
   return state;
 }
