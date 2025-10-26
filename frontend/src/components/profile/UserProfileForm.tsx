@@ -138,7 +138,6 @@ export default function UserProfileForm() {
           <div className="container">
         <h1 className="title has-text-centered">Your Profile</h1>
 
-        {error && <div className="notification is-danger">{error}</div>}
         {photoError && <p className="help is-danger">{photoError}</p>}
 
         <form className="user-profile  with-bottom-panel">
