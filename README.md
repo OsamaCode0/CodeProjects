@@ -1,3 +1,6 @@
+ go run . -seed
+ go run . -drop
+
 - install and start postgress
 
 - create .env file inside server folder:

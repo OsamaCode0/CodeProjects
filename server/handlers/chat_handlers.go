@@ -17,6 +17,7 @@ func GetUserChats(c *gin.Context) {
 	chats, err := database.GetUserChats(c.Request.Context(), internal.DB, userID)
 	
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load chats"})
 		return
 	}

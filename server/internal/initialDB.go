@@ -3,16 +3,15 @@ package internal
 import (
 	"context" 
 	"fmt"
-	"log"
 	"os"
 )
 
 // InitializeDB reads and executes the schema.sql file to set up the database.
-func InitializeDB() error {
+func ActionDB(fileName string) error {
 	// Read the SQL file
-	sqlBytes, err := os.ReadFile("schema.sql")
+	sqlBytes, err := os.ReadFile("sqlfiles/" + fileName)
 	if err != nil {
-		return fmt.Errorf("could not read schema.sql file: %w", err)
+		return fmt.Errorf("could not read %s file: %w", fileName, err)
 	}
 
 
@@ -21,6 +20,5 @@ func InitializeDB() error {
 		return fmt.Errorf("could not execute schema.sql script: %w", err)
 	}
 
-	log.Println("Database schema initialized successfully.")
 	return nil
 }

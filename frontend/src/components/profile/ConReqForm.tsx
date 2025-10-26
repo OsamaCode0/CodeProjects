@@ -3,7 +3,6 @@ import "../../styles/viewProfile.css";
 import { useState } from "react";
 import { useRecCon } from "../../hooks/useRecCon";
 import { loadNextProfile } from "../../hooks/loadNextProfile";
-import { reactToUser } from "../../hooks/postReaction";
 import type { CombinedUser } from "../../types/profile";
 import { Link } from "react-router-dom";
 import UserHeader from "../UserHeader";
@@ -58,7 +57,7 @@ export default function ConnectionsReqForm() {
   setReactError(null);
 
   // Optimistic: move to next immediately
-  const prevUser = user;
+ // const prevUser = user;
   handleNext();
 
   try {
