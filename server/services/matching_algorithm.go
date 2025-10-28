@@ -101,7 +101,7 @@ func CalculateCompatibilityScore(
 
 	// 6. AGE COMPATIBILITY (ALWAYS CONSIDERED)
 	ageScore := CalculateAgeCompatibility(profile1.ChildBirthday, profile2.ChildBirthday, prefs.MaxAgeDifference)
-	totalScore += ageScore * 2.0 // Base weight for age compatibility
+	totalScore += ageScore * 2.0
 	totalWeight += 2.0
 
 	// 7. LOCATION COMPATIBILITY
@@ -203,16 +203,25 @@ func CalculateAllergiesCompatibility(allergies1, allergies2 []string) float64 {
 // CalculateAgeCompatibility compares children's ages
 // Returns higher scores for smaller age differences, 0 - if difference exceeds user's maximum preference
 
-func CalculateAgeCompatibility(birth1, birth2 time.Time, maxDiffMonths int) float64 {
-	// Calculate age difference in months
-	diffMonths := math.Abs(birth1.Sub(birth2).Hours() / (24 * 30.44)) // Average days per month
-
-	if diffMonths > float64(maxDiffMonths) {
-		return 0.0 // Exceeds maximum allowed difference
+func CalculateAgeCompatibility(birth1, birth2 time.Time, maxDiffYears int) float64 {
+	now := time.Now()
+	age1 := now.Year() - birth1.Year()
+	age2 := now.Year() - birth2.Year()
+	
+	if now.Month() < birth1.Month() || (now.Month() == birth1.Month() && now.Day() < birth1.Day()) {
+		age1--
 	}
-
-	// Linear decrease in compatibility as age difference increases
-	return math.Max(0, 1.0-diffMonths/float64(maxDiffMonths))
+	if now.Month() < birth2.Month() || (now.Month() == birth2.Month() && now.Day() < birth2.Day()) {
+		age2--
+	}
+	
+	diffYears := math.Abs(float64(age1 - age2))
+	
+	if diffYears > float64(maxDiffYears) {
+		return 0.0
+	}
+	
+	return math.Max(0, 1.0 - (diffYears / float64(maxDiffYears)))
 }
 
 // NOT DONE YET CalculateLocationCompatibility compares geographic locations
@@ -226,7 +235,7 @@ func CalculateLocationCompatibility(city1, city2 string) float64 {
 		return 1.0 // Perfect match for same city
 	}
 
-	// TODO: Could be enhanced with distance calculation between cities
+	// Could be enhanced with distance calculation between cities
 	// For now, different cities get 0 score - could be improved with:
 	// - Distance calculation using coordinates
 	// - Country/region matching for partial scores
@@ -242,7 +251,7 @@ func CalculateBasicCompatibility(profile1, profile2 *database.MatchingProfile) f
 	// Basic formula using equal weights for core factors
 	interestsScore := CalculateArrayOverlap(profile1.Interests, profile2.Interests)
 	playStylesScore := CalculateArrayOverlap(profile1.PlayStyles, profile2.PlayStyles)
-	ageScore := CalculateAgeCompatibility(profile1.ChildBirthday, profile2.ChildBirthday, 24) // Default 24 months max
+	ageScore := CalculateAgeCompatibility(profile1.ChildBirthday, profile2.ChildBirthday, 2) // 2 years
 	locationScore := CalculateLocationCompatibility(profile1.City, profile2.City)
 
 	return (interestsScore + playStylesScore + ageScore + locationScore) / 4.0

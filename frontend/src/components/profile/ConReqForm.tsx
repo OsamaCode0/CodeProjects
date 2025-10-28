@@ -4,16 +4,16 @@ import { useState } from "react";
 import { useRecCon } from "../../hooks/useRecCon";
 import { loadNextProfile } from "../../hooks/loadNextProfile";
 import type { CombinedUser } from "../../types/profile";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import UserHeader from "../UserHeader";
 import "../../styles/UserHeader.css";
 import { acceptOrRejectConnection } from "../../hooks/postConnectionAction";
 
 type CombinedUserWithId = CombinedUser & { id: string };
 
-
 export default function ConnectionsReqForm() {
   const route = "/connections/requests";
+  const navigate = useNavigate();
 
   const { loading, error, data, connectionMap } = useRecCon(route);
   const [ids, setIds] = useState<string[]>([]);
@@ -29,10 +29,10 @@ export default function ConnectionsReqForm() {
     (nextUser as CombinedUserWithId | null) ??
     (data as CombinedUserWithId | null);
 
-  const handleNext = () =>{
-     if (loadingNext || isLast) return;
+  const handleNext = () => {
+    if (loadingNext || isLast) return;
     loadNextProfile(
-     route,
+      route,
       ids,
       currentIndex,
       setIds,
@@ -41,65 +41,98 @@ export default function ConnectionsReqForm() {
       setLoadingNext,
       setIsLast
     );
-  }
+  };
 
   async function handleReaction(kind: "accept" | "reject") {
-  if (!user || busyReact || loadingNext) return;
-  
-  // Get connection ID from connectionMap
-  const connectionId = connectionMap?.[user.id];
-  if (!connectionId) {
-    setReactError("Connection ID not found");
-    return;
-  }
-  
-  setBusyReact(true);
-  setReactError(null);
+    if (!user || busyReact || loadingNext) return;
 
-  // Optimistic: move to next immediately
- // const prevUser = user;
-  handleNext();
+    // Get connection ID from connectionMap
+    const connectionId = connectionMap?.[user.id];
+    if (!connectionId) {
+      setReactError("Connection ID not found");
+      return;
+    }
 
-  try {
-    await acceptOrRejectConnection(connectionId, kind);
-  } catch (e: any) {
-    setReactError(e?.message ?? `Failed to ${kind} connection`);
-  } finally {
-    setBusyReact(false);
+    setBusyReact(true);
+    setReactError(null);
+
+    try {
+      await acceptOrRejectConnection(connectionId, kind);
+
+      // ✅ Удалить обработанный ID из списка
+      const newIds = ids.filter((id) => id !== user.id);
+      setIds(newIds);
+
+      // Check if there are another requests
+      if (newIds.length > 0) {
+        // if yes - next 
+        setNextUser(null); 
+        
+        // Timeout to reset UI
+        setTimeout(() => {
+          loadNextProfile(
+            route,
+            newIds,
+            0, // start from the 1st
+            setIds,
+            setNextUser,
+            setCurrentIndex,
+            setLoadingNext,
+            setIsLast
+          );
+        }, 100);
+      } else {
+        // 
+        setTimeout(() => {
+          alert(`All requests processed! ✅`);
+          if (kind === "accept") {
+            navigate("/connections");
+          } else {
+            navigate("/recommendations");
+          }
+        }, 300);
+      }
+    } catch (e: any) {
+      setReactError(e?.message ?? `Failed to ${kind} connection`);
+    } finally {
+      setBusyReact(false);
+    }
   }
-}
 
   return (
     <section className="section has-background-light">
       <Link
-              to="/connections"
-              className="button connect is-link is-light"
-            >
-              View connections
-            </Link>
+        to="/connections"
+        className="button connect is-link is-light"
+      >
+        View connections
+      </Link>
       <div className="recommendations-container">
         <UserHeader />
 
-
         <div
-          className="buttons  is-centered"
-          style={{ gap: "0.5rem", marginLeft: "0.5rem" }}>
-        <button
-        className={`button is-danger ${busyReact ? "is-loading" : ""}`}
-        disabled={busyReact || loadingNext || !user}
-        onClick={() => handleReaction("reject")}>
-          Decline
-        </button>
-            <button
-              className={`button is-primary ${busyReact ? "is-loading" : ""}`}
-              disabled={busyReact || loadingNext || !user}
-               onClick={() => handleReaction("accept")}>
-           Accept
-            </button>
+          className="buttons is-centered"
+          style={{ gap: "0.5rem", marginLeft: "0.5rem" }}
+        >
+          <button
+            className={`button is-danger ${busyReact ? "is-loading" : ""}`}
+            disabled={busyReact || loadingNext || !user}
+            onClick={() => handleReaction("reject")}
+          >
+            Decline
+          </button>
+          <button
+            className={`button is-primary ${busyReact ? "is-loading" : ""}`}
+            disabled={busyReact || loadingNext || !user}
+            onClick={() => handleReaction("accept")}
+          >
+            Accept
+          </button>
           <button
             className={`button is-link ${loadingNext ? "is-loading" : ""}`}
             onClick={handleNext}
-           disabled={loadingNext || isLast}>
+            disabled={loadingNext || isLast}
+          >
             Next
           </button>
         </div>
@@ -112,7 +145,17 @@ export default function ConnectionsReqForm() {
           )}
           {error && <p className="error-text">{error}</p>}
           {reactError && <p className="error-text">{reactError}</p>}
-          {!loading && !error && !user && <p  className="error-text">No connection requests found.</p>}
+          {!loading && !error && !user && (
+            <div className="box has-text-centered">
+              <p className="subtitle">No connection requests found.</p>
+              <button
+                className="button is-primary mt-3"
+                onClick={() => navigate("/recommendations")}
+              >
+                Find Matches
+              </button>
+            </div>
+          )}
 
           {user && (
             <div className="box">

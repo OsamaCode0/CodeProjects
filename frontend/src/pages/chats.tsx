@@ -59,8 +59,7 @@ export default function Chats() {
     const unsubscribe = on('new_message', (msg) => {
       console.log('Received new message:', msg);
       
-      // Only update if the chat is open AND the message is from someone else
-      if (selected === msg.chat_id && msg.sender_id !== myUserId) {
+      if (selected === msg.chat_id) {
         setMessages(prev => [...prev, {
           id: msg.message_id!,
           sender_id: msg.sender_id!,
@@ -68,17 +67,17 @@ export default function Chats() {
           created_at: msg.created_at!
         }]);
         markAsRead(msg.chat_id!);
-      } else if (msg.sender_id !== myUserId) { // Handle unread count for other chats
+      } else {
         setConnections(prev => prev.map(conn => 
           conn.id === msg.chat_id 
             ? { ...conn, unreadCount: (conn.unreadCount || 0) + 1 }
             : conn
         ));
       }
-
+      loadConnections();
     });
     return unsubscribe;
-  }, [selected, on, myUserId]); 
+  }, [selected, on]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -147,18 +146,7 @@ export default function Chats() {
   };
 
   const sendMessage = async () => {
-    if (!selected || !newMessage.trim() || !myUserId) return;
-
-    const optimisticMessage: Message = {
-      id: `temp-${Date.now()}`, // Temporary unique ID
-      sender_id: myUserId,
-      content: newMessage,
-      created_at: new Date().toISOString(), // Use current time
-    };
-
-    setMessages(prevMessages => [...prevMessages, optimisticMessage]);
-    setNewMessage(""); // Clear the input right away
-
+    if (!selected || !newMessage.trim()) return;
     try {
       await fetch(`${API}/api/chats/${selected}/messages`, {
         method: "POST",
@@ -166,8 +154,9 @@ export default function Chats() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ content: newMessage }) // Send original content
+        body: JSON.stringify({ content: newMessage })
       });
+      setNewMessage("");
     } catch (error) {
       console.error('Failed to send message:', error);
     }
