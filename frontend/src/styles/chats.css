@@ -21,6 +21,8 @@
   display: flex;
   flex-direction: column;
   background: white;
+  z-index: 10; 
+  position: relative; 
 }
 
 .sidebar-header {
@@ -48,6 +50,8 @@
   cursor: pointer;
   transition: background 0.2s;
   border-bottom: 1px solid #f0f0f0;
+  position: relative; 
+  z-index: 20; 
 }
 
 .connection-item:hover {
@@ -104,6 +108,8 @@
   display: flex;
   flex-direction: column;
   background: #fafbfc;
+  z-index: 1; 
+  position: relative; 
 }
 
 .chat-header {

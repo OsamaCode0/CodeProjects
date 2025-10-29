@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 
-type WSMessage = {
+const WS_URL = import.meta.env.VITE_API_BASE_URL?.replace('http', 'ws') || 'ws://localhost:8088';
+
+interface WebSocketMessage {
   type: string;
   chat_id?: string;
   message_id?: string;
@@ -8,75 +10,48 @@ type WSMessage = {
   content?: string;
   created_at?: string;
   data?: any;
-};
-
-type MessageHandler = (message: WSMessage) => void;
-
-// Build a proper WS base URL from the HTTP(S) API URL
-function buildWsBaseUrl(): string {
-  const api = import.meta.env.VITE_API_BASE_URL as string | undefined;
-  if (!api) return 'ws://localhost:8088';
-  try {
-    const u = new URL(api);
-    u.protocol = u.protocol === 'https:' ? 'wss:' : 'ws:';
-    // Return just the origin (protocol + host + optional port)
-    return u.origin;
-  } catch {
-    // Fallback: simple replace if the URL was not fully qualified
-    return api.replace(/^https?/, (m) => (m === 'https' ? 'wss' : 'ws'));
-  }
 }
 
-const WS_BASE = buildWsBaseUrl();
+type MessageHandler = (message: WebSocketMessage) => void;
 
 export const useWebSocket = () => {
   const [isConnected, setIsConnected] = useState(false);
-
   const wsRef = useRef<WebSocket | null>(null);
   const handlersRef = useRef<Map<string, MessageHandler[]>>(new Map());
-
-  // Use browser-safe timeout types
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectTimeoutRef = useRef<number | undefined>(undefined); 
   const shouldReconnectRef = useRef(true);
-
-  const clearReconnectTimer = () => {
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
-    }
-  };
 
   const connect = () => {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    // Avoid opening a new socket unless the previous one is fully closed
-    const ready = wsRef.current?.readyState;
-    if (ready === WebSocket.OPEN || ready === WebSocket.CONNECTING || ready === WebSocket.CLOSING) {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
       return;
     }
 
-    const ws = new WebSocket(`${WS_BASE}/ws?token=${encodeURIComponent(token)}`);
+    const ws = new WebSocket(`${WS_URL}/ws?token=${token}`);
 
     ws.onopen = () => {
-      // console.debug('WebSocket connected');
+      console.log('WebSocket connected');
       setIsConnected(true);
-      clearReconnectTimer();
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = undefined;
+      }
     };
 
-    ws.onmessage = async (event) => {
+    ws.onmessage = (event) => {
       try {
-        // Support both string and Blob payloads
-        const raw = typeof event.data === 'string' ? event.data : await (event.data as Blob).text();
-        const message: WSMessage = JSON.parse(raw);
+        const message: WebSocketMessage = JSON.parse(event.data);
+        console.log('WebSocket message received:', message);
 
-        // Call handlers for the specific type
+        // Call all handlers for this message type
         const handlers = handlersRef.current.get(message.type) || [];
-        handlers.forEach((h) => h(message));
+        handlers.forEach(handler => handler(message));
 
-        // And wildcard handlers
+        // Also call wildcard handlers
         const wildcardHandlers = handlersRef.current.get('*') || [];
-        wildcardHandlers.forEach((h) => h(message));
+        wildcardHandlers.forEach(handler => handler(message));
       } catch (error) {
         console.error('Error parsing WebSocket message:', error);
       }
@@ -87,15 +62,14 @@ export const useWebSocket = () => {
     };
 
     ws.onclose = () => {
-      // console.debug('WebSocket disconnected');
+      console.log('WebSocket disconnected');
       setIsConnected(false);
       wsRef.current = null;
 
       if (shouldReconnectRef.current) {
-        clearReconnectTimer();
-        reconnectTimeoutRef.current = setTimeout(() => {
+        reconnectTimeoutRef.current = window.setTimeout(() => { 
           if (shouldReconnectRef.current) {
-            // console.debug('Attempting to reconnect...');
+            console.log('Attempting to reconnect...');
             connect();
           }
         }, 3000);
@@ -107,44 +81,38 @@ export const useWebSocket = () => {
 
   const disconnect = () => {
     shouldReconnectRef.current = false;
-    clearReconnectTimer();
-
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.close(1000, 'Component unmounting');
-    } else if (wsRef.current && wsRef.current.readyState === WebSocket.CONNECTING) {
-      // If still connecting, just null it; browser will fire onclose later
-      try {
-        wsRef.current.close();
-      } catch { /* noop */ }
+    
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = undefined;
     }
-    wsRef.current = null;
+    if (wsRef.current) {
+      wsRef.current.close(1000, 'Component unmounting');
+      wsRef.current = null;
+    }
     setIsConnected(false);
   };
 
-  const send = (message: WSMessage) => {
-    const ws = wsRef.current;
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(message));
+  const send = (message: WebSocketMessage) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(message));
     } else {
-      console.warn('WebSocket is not connected; message not sent:', message);
+      console.warn('WebSocket is not connected');
     }
   };
 
   const on = (type: string, handler: MessageHandler) => {
-    const map = handlersRef.current;
-    const list = map.get(type) ? [...(map.get(type) as MessageHandler[])] : [];
-    list.push(handler);
-    map.set(type, list);
+    const handlers = handlersRef.current.get(type) || [];
+    handlers.push(handler);
+    handlersRef.current.set(type, handlers);
 
-    // Cleanup unsubscribes this handler
+    // Return cleanup function
     return () => {
-      const current = map.get(type);
-      if (!current) return;
-      const next = current.filter((h) => h !== handler);
-      if (next.length === 0) {
-        map.delete(type);
-      } else {
-        map.set(type, next);
+      const currentHandlers = handlersRef.current.get(type) || [];
+      const index = currentHandlers.indexOf(handler);
+      if (index > -1) {
+        currentHandlers.splice(index, 1);
+        handlersRef.current.set(type, currentHandlers);
       }
     };
   };
@@ -152,13 +120,8 @@ export const useWebSocket = () => {
   useEffect(() => {
     shouldReconnectRef.current = true;
     connect();
-    return () => {
-      disconnect();
-      // Also clear all handlers on unmount to avoid leaks
-      handlersRef.current.clear();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return () => disconnect();
+  }, []); 
 
   return { isConnected, send, on };
 };

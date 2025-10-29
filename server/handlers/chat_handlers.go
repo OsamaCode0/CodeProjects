@@ -85,7 +85,7 @@ func SendMessage(c *gin.Context) {
 				CreatedAt: createdAt.Format(time.RFC3339),
 			}
 			
-			// Отправить получателю
+
 			GlobalHub.SendToUser(recipientID, wsMessage)
 			
 			GlobalHub.SendToUser(userID, wsMessage)

@@ -3,8 +3,7 @@ import { useLocation } from "react-router-dom";
 import { useWebSocket } from "../hooks/useWebSocket";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import "../styles/chats.css";
-
-const API = import.meta.env.VITE_API_BASE_URL;
+import { API } from "../registerform";
 
 type Connection = {
   id: string;
@@ -33,6 +32,7 @@ export default function Chats() {
   const [newMessage, setNewMessage] = useState("");
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const prevSelectedChatRef = useRef<string | null>(null); 
 
   const token = localStorage.getItem("token");
   const myUserId = localStorage.getItem("userId");
@@ -45,13 +45,17 @@ export default function Chats() {
   }, []);
 
   useEffect(() => {
-    if (state?.selectedChatId && connections.length > 0) {
+    if (state?.selectedChatId && 
+        connections.length > 0 && 
+        state.selectedChatId !== prevSelectedChatRef.current) {
+      
       const connection = connections.find(c => c.id === state.selectedChatId);
       if (connection) {
         setSelectedChat(state.selectedChatId);
         setSelectedName(connection.name);
         setSelectedUserId(connection.userId || null);
         loadMessages(state.selectedChatId);
+        prevSelectedChatRef.current = state.selectedChatId; 
       }
     }
   }, [state?.selectedChatId, connections]);
@@ -60,7 +64,6 @@ export default function Chats() {
     const unsubscribe = on('new_message', (msg) => {
       
       if (selected === msg.chat_id) {
-        // ✅ Проверить что сообщение еще не существует (дедупликация)
         setMessages(prev => {
           const exists = prev.some(m => m.id === msg.message_id);
           if (exists) return prev;
@@ -171,7 +174,6 @@ export default function Chats() {
         body: JSON.stringify({ content: messageContent })
       });
       
-      
     } catch (error) {
       console.error('Failed to send message:', error);
       setNewMessage(messageContent); 
@@ -213,6 +215,7 @@ export default function Chats() {
                   key={conn.id}
                   className={`connection-item ${selected === conn.id ? 'active' : ''}`}
                   onClick={() => {
+                    console.log('🖱️ Clicked on chat:', conn.id, conn.name); 
                     setSelectedChat(conn.id);
                     setSelectedName(conn.name);
                     setSelectedUserId(conn.userId || null);
