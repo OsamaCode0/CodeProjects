@@ -19,16 +19,25 @@ export const useWebSocket = () => {
   const wsRef = useRef<WebSocket | null>(null);
   const handlersRef = useRef<Map<string, MessageHandler[]>>(new Map());
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
+  const shouldReconnectRef = useRef(true); // ✅ ДОБАВЛЕНО
 
   const connect = () => {
     const token = localStorage.getItem('token');
     if (!token) return;
+
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      return;
+    }
 
     const ws = new WebSocket(`${WS_URL}/ws?token=${token}`);
 
     ws.onopen = () => {
       console.log('WebSocket connected');
       setIsConnected(true);
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = undefined;
+      }
     };
 
     ws.onmessage = (event) => {
@@ -57,24 +66,31 @@ export const useWebSocket = () => {
       setIsConnected(false);
       wsRef.current = null;
 
-      // Reconnect after 3 seconds
-      reconnectTimeoutRef.current = setTimeout(() => {
-        console.log('Attempting to reconnect...');
-        connect();
-      }, 3000);
+      if (shouldReconnectRef.current) {
+        reconnectTimeoutRef.current = setTimeout(() => {
+          if (shouldReconnectRef.current) { 
+            console.log('Attempting to reconnect...');
+            connect();
+          }
+        }, 3000);
+      }
     };
 
     wsRef.current = ws;
   };
 
   const disconnect = () => {
+    shouldReconnectRef.current = false;
+    
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = undefined; 
     }
     if (wsRef.current) {
-      wsRef.current.close();
+      wsRef.current.close(1000, 'Component unmounting'); 
       wsRef.current = null;
     }
+    setIsConnected(false); 
   };
 
   const send = (message: WebSocketMessage) => {
@@ -102,6 +118,7 @@ export const useWebSocket = () => {
   };
 
   useEffect(() => {
+    shouldReconnectRef.current = true; 
     connect();
     return () => disconnect();
   }, []);

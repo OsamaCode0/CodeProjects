@@ -1,8 +1,7 @@
 import "bulma/css/bulma.min.css";
 import "../../styles/viewProfile.css";
-import { useState } from "react";
-import { useRecCon } from "../../hooks/useRecCon";
-import { loadNextProfile } from "../../hooks/loadNextProfile";
+import { useState, useEffect } from "react";
+import { get } from "../../api/client";
 import type { CombinedUser } from "../../types/profile";
 import { Link, useNavigate } from "react-router-dom";
 import UserHeader from "../UserHeader";
@@ -11,43 +10,93 @@ import { acceptOrRejectConnection } from "../../hooks/postConnectionAction";
 
 type CombinedUserWithId = CombinedUser & { id: string };
 
+interface ConnectionRequestsResponse {
+  user_ids: string[];
+  connection_map: Record<string, string>;
+}
+
 export default function ConnectionsReqForm() {
-  const route = "/connections/requests";
   const navigate = useNavigate();
 
-  const { loading, error, data, connectionMap } = useRecCon(route);
-  const [ids, setIds] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [userIds, setUserIds] = useState<string[]>([]);
+  const [connectionMap, setConnectionMap] = useState<Record<string, string>>({});
+  const [profiles, setProfiles] = useState<CombinedUserWithId[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [loadingNext, setLoadingNext] = useState(false);
   const [busyReact, setBusyReact] = useState(false);
-  const [nextUser, setNextUser] = useState<CombinedUserWithId | null>(null);
   const [reactError, setReactError] = useState<string | null>(null);
-  const [isLast, setIsLast] = useState(false);
 
-  // Prefer the nextUser (after pressing Next), otherwise show the initial one
-  const user =
-    (nextUser as CombinedUserWithId | null) ??
-    (data as CombinedUserWithId | null);
+  // ✅ Загрузить список ID запросов
+  useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        setLoading(true);
+        const response = await get<ConnectionRequestsResponse>("/connections/requests");
+        
+        if (response.user_ids && response.user_ids.length > 0) {
+          setUserIds(response.user_ids);
+          setConnectionMap(response.connection_map || {});
+        } else {
+          setError("No connection requests found");
+        }
+      } catch (e: any) {
+        setError(e?.message || "Failed to load requests");
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchRequests();
+  }, []);
+
+  // ✅ Загрузить профили для всех ID
+  useEffect(() => {
+    if (userIds.length === 0) return;
+
+    const fetchProfiles = async () => {
+      try {
+        const profilePromises = userIds.map(async (userId) => {
+          const [profileData, bioData] = await Promise.all([
+            get<any>(`/users/${userId}/profile`),
+            get<any>(`/users/${userId}/bio`),
+          ]);
+
+          return {
+            id: userId,
+            ...profileData,
+            ...bioData,
+          } as CombinedUserWithId;
+        });
+
+        const loadedProfiles = await Promise.all(profilePromises);
+        setProfiles(loadedProfiles);
+      } catch (e: any) {
+        console.error("Failed to load profiles:", e);
+        setError("Failed to load profile details");
+      }
+    };
+
+    fetchProfiles();
+  }, [userIds]);
+
+  const currentUser = profiles[currentIndex] || null;
+
+  // ✅ Простая функция Next
   const handleNext = () => {
-    if (loadingNext || isLast) return;
-    loadNextProfile(
-      route,
-      ids,
-      currentIndex,
-      setIds,
-      setNextUser,
-      setCurrentIndex,
-      setLoadingNext,
-      setIsLast
-    );
+    if (currentIndex < profiles.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    } else {
+      // По кругу
+      setCurrentIndex(0);
+    }
   };
 
+  // ✅ Функция handleReaction
   async function handleReaction(kind: "accept" | "reject") {
-    if (!user || busyReact || loadingNext) return;
+    if (!currentUser || busyReact) return;
 
-    // Get connection ID from connectionMap
-    const connectionId = connectionMap?.[user.id];
+    const connectionId = connectionMap[currentUser.id];
     if (!connectionId) {
       setReactError("Connection ID not found");
       return;
@@ -59,32 +108,24 @@ export default function ConnectionsReqForm() {
     try {
       await acceptOrRejectConnection(connectionId, kind);
 
-      // ✅ Удалить обработанный ID из списка
-      const newIds = ids.filter((id) => id !== user.id);
-      setIds(newIds);
+      // ✅ Удалить текущий профиль из списка
+      const newProfiles = profiles.filter((_, idx) => idx !== currentIndex);
+      const newUserIds = userIds.filter((id) => id !== currentUser.id);
+      
+      setProfiles(newProfiles);
+      setUserIds(newUserIds);
 
-      // Check if there are another requests
-      if (newIds.length > 0) {
-        // if yes - next 
-        setNextUser(null); 
-        
-        // Timeout to reset UI
-        setTimeout(() => {
-          loadNextProfile(
-            route,
-            newIds,
-            0, // start from the 1st
-            setIds,
-            setNextUser,
-            setCurrentIndex,
-            setLoadingNext,
-            setIsLast
-          );
-        }, 100);
+      // ✅ Проверить, остались ли еще запросы
+      if (newProfiles.length > 0) {
+        // Если удалили последний элемент, вернуться к началу
+        if (currentIndex >= newProfiles.length) {
+          setCurrentIndex(0);
+        }
+        // Иначе индекс остается тем же (покажется следующий профиль)
       } else {
-        // 
+        // ✅ Все запросы обработаны - редирект
         setTimeout(() => {
-          alert(`All requests processed! ✅`);
+          alert("All requests processed! ✅");
           if (kind === "accept") {
             navigate("/connections");
           } else {
@@ -101,10 +142,7 @@ export default function ConnectionsReqForm() {
 
   return (
     <section className="section has-background-light">
-      <Link
-        to="/connections"
-        className="button connect is-link is-light"
-      >
+      <Link to="/connections" className="button connect is-link is-light">
         View connections
       </Link>
       <div className="recommendations-container">
@@ -116,22 +154,22 @@ export default function ConnectionsReqForm() {
         >
           <button
             className={`button is-danger ${busyReact ? "is-loading" : ""}`}
-            disabled={busyReact || loadingNext || !user}
+            disabled={busyReact || !currentUser}
             onClick={() => handleReaction("reject")}
           >
             Decline
           </button>
           <button
             className={`button is-primary ${busyReact ? "is-loading" : ""}`}
-            disabled={busyReact || loadingNext || !user}
+            disabled={busyReact || !currentUser}
             onClick={() => handleReaction("accept")}
           >
             Accept
           </button>
           <button
-            className={`button is-link ${loadingNext ? "is-loading" : ""}`}
+            className="button is-link"
             onClick={handleNext}
-            disabled={loadingNext || isLast}
+            disabled={profiles.length <= 1}
           >
             Next
           </button>
@@ -139,13 +177,22 @@ export default function ConnectionsReqForm() {
 
         <h1 className="title has-text-centered">Your connection requests</h1>
 
+        {/* Показать счетчик */}
+        {profiles.length > 0 && (
+          <div className="has-text-centered mb-3">
+            <span className="tag is-info is-light">
+              {currentIndex + 1} / {profiles.length}
+            </span>
+          </div>
+        )}
+
         <div className="user-profile with-bottom-panel">
           {loading && (
             <p className="loading-text">Loading connection requests...</p>
           )}
           {error && <p className="error-text">{error}</p>}
           {reactError && <p className="error-text">{reactError}</p>}
-          {!loading && !error && !user && (
+          {!loading && !error && !currentUser && (
             <div className="box has-text-centered">
               <p className="subtitle">No connection requests found.</p>
               <button
@@ -157,13 +204,13 @@ export default function ConnectionsReqForm() {
             </div>
           )}
 
-          {user && (
+          {currentUser && (
             <div className="box">
               <article className="media">
                 <figure className="media-left">
                   <div className="avatar-wrapper">
-                    {user.avatarurl ? (
-                      <img src={user.avatarurl} alt={`${user.name} avatar`} />
+                    {currentUser.avatarurl ? (
+                      <img src={currentUser.avatarurl} alt={`${currentUser.name} avatar`} />
                     ) : (
                       <span className="avatar-fallback">👤</span>
                     )}
@@ -171,18 +218,16 @@ export default function ConnectionsReqForm() {
                 </figure>
 
                 <div className="media-content">
-                  <h2 className="parent-name">{user.name}</h2>
-                  <p className="parent-city">{user.addressCity}</p>
-                  {user.about && <p className="parent-about">{user.about}</p>}
+                  <h2 className="parent-name">{currentUser.name}</h2>
+                  <p className="parent-city">{currentUser.addressCity}</p>
+                  {currentUser.about && <p className="parent-about">{currentUser.about}</p>}
 
-                  {Array.isArray(user.languages) &&
-                    user.languages.length > 0 && (
+                  {Array.isArray(currentUser.languages) &&
+                    currentUser.languages.length > 0 && (
                       <>
-                        <p className="has-text-weight-semibold mb-1">
-                          Languages
-                        </p>
+                        <p className="has-text-weight-semibold mb-1">Languages</p>
                         <div className="tags mb-3">
-                          {user.languages.map((lang) => (
+                          {currentUser.languages.map((lang) => (
                             <span key={lang} className="tag is-info is-light">
                               {lang.toUpperCase()}
                             </span>
@@ -201,33 +246,31 @@ export default function ConnectionsReqForm() {
                   <div className="column is-half">
                     <p>
                       <strong>Name:</strong>{" "}
-                      <span className="child-name">{user.child.name}</span>
+                      <span className="child-name">{currentUser.child.name}</span>
                     </p>
                     <p>
-                      <strong>Gender:</strong> {user.child.gender}
+                      <strong>Gender:</strong> {currentUser.child.gender}
                     </p>
                   </div>
                   <div className="column is-half">
                     <p>
-                      <strong>Age:</strong> {user.child.ageYears}{" "}
-                      {user.child.ageYears === 1 ? "year" : "years"}
+                      <strong>Age:</strong> {currentUser.child.ageYears}{" "}
+                      {currentUser.child.ageYears === 1 ? "year" : "years"}
                     </p>
                   </div>
 
-                  {user.child.aboutShort && (
+                  {currentUser.child.aboutShort && (
                     <div className="column is-full">
-                      <p className="child-about">{user.child.aboutShort}</p>
+                      <p className="child-about">{currentUser.child.aboutShort}</p>
                     </div>
                   )}
 
-                  {Array.isArray(user.child.topInterests) &&
-                    user.child.topInterests.length > 0 && (
+                  {Array.isArray(currentUser.child.topInterests) &&
+                    currentUser.child.topInterests.length > 0 && (
                       <div className="column is-full top-interests">
-                        <p className="has-text-weight-semibold mb-1">
-                          Top interests
-                        </p>
+                        <p className="has-text-weight-semibold mb-1">Top interests</p>
                         <div className="tags">
-                          {user.child.topInterests.map((i) => (
+                          {currentUser.child.topInterests.map((i) => (
                             <span key={i} className="tag is-success is-light">
                               {i}
                             </span>

@@ -31,6 +31,7 @@ export default function Chats() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false); // ✅ ДОБАВЛЕНО
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const token = localStorage.getItem("token");
@@ -57,7 +58,6 @@ export default function Chats() {
 
   useEffect(() => {
     const unsubscribe = on('new_message', (msg) => {
-      console.log('Received new message:', msg);
       
       if (selected === msg.chat_id) {
         setMessages(prev => [...prev, {
@@ -74,7 +74,6 @@ export default function Chats() {
             : conn
         ));
       }
-      loadConnections();
     });
     return unsubscribe;
   }, [selected, on]);
@@ -119,6 +118,9 @@ export default function Chats() {
   };
 
   const loadMessages = async (chatId: string) => {
+    if (isLoadingMessages) return;
+    
+    setIsLoadingMessages(true);
     try {
       const res = await fetch(`${API}/api/chats/${chatId}/messages`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -128,6 +130,8 @@ export default function Chats() {
       await markAsRead(chatId);
     } catch (error) {
       console.error('Failed to load messages:', error);
+    } finally {
+      setIsLoadingMessages(false); 
     }
   };
 
