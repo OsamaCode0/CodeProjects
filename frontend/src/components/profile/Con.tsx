@@ -31,7 +31,7 @@ export default function ConnectionsForm() {
         alert('Chat not found. Please try again.');
       }
     } catch (err) {
-      //console.error('Failed to open chat:', err);
+    
       alert('Failed to open chat');
     } finally {
       setChatLoading(null);

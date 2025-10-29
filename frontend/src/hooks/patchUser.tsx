@@ -18,7 +18,7 @@ export async function saveProfile(payload: Record<string, unknown>, route: strin
     throw new Error(`HTTP ${res.status}${text ? `: ${text}` : ""}`);
   }
 
-  // if your backend returns updated profile, parse it
+  
   const ct = res.headers.get("content-type") || "";
   if (ct.includes("application/json")) {
     return res.json();

@@ -43,7 +43,7 @@ func serveBio(c *gin.Context, id string) {
 	p, ch, ok := LoadProfiles(c, id)
 
 	if !ok {
-		return //json respond already sent in LoadProfiles func
+		return 
 	}
 	res := buildBioResponse(p, ch)
 	c.JSON(200, res)

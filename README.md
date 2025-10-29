@@ -83,18 +83,21 @@ Ensure you have the following installed on your system:
 
 #### 4.  **Install Dependencies and Run**
 
+    ```bash
+    # Install dependencies for both client and server
+    make dev-setup
+    ``` 
     Run the frontend and backend servers in **two separate terminal windows**:
 
     ```bash
     # In terminal 1: Start the client dev server
-    cd frontend
-    make run dev
+    make dev-client
     # Frontend will be available at http://localhost:5173
     ```
 
     ```bash
     # In terminal 2: Start the backend server
-    go run .
+    make run-server
     # Backend will be running at http://localhost:8088
     ```
 
@@ -114,12 +117,27 @@ Ensure you have the following installed on your system:
     # Navigate to the server directory
     cd server
 
-    # Seed the database with 100 test users
+    # Seed the database with 100 test users(password "password123")
     go run . -seed
 
     # Completely reset the database (drop all data)
     go run . -drop
     ```
+## ⚙️ Usage
+
+### Makefile Commands
+
+A `Makefile` at the root of the project simplifies common tasks.
+
+| Command | Description |
+| :--- | :--- |
+| `make help` | Displays a list of all available commands. |
+| `make dev-setup` | Installs all dependencies for both client and server. |
+| `make dev-client` | Starts the frontend development server with hot-reloading. |
+| `make run-server`| Starts the backend API server. |
+| `make build-all` | Creates production-ready builds for both client and server. |
+
+-----
 
 ## ✨ Features
 

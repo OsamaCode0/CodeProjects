@@ -12,7 +12,6 @@ export async function get<T>(path: string): Promise<T> {
     credentials: "include",
   });
 
-  // Try to parse JSON even on error responses
   const data = await res.json().catch(() => null);
 
   // Handle unauthorized

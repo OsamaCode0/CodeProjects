@@ -28,7 +28,6 @@ func PatchMeProfile(c *gin.Context) {
 	table := "parent_profiles"
 
 	var in PatchParentProfileInput
-	//log.Printf("PATCH /me/profile input: %#v", in)
 	if err := c.ShouldBindJSON(&in); err != nil {
 		c.JSON(400, structs.ErrorResponse{
 			Message: CommonErr})
@@ -57,7 +56,7 @@ func PatchMeProfile(c *gin.Context) {
 		add("about", *in.About)
 	}
 	if in.Languages != nil {
-		add("languages", *in.Languages) // pgx: []string -> TEXT[]
+		add("languages", *in.Languages)
 	}
 	if in.AddressCity != nil {
 		add("address_city", *in.AddressCity)

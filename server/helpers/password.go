@@ -13,7 +13,7 @@ func IsValidPassword(password string) bool {
 	if len(password) < 6 {
 		return false
 	}
-	// must contain at least one letter
+	
 	re := regexp.MustCompile(`[A-Za-z]`)
 	return re.MatchString(password)
 
@@ -21,7 +21,6 @@ func IsValidPassword(password string) bool {
 
 func HashPassword(password string) (string, error) {
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	//for unhash err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(password))
 	if err != nil {
 		log.Println("password hashing failed")
 		return "", errors.New("password hashing failed")

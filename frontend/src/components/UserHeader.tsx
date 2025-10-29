@@ -20,7 +20,7 @@ export default function UserHeader() {
           setEmail(data.email);
         }
       } catch (err) {
-        // Silently handle error
+
       }
     };
 

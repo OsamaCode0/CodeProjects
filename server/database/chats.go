@@ -68,7 +68,7 @@ func GetChatByID(ctx context.Context, pool *pgxpool.Pool, chatID, userID string)
 	
 	return &chat, nil
 }
-// GetChatMessages returns messages for a chat with pagination
+
 // GetChatMessages returns messages for a chat with pagination
 func GetChatMessages(ctx context.Context, pool *pgxpool.Pool, chatID, userID, before string, limit int) ([]structs.ChatMessage, error) {
 	// Verify user has access to this chat

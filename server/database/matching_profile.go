@@ -27,19 +27,6 @@ type MatchingProfile struct {
 	PlayStyles    []string  `db:"play_styles"`
 }
 
-// UserMatchingPreferences - user's preferences for matching algorithm
-// These weights determine how important each factor is for this specific user: from 0 to 5 (not important - very important)
-/*type UserMatchingPreferences struct {
-	UserID                string `db:"user_id"`
-	InterestsWeight       int    `db:"interests_weight"`
-	ActivityLevelWeight   int    `db:"activity_level_weight"`
-	LimitationsWeight     int    `db:"limitations_weight"`
-	AllergiesWeight       int    `db:"allergies_weight"`
-	PlayStylesWeight      int    `db:"play_styles_weight"`
-	LocationWeight        int    `db:"location_weight"`
-	LanguageWeight        int    `db:"language_weight"`
-	MaxAgeDifference      int    `db:"max_age_difference"`
-}*/
 
 // Looking for matching. COALESCE to be sure that we get something as a result
 func GetMatchingProfile(ctx context.Context, pool *pgxpool.Pool, userID string) (*MatchingProfile, error) {
@@ -90,65 +77,7 @@ func GetMatchingProfile(ctx context.Context, pool *pgxpool.Pool, userID string) 
 	return &profile, nil
 }
 
-// GetUserMatchingPreferences retrieves user's matching preferences
-// If preferences don't exist, creates default ones automatically
-/*func GetUserMatchingPreferences(ctx context.Context, pool *pgxpool.Pool, userID string) (*UserMatchingPreferences, error) {
-	const query = `
-		SELECT user_id::text, interests_weight, activity_level_weight, limitations_weight,
-			   allergies_weight, play_styles_weight, location_weight,
-			   language_weight, max_age_difference
-		FROM user_matching_preferences
-		WHERE user_id = $1`
 
-	var prefs UserMatchingPreferences
-	err := pool.QueryRow(ctx, query, userID).Scan(
-		&prefs.UserID,
-		&prefs.InterestsWeight,
-		&prefs.ActivityLevelWeight,
-		&prefs.LimitationsWeight,
-		&prefs.AllergiesWeight,
-		&prefs.PlayStylesWeight,
-		&prefs.LocationWeight,
-		&prefs.LanguageWeight,
-		&prefs.MaxAgeDifference,
-	)
-
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			// Create default preferences if they don't exist
-			return createDefaultPreferences(ctx, pool, userID)
-		}
-		return nil, err
-	}
-
-	return &prefs, nil
-}
-
-// Called automatically when preferences are not made by user
-func createDefaultPreferences(ctx context.Context, pool *pgxpool.Pool, userID string) (*UserMatchingPreferences, error) {
-	const query = `
-		INSERT INTO user_matching_preferences (user_id)
-		VALUES ($1)
-		ON CONFLICT (user_id) DO NOTHING
-		RETURNING user_id::text, interests_weight, activity_level_weight, limitations_weight,
-				  allergies_weight, play_styles_weight, location_weight,
-				  language_weight, max_age_difference`
-
-	var prefs UserMatchingPreferences
-	err := pool.QueryRow(ctx, query, userID).Scan(
-		&prefs.UserID,
-		&prefs.InterestsWeight,
-		&prefs.ActivityLevelWeight,
-		&prefs.LimitationsWeight,
-		&prefs.AllergiesWeight,
-		&prefs.PlayStylesWeight,
-		&prefs.LocationWeight,
-		&prefs.LanguageWeight,
-		&prefs.MaxAgeDifference,
-	)
-
-	return &prefs, err
-}*/
 
 // GetPotentialMatches retrieves potential matching candidates for a user
 // Excludes already connected users and dismissed recommendations
@@ -214,7 +143,7 @@ WHERE pp.user_id <> $1::uuid
 			&profile.PlayStyles,
 		)
 		if err != nil {
-			continue // Skip profiles with scan errors
+			continue 
 		}
 		profiles = append(profiles, profile)
 	}

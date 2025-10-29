@@ -10,9 +10,9 @@ type City = {
 };
 
 type Props = {
-  country?: string; // ISO-2, default "FI"
-  value: City | null; // current selected city from parent
-  onChange: (city: City | null) => void; // tell parent when user picks/clears
+  country?: string; 
+  value: City | null;
+  onChange: (city: City | null) => void;
   placeholder?: string;
   onSelect?: (city: City) => void;
 };

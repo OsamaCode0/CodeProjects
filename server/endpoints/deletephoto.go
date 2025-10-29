@@ -3,7 +3,6 @@ package endpoints
 import (
 	"matchme-server/database"
 	"matchme-server/internal"
-
 	"github.com/gin-gonic/gin"
 )
 

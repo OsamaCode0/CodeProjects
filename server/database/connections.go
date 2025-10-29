@@ -3,9 +3,7 @@ package database
 import (
 	"context"
 	"errors"
-	//"log"
 	"matchme-server/structs"
-	//"github.com/golang-jwt/jwt/v5/request"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -145,14 +143,6 @@ func UpdateConnectionStatus(ctx context.Context, pool *pgxpool.Pool, connectionI
         return err
     }
 	}
-
-	
-	
-	// Notifications are handled by the application bootstrap to avoid importing
-	// the internal hub package from this package; wire up the real notifier there.
-	// If an in-package call is required, replace the following commented line with the correct import/path:
-	// internal.HubStruct.NotifyUsersAboutNewChat(requesterID, targetID, chatID)
-	
 	
 	return nil
 }

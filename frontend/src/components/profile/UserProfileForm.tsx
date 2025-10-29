@@ -96,7 +96,7 @@ export default function UserProfileForm() {
       if ("languages" in payload)
         originalLanguages.current = languages ?? ["", "", ""];
 
-      // If your payload uses addressCity/lat/lon for city:
+     
       if ("addressCity" in payload || "lat" in payload || "lon" in payload) {
         originalCity.current = city ?? null;
       }

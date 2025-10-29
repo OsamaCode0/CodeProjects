@@ -2,12 +2,9 @@ import { useState, useRef } from "react";
 import "../styles/userPhoto.css";
 
 type Props = {
-  /** called when the file changes (null when removed) */
   onChange?: (file: File | null) => void;
-  /** existing photo URL from backend (optional) */
   initialUrl?: string | null;
-  /** emoji shown when empty */
-  placeholderEmoji?: string; // e.g. "👤"
+  placeholderEmoji?: string; 
   name?: string;
 };
 
@@ -72,7 +69,6 @@ export default function UserPhotoField({
           onChange={(e) => {
             const f = e.target.files?.[0] ?? null;
             handlePick(f);
-            // allow selecting the same file again later
             if (inputRef.current) inputRef.current.value = "";
           }}
         />
@@ -83,7 +79,7 @@ export default function UserPhotoField({
             className="remove"
             onClick={(e) => {
               e.preventDefault();
-              e.stopPropagation(); // prevent picker opening
+              e.stopPropagation(); 
               handlePick(null);
               if (inputRef.current) inputRef.current.value = "";
             }}

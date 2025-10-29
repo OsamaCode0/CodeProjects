@@ -12,7 +12,6 @@ import (
 var ErrProfileNotFound = errors.New("profile not found")
 // UpdateParentProfileDynamic updates with prebuilt SET clauses and args,
 // and returns a map keyed by the RETURNING column names.
-// args MUST start with userID as $1, and SET placeholders must start at $2.
 func UpdateProfileDynamic(
 	ctx context.Context,
 	pool *pgxpool.Pool,

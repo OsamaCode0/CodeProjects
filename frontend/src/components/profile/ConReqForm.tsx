@@ -27,7 +27,7 @@ export default function ConnectionsReqForm() {
   const [busyReact, setBusyReact] = useState(false);
   const [reactError, setReactError] = useState<string | null>(null);
 
-  // ✅ Загрузить список ID запросов
+
   useEffect(() => {
     const fetchRequests = async () => {
       try {
@@ -50,7 +50,7 @@ export default function ConnectionsReqForm() {
     fetchRequests();
   }, []);
 
-  // ✅ Загрузить профили для всех ID
+ 
   useEffect(() => {
     if (userIds.length === 0) return;
 
@@ -82,17 +82,17 @@ export default function ConnectionsReqForm() {
 
   const currentUser = profiles[currentIndex] || null;
 
-  // ✅ Простая функция Next
+
   const handleNext = () => {
     if (currentIndex < profiles.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      // По кругу
+  
       setCurrentIndex(0);
     }
   };
 
-  // ✅ Функция handleReaction
+ 
   async function handleReaction(kind: "accept" | "reject") {
     if (!currentUser || busyReact) return;
 
@@ -108,22 +108,22 @@ export default function ConnectionsReqForm() {
     try {
       await acceptOrRejectConnection(connectionId, kind);
 
-      // ✅ Удалить текущий профиль из списка
+      
       const newProfiles = profiles.filter((_, idx) => idx !== currentIndex);
       const newUserIds = userIds.filter((id) => id !== currentUser.id);
       
       setProfiles(newProfiles);
       setUserIds(newUserIds);
 
-      // ✅ Проверить, остались ли еще запросы
+      
       if (newProfiles.length > 0) {
-        // Если удалили последний элемент, вернуться к началу
+    
         if (currentIndex >= newProfiles.length) {
           setCurrentIndex(0);
         }
-        // Иначе индекс остается тем же (покажется следующий профиль)
+      
       } else {
-        // ✅ Все запросы обработаны - редирект
+    
         setTimeout(() => {
           alert("All requests processed! ✅");
           if (kind === "accept") {
@@ -177,7 +177,6 @@ export default function ConnectionsReqForm() {
 
         <h1 className="title has-text-centered">Your connection requests</h1>
 
-        {/* Показать счетчик */}
         {profiles.length > 0 && (
           <div className="has-text-centered mb-3">
             <span className="tag is-info is-light">

@@ -35,7 +35,7 @@ export default function LoginForm() {
     const data = res.data; 
     localStorage.setItem("token", data.access_token);
     localStorage.setItem("userId", data.user_id);
-    //replaces the current entry → the Back button won't go back to the login page you just came from
+    
       setTimeout(() => {
       navigate("/profile", { replace: true });
       }, 100);

@@ -50,7 +50,7 @@ export default function RecommendationsForm() {
     setBusyReact(true);
     setReactError(null);
 
-    // optimistic: move to next immediately
+  
     const prevUser = user;
     handleNext();
 

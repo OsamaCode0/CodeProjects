@@ -6,10 +6,10 @@ import (
 )
 
 type Hub struct {
-	Clients    map[string]*Client  // Clients вместо clients
-	Broadcast  chan *Message       // Broadcast вместо broadcast
-	Register   chan *Client        // Register вместо register
-	Unregister chan *Client        // Unregister вместо unregister
+	Clients    map[string]*Client 
+	Broadcast  chan *Message       
+	Register   chan *Client        
+	Unregister chan *Client       
 	mu         sync.RWMutex
 }
 

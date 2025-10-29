@@ -2,7 +2,7 @@ import { useId } from "react";
 import "../styles/profiles.css";
 
 type Props = {
-  maxLanguages?: number; // default = 3
+  maxLanguages?: number;
   languages: string[];
   onChange: (langs: string[]) => void;
 };
@@ -14,7 +14,7 @@ export default function UserLanguagesField({
 }: Props) {
   const listId = useId();
 
-  // ensure we always render exactly maxLanguages slots
+
   const safe = [...languages, ...Array(Math.max(0, maxLanguages - languages.length)).fill("")]
     .slice(0, maxLanguages);
 

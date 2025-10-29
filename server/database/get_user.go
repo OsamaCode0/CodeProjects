@@ -27,8 +27,8 @@ func EnsureUserExists(ctx context.Context, pool *pgxpool.Pool, id string) (error
 func GetUserNamePhotoURL(ctx context.Context, pool *pgxpool.Pool, userID string) (string, string) {
 	var (
 		name     string
-		publicID *string // nullable
-		version  *int32  // nullable (INT in PG -> int32 here)
+		publicID *string 
+		version  *int32  
 	)
 
 	err := pool.QueryRow(ctx, `

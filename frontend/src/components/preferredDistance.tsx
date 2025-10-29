@@ -3,11 +3,11 @@ import "../styles/preferredDistance.css";
 
 type Props = {
   label?: string;
-  value: number;          // required now; parent controls it
+  value: number;          
   min?: number;
   max?: number;
   step?: number;
-  onChange: (v: number) => void; // required
+  onChange: (v: number) => void;
 };
 
 export default function PreferredDistanceField({

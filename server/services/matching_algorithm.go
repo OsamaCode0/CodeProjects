@@ -104,20 +104,6 @@ func CalculateCompatibilityScore(
 	totalScore += ageScore * 2.0
 	totalWeight += 2.0
 
-	// 7. LOCATION COMPATIBILITY
-	// Geographic proximity for practical meetups
-	/*if prefs.LocationWeight > 0 {
-		score := CalculateLocationCompatibility(profile1.City, profile2.City)
-		totalScore += score * float64(prefs.LocationWeight)
-		totalWeight += float64(prefs.LocationWeight)
-	}*/
-
-	// 8. LANGUAGE COMPATIBILITY
-	/*if prefs.LanguageWeight > 0 {
-		score := CalculateArrayOverlap(profile1.Languages, profile2.Languages)
-		totalScore += score * float64(prefs.LanguageWeight)
-		totalWeight += float64(prefs.LanguageWeight)
-	}*/
 
 	// FALLBACK: If all weights are 0, use basic compatibility formula
 	if totalWeight == 0 {
@@ -195,8 +181,6 @@ func CalculateActivityCompatibility(level1, level2 string) float64 {
 // Similar allergies can be good (parents understand each other's challenges)
 // This could be enhanced to check for conflicting allergies
 func CalculateAllergiesCompatibility(allergies1, allergies2 []string) float64 {
-	// Currently using simple overlap - could be enhanced to check conflicts
-	// For example: if one child is allergic to nuts and another loves nuts = low score
 	return CalculateArrayOverlap(allergies1, allergies2)
 }
 
@@ -224,26 +208,6 @@ func CalculateAgeCompatibility(birth1, birth2 time.Time, maxDiffYears int) float
 	return math.Max(0, 1.0 - (diffYears / float64(maxDiffYears)))
 }
 
-// NOT DONE YET CalculateLocationCompatibility compares geographic locations
-// Currently simple city name matching - we need to use distance
-func CalculateLocationCompatibility(city1, city2 string) float64 {
-	if city1 == "" || city2 == "" {
-		return 0.3 // Low score when location data is missing
-	}
-
-	if strings.EqualFold(city1, city2) {
-		return 1.0 // Perfect match for same city
-	}
-
-	// Could be enhanced with distance calculation between cities
-	// For now, different cities get 0 score - could be improved with:
-	// - Distance calculation using coordinates
-	// - Country/region matching for partial scores
-	// - Transportation accessibility scoring
-	return 0.0
-}
-
-// FALLBACK AND UTILITY FUNCTIONS
 
 // CalculateBasicCompatibility provides fallback scoring when all weights are 0
 // Uses equal weighting for core compatibility factors
@@ -252,7 +216,6 @@ func CalculateBasicCompatibility(profile1, profile2 *database.MatchingProfile) f
 	interestsScore := CalculateArrayOverlap(profile1.Interests, profile2.Interests)
 	playStylesScore := CalculateArrayOverlap(profile1.PlayStyles, profile2.PlayStyles)
 	ageScore := CalculateAgeCompatibility(profile1.ChildBirthday, profile2.ChildBirthday, 2) // 2 years
-	locationScore := CalculateLocationCompatibility(profile1.City, profile2.City)
 
-	return (interestsScore + playStylesScore + ageScore + locationScore) / 4.0
+	return (interestsScore + playStylesScore + ageScore ) / 4.0
 }
