@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
 // GetUserChats returns all chats for the authenticated user
 func GetUserChats(c *gin.Context) {
 	userID := c.GetString("userID")
@@ -62,6 +63,8 @@ func SendMessage(c *gin.Context) {
 		return
 	}
 
+	createdAt := time.Now()
+
 	// Get the other user's ID
 	chat, _ := database.GetChatByID(c.Request.Context(), internal.DB, chatID, userID)
 	var recipientID string
@@ -72,23 +75,34 @@ func SendMessage(c *gin.Context) {
 			recipientID = chat.User1ID
 		}
 
-		// Send via WebSocket
 		if GlobalHub != nil {
-			GlobalHub.SendToUser(recipientID, &ws.Message{
+			wsMessage := &ws.Message{
 				Type:      "new_message",
 				ChatID:    chatID,
 				MessageID: messageID,
 				SenderID:  userID,
 				Content:   req.Content,
-				CreatedAt: time.Now().Format(time.RFC3339),
-			})
+				CreatedAt: createdAt.Format(time.RFC3339),
+			}
+			
+			// Отправить получателю
+			GlobalHub.SendToUser(recipientID, wsMessage)
+			
+			GlobalHub.SendToUser(userID, wsMessage)
 		}
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message_id": messageID})
+	c.JSON(http.StatusCreated, gin.H{
+		"message": gin.H{
+			"id":         messageID,
+			"sender_id":  userID,
+			"content":    req.Content,
+			"created_at": createdAt.Format(time.RFC3339),
+		},
+	})
 }
 
-	// MarkMessagesAsRead marks all messages in a chat as read
+// MarkMessagesAsRead marks all messages in a chat as read
 func MarkMessagesAsRead(c *gin.Context) {
 	userID := c.GetString("userID")
 	chatID := c.Param("chatId")
@@ -111,7 +125,6 @@ func MarkMessagesAsRead(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
-	
 // CheckOnlineStatus checks if a user is currently online
 func CheckOnlineStatus(c *gin.Context) {
 	targetUserID := c.Param("id")

@@ -31,7 +31,7 @@ export default function Chats() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [isLoadingMessages, setIsLoadingMessages] = useState(false); // ✅ ДОБАВЛЕНО
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const token = localStorage.getItem("token");
@@ -60,12 +60,18 @@ export default function Chats() {
     const unsubscribe = on('new_message', (msg) => {
       
       if (selected === msg.chat_id) {
-        setMessages(prev => [...prev, {
-          id: msg.message_id!,
-          sender_id: msg.sender_id!,
-          content: msg.content!,
-          created_at: msg.created_at!
-        }]);
+        // ✅ Проверить что сообщение еще не существует (дедупликация)
+        setMessages(prev => {
+          const exists = prev.some(m => m.id === msg.message_id);
+          if (exists) return prev;
+          
+          return [...prev, {
+            id: msg.message_id!,
+            sender_id: msg.sender_id!,
+            content: msg.content!,
+            created_at: msg.created_at!
+          }];
+        });
         markAsRead(msg.chat_id!);
       } else {
         setConnections(prev => prev.map(conn => 
@@ -131,7 +137,7 @@ export default function Chats() {
     } catch (error) {
       console.error('Failed to load messages:', error);
     } finally {
-      setIsLoadingMessages(false); 
+      setIsLoadingMessages(false);
     }
   };
 
@@ -151,6 +157,10 @@ export default function Chats() {
 
   const sendMessage = async () => {
     if (!selected || !newMessage.trim()) return;
+    
+    const messageContent = newMessage;
+    setNewMessage(""); 
+    
     try {
       await fetch(`${API}/api/chats/${selected}/messages`, {
         method: "POST",
@@ -158,11 +168,13 @@ export default function Chats() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ content: newMessage })
+        body: JSON.stringify({ content: messageContent })
       });
-      setNewMessage("");
+      
+      
     } catch (error) {
       console.error('Failed to send message:', error);
+      setNewMessage(messageContent); 
     }
   };
 
