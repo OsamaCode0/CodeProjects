@@ -56,17 +56,19 @@ func SetupRouter() *gin.Engine {
 	router.POST("/users/register", services.Register)
 	router.POST("/users/login", services.Login)
 
-	router.GET("/users/:id", endpoints.GetNameAndPhoto)
-	router.GET("/users/:id/profile", endpoints.GetUserProfileByID)
-	router.GET("/users/:id/bio", endpoints.GetUserBioByID)
+	
 
 	router.GET("/ws", HandleWebSocket(GlobalHub))
 
 	auth := router.Group("/")
 	auth.Use(middleware.AuthRequired(internal.Cfg.JWTSecret))
+	auth.GET("/users/:id", endpoints.GetNameAndPhoto)
+	auth.GET("/users/:id/profile", endpoints.GetUserProfileByID)
+	auth.GET("/users/:id/bio", endpoints.GetUserBioByID)
+
+
 	auth.PATCH("/me/profile", services.PatchMeProfile)
 	auth.PATCH("/me/child", services.PatchMeChild)
-
 	auth.GET("/me", endpoints.GetMeNameAndPhoto)
 	auth.GET("/me/profile", endpoints.GetMyProfile)
 	auth.GET("/me/bio", endpoints.GetMeBio)
