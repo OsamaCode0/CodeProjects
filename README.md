@@ -8,6 +8,86 @@ Whether you’re new in town or just looking to make new friends for your child,
 
 > 🧸 In this demo, each parent can currently add **one child** profile to try out the experience.
 
+### How Matching Works (User Perspective)
+
+When you look for new playmates in **Match-Me**, the app doesn’t just show random families nearby — it actually analyzes how well your child’s personality, interests, and play style fit with others.
+
+Every family creates a **Parent Profile**  and one **Child Profile**.  
+The app then calculates **compatibility scores** between families.
+
+The system:
+- Shows up to 10 recommendations at a time
+- Ranks matches by score (highest first)
+- Filters out already dismissed profiles
+- Only shows users from your selected location
+
+#### Behind the scenes:
+
+1. 🗺️ **Nearby families are pre-filtered** by your preferred distance (via PostGIS).  
+2. 💬 **Your preferences** — such as how important shared interests or play style are — are applied as **weights**.  
+3. 💡 Each potential match gets a **score**:
+   - Shared interests and play styles → higher score  
+   - Similar activity levels → higher score  
+   - Smaller age gap → higher score  
+   - Conflicting allergies or limitations → lower score
+4. 🤝 **Mutual compatibility** is checked both ways — you must match *each other’s* preferences.
+5. 🔢 **Results are sorted** by final compatibility.
+
+> Example:  
+> If your 5-year-old loves building Lego and has medium energy, you’ll likely see families with similar-aged, creative, and moderately active kids near you.
+
+
+### 🧩 Matching Algorithm (Developer Perspective)
+
+Matching logic lives in `server/services/matching.go` and works in two main stages:  
+**prefiltering (SQL/PostGIS)** and **scoring (Go logic)**.
+
+#### 1. Prefiltering (SQL)
+
+Selects only eligible candidates near the user who haven’t been liked/disliked before:
+
+```sql
+WITH pf AS (
+  SELECT candidate_user_id
+  FROM prefilter_candidates_postgis($1::uuid, 200, 0)
+)
+SELECT ...
+FROM pf
+JOIN parent_profiles pp ON pp.user_id = pf.candidate_user_id
+JOIN children c ON c.user_id = pp.user_id
+WHERE pp.user_id <> $1::uuid
+  AND pp.user_id NOT IN (
+    SELECT target_user_id FROM user_reactions WHERE user_id = $1::uuid
+    UNION
+    SELECT user_id FROM user_reactions WHERE target_user_id = $1::uuid
+  );
+
+  
+#### 2. Compatibility Scoring (Go)
+
+Each candidate is evaluated across multiple dimensions.
+The main scoring function is CalculateMatchingScores().
+
+Factor	Function	Description	Weight Source
+🎨 Interests	CalculateArrayOverlap()	Shared hobbies/interests	prefs.InterestsWeight
+⚡ Activity Level	CalculateActivityCompatibility()	Energy match (low/medium/high)	prefs.ActivityLevelWeight
+💬 Limitations	CalculateArrayOverlap()	Similar needs or conditions	prefs.LimitationsWeight
+🌿 Allergies	CalculateAllergiesCompatibility()	Checks overlap	prefs.AllergiesWeight
+🧸 Play Styles	CalculateArrayOverlap()	Creative / outdoor / quiet, etc.	prefs.PlayStylesWeight
+⏳ Age	CalculateAgeCompatibility()	Penalizes large age gaps	Always active
+
+Final score:
+
+finalScore = totalWeightedScore / totalWeight
+
+Then mutual scoring:
+
+score1 := CalculateCompatibilityScore(currentUser, candidate, currentUserPrefs)
+score2 := CalculateCompatibilityScore(candidate, currentUser, candidatePrefs)
+finalScore := (score1 + score2) / 2
+
+The result is normalized to 0.0 – 1.0.
+
 ---
 
 ## 🚀 Getting Started
