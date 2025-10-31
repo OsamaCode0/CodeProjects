@@ -292,7 +292,7 @@ $$;
 CREATE OR REPLACE FUNCTION profile_completion_percent(p_user_id uuid)
 RETURNS numeric AS $$
 DECLARE
-  total_fields int := 15;
+  total_fields int := 14;
   parent_filled int := 0;
   child_filled int := 0;
 BEGIN
@@ -301,8 +301,7 @@ BEGIN
     ((gender IS NOT NULL AND gender <> '')::int) +
     ((about IS NOT NULL AND about <> '')::int) +
     ((languages IS NOT NULL AND cardinality(languages) > 0)::int) +
-    ((address_city IS NOT NULL AND address_city <> '')::int) +
-    ((preferred_distance_km IS NOT NULL)::int)
+    ((address_city IS NOT NULL AND address_city <> '')::int)
   INTO parent_filled
   FROM parent_profiles
   WHERE user_id = p_user_id;

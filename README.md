@@ -61,6 +61,7 @@ WHERE pp.user_id <> $1::uuid
     UNION
     SELECT user_id FROM user_reactions WHERE target_user_id = $1::uuid
   );
+```
 
   
 #### 2. Compatibility Scoring (Go)
