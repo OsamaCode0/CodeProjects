@@ -26,13 +26,21 @@ export const useWebSocket = () => {
     if (!token) return;
 
     if (wsRef.current?.readyState === WebSocket.OPEN) {
+      console.log('WebSocket already connected');
+      setIsConnected(true);
       return;
     }
 
+    if (wsRef.current?.readyState === WebSocket.CONNECTING) {
+      console.log('WebSocket is connecting, skipping...');
+      return;
+    }
+
+    console.log('Connecting to WebSocket...');
     const ws = new WebSocket(`${WS_URL}/ws?token=${token}`);
 
     ws.onopen = () => {
-      console.log('WebSocket connected');
+      console.log('✅ WebSocket connected');
       setIsConnected(true);
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
@@ -43,13 +51,11 @@ export const useWebSocket = () => {
     ws.onmessage = (event) => {
       try {
         const message: WebSocketMessage = JSON.parse(event.data);
-        console.log('WebSocket message received:', message);
+        console.log('📨 WebSocket message received:', message);
 
-        // Call all handlers for this message type
         const handlers = handlersRef.current.get(message.type) || [];
         handlers.forEach(handler => handler(message));
 
-        // Also call wildcard handlers
         const wildcardHandlers = handlersRef.current.get('*') || [];
         wildcardHandlers.forEach(handler => handler(message));
       } catch (error) {
@@ -58,18 +64,18 @@ export const useWebSocket = () => {
     };
 
     ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
+      console.error('❌ WebSocket error:', error);
     };
 
     ws.onclose = () => {
-      console.log('WebSocket disconnected');
+      console.log('🔌 WebSocket disconnected');
       setIsConnected(false);
       wsRef.current = null;
 
       if (shouldReconnectRef.current) {
+        console.log('⏳ Reconnecting in 3 seconds...');
         reconnectTimeoutRef.current = window.setTimeout(() => { 
           if (shouldReconnectRef.current) {
-            console.log('Attempting to reconnect...');
             connect();
           }
         }, 3000);
@@ -95,9 +101,10 @@ export const useWebSocket = () => {
 
   const send = (message: WebSocketMessage) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
+      console.log('📤 Sending:', message); 
       wsRef.current.send(JSON.stringify(message));
     } else {
-      console.warn('WebSocket is not connected');
+      console.warn('⚠️ WebSocket is not connected, state:', wsRef.current?.readyState);
     }
   };
 
@@ -106,7 +113,6 @@ export const useWebSocket = () => {
     handlers.push(handler);
     handlersRef.current.set(type, handlers);
 
-    // Return cleanup function
     return () => {
       const currentHandlers = handlersRef.current.get(type) || [];
       const index = currentHandlers.indexOf(handler);
@@ -119,8 +125,15 @@ export const useWebSocket = () => {
 
   useEffect(() => {
     shouldReconnectRef.current = true;
-    connect();
-    return () => disconnect();
+    
+    const timer = setTimeout(() => {
+      connect();
+    }, 100);
+    
+    return () => {
+      clearTimeout(timer);
+      disconnect();
+    };
   }, []); 
 
   return { isConnected, send, on };

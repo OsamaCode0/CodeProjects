@@ -54,9 +54,10 @@ func (c *Client) ReadPump() {
 
 		// Handle typing indicator
 		if msg.Type == "typing" {
-		// Broadcast to the recipient
+			log.Printf("🔵 Received typing event from user %s", c.userID)
+			// Broadcast to the recipient
 			c.hub.Broadcast <- &msg
-}
+		}
 	}
 }
 

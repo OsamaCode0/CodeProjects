@@ -32,12 +32,18 @@ export default function Chats() {
   const [newMessage, setNewMessage] = useState("");
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const prevSelectedChatRef = useRef<string | null>(null); 
+  const prevSelectedChatRef = useRef<string | null>(null);
+  
+  // ADDED: Typing indicator states
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef<number | undefined>(undefined);
+  const [typingTimer, setTypingTimer] = useState<number | undefined>(undefined);
+  const lastTypingSentRef = useRef<number>(0); // ADDED: For throttling
 
   const token = localStorage.getItem("token");
   const myUserId = localStorage.getItem("userId");
   
-  const { isConnected, on } = useWebSocket();
+  const { isConnected, on, send } = useWebSocket();
   const isOnline = useOnlineStatus(selectedUserId);
 
   useEffect(() => {
@@ -87,9 +93,55 @@ export default function Chats() {
     return unsubscribe;
   }, [selected, on]);
 
+useEffect(() => {
+  const unsubscribe = on('typing', (msg) => {
+    if (msg.chat_id === selected && msg.sender_id !== myUserId) {
+      console.log('✅ Showing typing indicator');
+      setIsTyping(true);
+      
+      if (typingTimeoutRef.current) {
+        console.log('🧹 Clearing old timeout');
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = undefined; 
+      }
+      
+      typingTimeoutRef.current = window.setTimeout(() => {
+        console.log('⏰ Hiding typing indicator (timeout)');
+        setIsTyping(false);
+        typingTimeoutRef.current = undefined; 
+      }, 3000);
+      
+      console.log('⏲️ New timeout set:', typingTimeoutRef.current); 
+    }
+  });
+
+  return () => {
+    console.log('🧽 Cleanup: unsubscribing and clearing timeout'); // ADDED: Debug
+    unsubscribe();
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = undefined;
+    }
+  };
+}, [selected, myUserId, on]);
+
+useEffect(() => {
+  console.log('🔄 Chat changed, resetting typing'); // Debug
+  setIsTyping(false);
+  if (typingTimeoutRef.current) {
+    clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = undefined;
+  }
+}, [selected]);
+    
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+  console.log('🔄 isTyping changed to:', isTyping);
+}, [isTyping]);
 
   const loadConnections = async () => {
     try {
@@ -158,6 +210,30 @@ export default function Chats() {
     }
   };
 
+  // UPDATED: Throttled typing indicator
+  const handleTyping = () => {
+    if (!selected || !selectedUserId || !isConnected) return;
+    
+    // Throttle - send typing indicator max once per 2 seconds
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < 2000) {
+      console.log('⏳ Throttling typing indicator');
+      return;
+    }
+    
+    lastTypingSentRef.current = now;
+    console.log('🟢 Sending typing indicator');
+    
+    send({
+      type: 'typing',
+      chat_id: selected,
+      sender_id: myUserId || '',
+      data: {
+        recipient_id: selectedUserId
+      }
+    });
+  };
+
   const sendMessage = async () => {
     if (!selected || !newMessage.trim()) return;
     
@@ -184,6 +260,28 @@ export default function Chats() {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
+    }
+  };
+
+  // UPDATED: Handle input change with debouncing
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewMessage(e.target.value);
+    
+    // Send typing indicator only if connected and has text
+    if (isConnected && e.target.value.length > 0) {
+      handleTyping();
+      
+      // Clear previous timer
+      if (typingTimer) {
+        clearTimeout(typingTimer);
+      }
+      
+      // Set new timer
+      const timer = window.setTimeout(() => {
+        console.log('⏱️ User stopped typing');
+      }, 2000);
+      
+      setTypingTimer(timer);
     }
   };
 
@@ -279,6 +377,18 @@ export default function Chats() {
                     </div>
                   ))
                 )}
+                
+                {isTyping && (
+                  <div className="typing-indicator">
+                    <div className="typing-dots">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                    <span className="typing-text">{selectedName} is typing...</span>
+                  </div>
+                )}
+                
                 <div ref={messagesEndRef} />
               </div>
 
@@ -287,7 +397,7 @@ export default function Chats() {
                   type="text"
                   className="message-input"
                   value={newMessage}
-                  onChange={e => setNewMessage(e.target.value)}
+                  onChange={handleInputChange}
                   onKeyPress={handleKeyPress}
                   placeholder="Type a message..."
                 />

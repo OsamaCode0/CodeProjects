@@ -50,17 +50,22 @@ func (h *Hub) Run() {
 			}
 			h.mu.Unlock()
 
-case message := <-h.Broadcast:
-	h.mu.RLock()
-	// Handle typing indicator - send to specific recipient
-	if message.Type == "typing" && message.Data != nil {
-		if recipientID, ok := message.Data["recipient_id"].(string); ok {
-			h.SendToUser(recipientID, message)
+		case message := <-h.Broadcast:
+			h.mu.RLock()
+			
+			// Handle typing indicator - send to specific recipient only
+			if message.Type == "typing" && message.Data != nil {
+				if recipientID, ok := message.Data["recipient_id"].(string); ok {
+					log.Printf("📨 Sending typing indicator from %s to %s", message.SenderID, recipientID)
+					h.SendToUser(recipientID, message)
+				}
+			} else {
+				log.Printf("⚠️ Received non-typing message in broadcast: %+v", message)
+			}
+			
+			h.mu.RUnlock()
 		}
 	}
-	h.mu.RUnlock()
-	}
-}
 }
 
 func (h *Hub) SendToUser(userID string, message *Message) {
