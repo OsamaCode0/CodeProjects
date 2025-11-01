@@ -23,8 +23,7 @@ func SetupRouter(IsDevMode bool, db *pgxpool.Pool) *gin.Engine {
 	}
 
 	router := gin.Default()
-func SetupRouter() *gin.Engine {
-	router := gin.New()
+	//router := gin.New()
 	router.Use(gin.Recovery())
 
 	tokenRegex := regexp.MustCompile(`token=[^&\s]+`)
