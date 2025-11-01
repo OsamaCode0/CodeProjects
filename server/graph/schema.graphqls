@@ -1,0 +1,41 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+# This is the new content for 'graph/schema.graphqls'
+
+# 1. "Translate" your buildTodoType()
+type Todo {
+  id: ID!
+  text: String!
+  done: Boolean!
+}
+
+
+type User {
+  id: ID!
+  email: String!
+  created_at: Time!
+}
+
+type LoginResponse {
+  token: String!
+  user: User!
+}
+
+# 3. "Translate" your buildQueryType()
+type Query {
+  todo(id: ID!): Todo
+  todos: [Todo!]!
+  users: [User!]!
+}
+
+type Mutation {
+  createTodo(text: String!): Todo!
+  updateTodo(id: ID!, done: Boolean): Todo
+  registerUser(email: String!, password: String!): User!
+  loginUser(email: String!, password: String!): LoginResponse!
+}
+
+# This scalar is provided by gqlgen
+scalar Time

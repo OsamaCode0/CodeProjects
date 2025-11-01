@@ -79,3 +79,20 @@ func GetUserByEmail(ctx context.Context, pool *pgxpool.Pool, email string) (stri
 
 	return id, pwHash, nil
 }
+
+func GetUserCreatedAt(ctx context.Context, pool *pgxpool.Pool, email string) (time.Time, error) {
+	const q = `SELECT created_at FROM users WHERE email=$1`
+
+	var created_at time.Time
+
+	err := pool.QueryRow(ctx, q, email).Scan(&created_at)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return time.Time{} ,  pgx.ErrNoRows
+		}
+		return time.Time{},  err
+	}
+
+	return created_at, nil
+}
+

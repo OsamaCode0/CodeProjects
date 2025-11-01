@@ -73,6 +73,7 @@ export default function RecommendationsForm() {
 
         <div
           className="buttons is-centered"
+
           style={{ gap: "0.5rem", marginLeft: "0.5rem" }}>
           <button
             className={`button is-danger ${busyReact ? "is-loading" : ""}`}

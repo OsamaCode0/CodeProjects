@@ -17,7 +17,6 @@ type disconnectReq struct {
 // POST /api/reactions/disconnect
 func PostDisconnect(c *gin.Context) {
 	userID := c.GetString("userID")
-	
 
 	var req disconnectReq
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -74,6 +73,7 @@ func PostDisconnect(c *gin.Context) {
 		"status":         "ok",
 		"userID":         userID,
 		"target_user_id": req.TargetUserID,
+		"reaction":       "dislike",
 	})
 
 }

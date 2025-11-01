@@ -19,6 +19,7 @@ type Config struct {
 	Cloud_secret string
 	Cloud_name string
 	Cloud_key string
+
 }
 
 func LoadConfig() *Config {
@@ -45,7 +46,6 @@ func LoadConfig() *Config {
 	c.Cloud_secret = os.Getenv("CLOUDINARY_API_SECRET")
 	c.Cloud_name = cloud
 	c.Cloud_key = os.Getenv("CLOUDINARY_API_KEY")
-
 	Cfg = &c
 	return Cfg
 }

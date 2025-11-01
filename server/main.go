@@ -43,7 +43,6 @@ func main() {
 		}
 		log.Println("✅ Database seeded successfully.")
 	}
-
-	router := handlers.SetupRouter()
+	router := handlers.SetupRouter(internal.Cfg.IsDevMode, internal.DB)
 	router.Run(":" + internal.Cfg.Port)
 }

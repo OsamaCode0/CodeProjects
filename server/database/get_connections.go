@@ -18,12 +18,14 @@ func GetConnections(ctx context.Context, pool *pgxpool.Pool, userID string) ([]s
 	`
 	
 	rows, err := pool.Query(ctx, query, userID)
+
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	var connections []string
+
 	for rows.Next() {
 		var connection string
 		if err := rows.Scan(&connection); err != nil {
@@ -34,3 +36,4 @@ func GetConnections(ctx context.Context, pool *pgxpool.Pool, userID string) ([]s
 
 	return connections, nil
 }
+

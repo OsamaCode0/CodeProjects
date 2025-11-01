@@ -31,7 +31,6 @@ func GetConnections(c *gin.Context){
 		return
 	}
 	
-	
 	connections, err := database.GetConnections(ctx, internal.DB, userID)
 	if err != nil {
 		log.Println(err)
