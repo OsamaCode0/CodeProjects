@@ -1,0 +1,39 @@
+# any hidden files
+.*
+
+# any postential bigger file
+*.jpg
+*.png
+*.svg
+*.jpeg
+*.mp3
+*.mp4
+
+# unneccessary files
+*.txt
+*.drawio
+*.php
+*.*.md
+!Readme.md
+*.doc
+*.pdf
+
+# local bins and backup folder
+bin
+trash
+backup
+
+# environtment
+.env
+.env.local
+
+
+# logs
+logs
+*.log*
+
+# private key
+*.pem
+
+# modules
+*node_module*
