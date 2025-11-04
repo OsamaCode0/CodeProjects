@@ -3,8 +3,25 @@
 package model
 
 import (
+	"bytes"
+	"fmt"
+	"io"
+	"strconv"
 	"time"
 )
+
+type Bio struct {
+	UserID             string                 `json:"userID"`
+	ParentGender       GenderEnum             `json:"parentGender"`
+	PreferredDistance  *int32                 `json:"preferredDistance,omitempty"`
+	ChildBirthday      string                 `json:"childBirthday"`
+	ChildGender        ChidGenderEnum         `json:"childGender"`
+	ChildActivityLevel ChildActivityLevelEnum `json:"childActivity_level"`
+	Limitations        []*string              `json:"limitations,omitempty"`
+	Allergies          []*string              `json:"allergies,omitempty"`
+	PlayStyles         []*string              `json:"play_styles,omitempty"`
+	User               *User                  `json:"user"`
+}
 
 type LoginResponse struct {
 	Token string `json:"token"`
@@ -14,17 +31,203 @@ type LoginResponse struct {
 type Mutation struct {
 }
 
+type Profile struct {
+	UserID         string   `json:"userID"`
+	Name           string   `json:"name"`
+	About          string   `json:"about"`
+	Languages      []string `json:"languages"`
+	AddressCity    string   `json:"addressCity"`
+	Lat            *float64 `json:"lat,omitempty"`
+	Lon            *float64 `json:"lon,omitempty"`
+	ChildName      string   `json:"childName"`
+	ChildAbout     string   `json:"childAbout"`
+	ChildInterests []string `json:"ChildInterests"`
+	User           *User    `json:"user"`
+}
+
 type Query struct {
 }
 
-type Todo struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
+type User struct {
+	UserID         string    `json:"userID"`
+	Email          string    `json:"email"`
+	CreatedAt      time.Time `json:"created_at"`
+	ProfilePicture *string   `json:"profilePicture,omitempty"`
+	Profile        *Profile  `json:"profile"`
+	Bio            *Bio      `json:"bio"`
 }
 
-type User struct {
-	ID        string    `json:"id"`
-	Email     string    `json:"email"`
-	CreatedAt time.Time `json:"created_at"`
+type ChidGenderEnum string
+
+const (
+	ChidGenderEnumGirl  ChidGenderEnum = "GIRL"
+	ChidGenderEnumBoy   ChidGenderEnum = "BOY"
+	ChidGenderEnumOther ChidGenderEnum = "OTHER"
+)
+
+var AllChidGenderEnum = []ChidGenderEnum{
+	ChidGenderEnumGirl,
+	ChidGenderEnumBoy,
+	ChidGenderEnumOther,
+}
+
+func (e ChidGenderEnum) IsValid() bool {
+	switch e {
+	case ChidGenderEnumGirl, ChidGenderEnumBoy, ChidGenderEnumOther:
+		return true
+	}
+	return false
+}
+
+func (e ChidGenderEnum) String() string {
+	return string(e)
+}
+
+func (e *ChidGenderEnum) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ChidGenderEnum(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ChidGenderEnum", str)
+	}
+	return nil
+}
+
+func (e ChidGenderEnum) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *ChidGenderEnum) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e ChidGenderEnum) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type GenderEnum string
+
+const (
+	GenderEnumMale           GenderEnum = "MALE"
+	GenderEnumFemale         GenderEnum = "FEMALE"
+	GenderEnumNonBinary      GenderEnum = "NON_BINARY"
+	GenderEnumOther          GenderEnum = "OTHER"
+	GenderEnumPreferNotToSay GenderEnum = "PREFER_NOT_TO_SAY"
+)
+
+var AllGenderEnum = []GenderEnum{
+	GenderEnumMale,
+	GenderEnumFemale,
+	GenderEnumNonBinary,
+	GenderEnumOther,
+	GenderEnumPreferNotToSay,
+}
+
+func (e GenderEnum) IsValid() bool {
+	switch e {
+	case GenderEnumMale, GenderEnumFemale, GenderEnumNonBinary, GenderEnumOther, GenderEnumPreferNotToSay:
+		return true
+	}
+	return false
+}
+
+func (e GenderEnum) String() string {
+	return string(e)
+}
+
+func (e *GenderEnum) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = GenderEnum(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid GenderEnum", str)
+	}
+	return nil
+}
+
+func (e GenderEnum) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *GenderEnum) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e GenderEnum) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type ChildActivityLevelEnum string
+
+const (
+	ChildActivityLevelEnumLow    ChildActivityLevelEnum = "LOW"
+	ChildActivityLevelEnumMedium ChildActivityLevelEnum = "MEDIUM"
+	ChildActivityLevelEnumHigh   ChildActivityLevelEnum = "HIGH"
+)
+
+var AllChildActivityLevelEnum = []ChildActivityLevelEnum{
+	ChildActivityLevelEnumLow,
+	ChildActivityLevelEnumMedium,
+	ChildActivityLevelEnumHigh,
+}
+
+func (e ChildActivityLevelEnum) IsValid() bool {
+	switch e {
+	case ChildActivityLevelEnumLow, ChildActivityLevelEnumMedium, ChildActivityLevelEnumHigh:
+		return true
+	}
+	return false
+}
+
+func (e ChildActivityLevelEnum) String() string {
+	return string(e)
+}
+
+func (e *ChildActivityLevelEnum) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ChildActivityLevelEnum(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid childActivity_levelEnum", str)
+	}
+	return nil
+}
+
+func (e ChildActivityLevelEnum) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *ChildActivityLevelEnum) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e ChildActivityLevelEnum) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }

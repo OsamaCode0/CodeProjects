@@ -12,19 +12,11 @@ import (
 	"matchme-server/database"
 	"matchme-server/graph/model"
 	"matchme-server/helpers"
+	"matchme-server/middleware"
 
-	"github.com/jackc/pgx/v5"
+	pgx "github.com/jackc/pgx/v5"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 )
-
-// CreateTodo is the resolver for the createTodo field.
-func (r *mutationResolver) CreateTodo(ctx context.Context, text string) (*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: CreateTodo - createTodo"))
-}
-
-// UpdateTodo is the resolver for the updateTodo field.
-func (r *mutationResolver) UpdateTodo(ctx context.Context, id string, done *bool) (*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: UpdateTodo - updateTodo"))
-}
 
 // RegisterUser is the resolver for the registerUser field.
 func (r *mutationResolver) RegisterUser(ctx context.Context, email string, password string) (*model.User, error) {
@@ -52,7 +44,7 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, email string, passw
 
 	//    Note: gqlgen models are pointers
 	return &model.User{
-		ID:        id,
+		UserID:    id,
 		Email:     email,
 		CreatedAt: createdAt,
 	}, nil
@@ -60,7 +52,6 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, email string, passw
 
 // LoginUser is the resolver for the loginUser field.
 func (r *mutationResolver) LoginUser(ctx context.Context, email string, password string) (*model.LoginResponse, error) {
-
 	id, pwHash, err := database.GetUserByEmail(ctx, r.DB, email)
 
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -75,41 +66,170 @@ func (r *mutationResolver) LoginUser(ctx context.Context, email string, password
 		return nil, fmt.Errorf("invalid email or password")
 	}
 
-	created_at, err := database.GetUserCreatedAt(ctx, r.DB, email)
+	_, created_at, err := database.GetUserEmailCreatedAt(ctx, r.DB, id)
 	if err != nil {
+		log.Println(err)
 		return nil, fmt.Errorf("internal server error (db)")
 	}
-
 
 	access, err := helpers.MakeAccessToken(id)
 	if err != nil {
 		return nil, fmt.Errorf("internal server error(access token)")
 	}
 	user := &model.User{
-		ID:    id,
-		Email: email,
+		UserID:    id,
+		Email:     email,
 		CreatedAt: created_at,
 	}
 	return &model.LoginResponse{
 		Token: access,
 		User:  user,
 	}, nil
-
 }
 
-// Todo is the resolver for the todo field.
-func (r *queryResolver) Todo(ctx context.Context, id string) (*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: Todo - todo"))
+// UpdateProfile is the resolver for the updateProfile field.
+func (r *mutationResolver) UpdateProfile(ctx context.Context, userID *string, name *string, about *string, languages []*string, addressCity *string, lat *float64, lon *float64, childName *string, childAge *int32, childAbout *string, childInterests []*string) (*model.Profile, error) {
+	panic(fmt.Errorf("not implemented: UpdateProfile - updateProfile"))
 }
 
-// Todos is the resolver for the todos field.
-func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: Todos - todos"))
+// UpdateBio is the resolver for the updateBio field.
+func (r *mutationResolver) UpdateBio(ctx context.Context, userID *string, parentGender *string, preferredDistance *int32, childBirthday *string, childGender *string, childActivityLevel *string, limitations []*string, allergies []*string, playStyles []*string) (*model.Bio, error) {
+	panic(fmt.Errorf("not implemented: UpdateBio - updateBio"))
 }
 
-// Users is the resolver for the users field.
-func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
-	panic(fmt.Errorf("not implemented: Users - users"))
+// User is the resolver for the user field.
+func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {
+	_, ok := middleware.GetUserIDFromContext(ctx) //just check that it is auth user
+	if !ok {
+		// User is not logged in.
+		return nil, gqlerror.Errorf("Not authenticated")
+	}
+	email, created_at, err := database.GetUserEmailCreatedAt(ctx, r.DB, id)
+	if err != nil {
+		return nil, gqlerror.Errorf("DB error")
+	}
+
+	_, profilePicture := database.GetUserNamePhotoURL(ctx, r.DB, id)
+
+	user := &model.User{
+		UserID:         id,
+		Email:          email,
+		CreatedAt:      created_at,
+		ProfilePicture: &profilePicture,
+	}
+
+	return user, nil
+}
+
+// Profile is the resolver for the profile field.
+func (r *queryResolver) Profile(ctx context.Context, userID string) (*model.Profile, error) {
+	_, ok := middleware.GetUserIDFromContext(ctx) //just check that it is auth user
+	if !ok {
+		// User is not logged in.
+		return nil, gqlerror.Errorf("Not authenticated")
+	}
+
+	p, err := database.GetUserProfile(ctx, r.DB, userID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// Return a GraphQL "not found" error
+			return nil, gqlerror.Errorf("Profile not found for user ID: %s", userID)
+		}
+		// Return a generic server error
+		log.Println(err)
+		return nil, gqlerror.Errorf("Database error fetching parent.")
+	}
+
+	// Fetch Child data
+	ch, err := database.GetChildProfile(ctx, r.DB, userID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// This is a data integrity issue, but we'll treat it as "not found"
+			return nil, gqlerror.Errorf("Child profile not found for user ID: %s", userID)
+		}
+		log.Println(err)
+		return nil, gqlerror.Errorf("Database error fetching child")
+	}
+	var latPtr *float64
+	if p.Lat != 0.0 {
+		temp := float64(p.Lat)
+		latPtr = &temp
+	}
+
+	var lonPtr *float64
+	if p.Lon != 0.0 {
+		temp := float64(p.Lon)
+		lonPtr = &temp
+	}
+
+	// Create the final response object
+	profile := &model.Profile{
+		UserID:         p.UserID,
+		Name:           p.Name,
+		About:          p.About,
+		AddressCity:    p.AddressCity,
+		Lat:            latPtr,
+		Lon:            lonPtr,
+		ChildName:      ch.Name,
+		ChildAbout:     ch.About_short,
+		ChildInterests: ch.Interests,
+
+		User: nil,
+	}
+
+	return profile, nil
+}
+
+// Bio is the resolver for the bio field.
+func (r *queryResolver) Bio(ctx context.Context, userID string) (*model.Bio, error) {
+	_, ok := middleware.GetUserIDFromContext(ctx) //just check that it is auth user
+	if !ok {
+		// User is not logged in.
+		return nil, gqlerror.Errorf("Not authenticated")
+	}
+
+	p, err := database.GetUserProfile(ctx, r.DB, userID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// Return a GraphQL "not found" error
+			return nil, gqlerror.Errorf("Profile not found for user ID: %s", userID)
+		}
+		// Return a generic server error
+		log.Println(err)
+		return nil, gqlerror.Errorf("Database error fetching parent.")
+	}
+
+	// Fetch Child data
+	ch, err := database.GetChildProfile(ctx, r.DB, userID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// This is a data integrity issue, but we'll treat it as "not found"
+			return nil, gqlerror.Errorf("Child profile not found for user ID: %s", userID)
+		}
+		log.Println(err)
+		return nil, gqlerror.Errorf("Database error fetching child")
+	}
+
+	var preferredDistPtr *int32
+	if p.PreferredDistance != 0 {
+		temp := int32(p.PreferredDistance) // 1. Convert int to int32
+		preferredDistPtr = &temp           // 2. Get a pointer to the int32
+	}
+
+	bio := &model.Bio{
+		UserID:             p.UserID,
+		ParentGender:       model.GenderEnum(p.Gender),
+		PreferredDistance:  preferredDistPtr,
+		ChildBirthday:      ch.Birthday.String(),
+		ChildGender:        model.ChidGenderEnum(ch.Gender),
+		ChildActivityLevel: model.ChildActivityLevelEnum(ch.Activity_level),
+		Limitations:        stringSliceToPtrSlice(ch.Limitations),
+		Allergies:          stringSliceToPtrSlice(ch.Allergies),
+		PlayStyles:         stringSliceToPtrSlice(ch.Play_styles),
+
+		User: nil,
+	}
+	return bio, nil
 }
 
 // Mutation returns MutationResolver implementation.
@@ -120,3 +240,4 @@ func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+

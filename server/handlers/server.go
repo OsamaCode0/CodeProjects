@@ -16,14 +16,19 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+func setupGraphQL(router gin.IRouter, IsDevMode bool, db *pgxpool.Pool) {
+	// This function registers /graphql and /playground
+	graphsetup.RegisterGraphQL(router, IsDevMode, db)
+}
+
 func SetupRouter(IsDevMode bool, db *pgxpool.Pool) *gin.Engine {
 
 	if !IsDevMode {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	router := gin.Default()
-	//router := gin.New()
+	//router := gin.Default()
+	router := gin.New()
 	router.Use(gin.Recovery())
 
 	tokenRegex := regexp.MustCompile(`token=[^&\s]+`)
@@ -60,15 +65,17 @@ func SetupRouter(IsDevMode bool, db *pgxpool.Pool) *gin.Engine {
 		AllowWildcard:    false,
 		MaxAge:           12 * time.Hour,
 	}))
-	router.Use(gin.Logger())
-	router.Use(gin.Recovery())
+	//router.Use(gin.Logger())
+	//router.Use(gin.Recovery())
 
 	//to check that REST is working
 	router.GET("/rest/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "pong!"})
 	})
-
-	graphsetup.RegisterGraphQL(router, IsDevMode, db)
+	
+	gqlGroup := router.Group("/") // You can use / or /graphql
+	gqlGroup.Use(middleware.GinGqlAuthMiddleware(internal.Cfg.JWTSecret))
+	setupGraphQL(gqlGroup, IsDevMode, db)
 
 
 	router.POST("/users/register", services.Register)
@@ -93,6 +100,7 @@ func SetupRouter(IsDevMode bool, db *pgxpool.Pool) *gin.Engine {
 	auth.GET("/me/bio", endpoints.GetMeBio)
 	auth.GET("/me/child", endpoints.GetChildProfile)
 	auth.GET("/me/cloudinary-sign", endpoints.CloudinarySign)
+	auth.GET("/me/email", endpoints.GetMyEmail)
 	
 	auth.POST("/me/photo", endpoints.PostMePhoto)
 	auth.DELETE("/me/photo", endpoints.DeleteMePhoto)
@@ -101,8 +109,6 @@ func SetupRouter(IsDevMode bool, db *pgxpool.Pool) *gin.Engine {
 	auth.POST("/api/disconnect", endpoints.PostDisconnect)
 
 	auth.GET("/recommendations", services.GetRecommendations)
-	auth.GET("/connections/requests", services.GetRequests)
-	auth.GET("/connections", services.GetConnections)
 	auth.GET("/connections/requests", services.GetRequests)
 	auth.GET("/connections", services.GetConnections)
 

@@ -16,7 +16,7 @@ import (
 )
 
 // RegisterGraphQL connects the gqlgen server to the Gin router.
-func RegisterGraphQL(router *gin.Engine, IsDevMode bool, db *pgxpool.Pool) {
+func RegisterGraphQL(router gin.IRouter, IsDevMode bool, db *pgxpool.Pool) {
 
 	// 1. Create the Resolver, passing in the database connection
 	resolver := &graph.Resolver{

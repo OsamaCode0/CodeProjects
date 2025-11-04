@@ -3,19 +3,66 @@
 # https://gqlgen.com/getting-started/
 
 # This is the new content for 'graph/schema.graphqls'
+enum GenderEnum {
+  MALE
+  FEMALE
+  NON_BINARY
+  OTHER
+  PREFER_NOT_TO_SAY
+}
 
-# 1. "Translate" your buildTodoType()
-type Todo {
-  id: ID!
-  text: String!
-  done: Boolean!
+enum ChidGenderEnum {
+  GIRL
+  BOY
+  OTHER
+}
+
+enum childActivity_levelEnum {
+  LOW
+  MEDIUM
+  HIGH
 }
 
 
+
 type User {
-  id: ID!
+  userID: ID!
   email: String!
   created_at: Time!
+  profilePicture: String
+
+  profile: Profile!
+
+  bio: Bio!
+}
+ 
+type Profile {
+  userID: ID!
+  name: String!
+  about: String!
+  languages: [String!]!
+	addressCity: String!
+  lat: Float
+  lon: Float
+	childName: String!
+	childAbout:  String!
+	ChildInterests: [String!]!
+  
+  user: User!
+}
+
+type Bio {
+  userID: ID!
+	parentGender: GenderEnum!
+	preferredDistance: Int
+	childBirthday: String!
+	childGender: ChidGenderEnum!
+	childActivity_level: childActivity_levelEnum!
+	limitations: [String]
+	allergies: [String]
+	play_styles: [String]
+
+  user: User!
 }
 
 type LoginResponse {
@@ -23,18 +70,42 @@ type LoginResponse {
   user: User!
 }
 
-# 3. "Translate" your buildQueryType()
+
 type Query {
-  todo(id: ID!): Todo
-  todos: [Todo!]!
-  users: [User!]!
+  user(id: ID!): User
+  profile(userID: ID!): Profile
+  bio(userID: ID!): Bio
 }
 
 type Mutation {
-  createTodo(text: String!): Todo!
-  updateTodo(id: ID!, done: Boolean): Todo
   registerUser(email: String!, password: String!): User!
   loginUser(email: String!, password: String!): LoginResponse!
+
+  updateProfile (
+  userID: ID
+  name: String
+  about: String
+  languages: [String]
+	addressCity: String
+  lat: Float
+  lon: Float
+	childName: String
+	childAge:   Int
+	childAbout:  String
+	ChildInterests: [String]
+  ):Profile
+
+  updateBio (
+  userID: ID
+	parentGender: String
+	preferredDistance: Int
+	childBirthday: String
+	childGender: String
+	childActivity_level: String
+	limitations: [String]
+	allergies: [String]
+	play_styles: [String]
+  ):Bio
 }
 
 # This scalar is provided by gqlgen

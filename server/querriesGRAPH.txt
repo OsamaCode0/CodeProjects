@@ -1,0 +1,26 @@
+--get profile
+query GetProfile($userID: ID!) {
+  profile(userID: $userID) {
+  userID,
+  name,
+  about,
+  childName,
+  ChildInterests,
+    lat
+  }
+}
+
+VAR {"userID": "9b6a2aa5-5ea8-4ada-a850-37e849ce498c"}
+Header {
+  "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjIyNTg0OTAsImlhdCI6MTc2MjE3MjA5MCwic3ViIjoiMDM1OGJkN2UtZjhiMS00MmFkLWE0ZWEtNmQ1NDhmMWE0MDcyIn0.QCtqdvxMMd3BxsV180x1ZWxj9ZSPymgXXbduuqZBiFA"
+}
+
+loginUser
+mutation{
+  loginUser(email:"graph1@gmail.com", password:"12345a"){
+    token
+    user{
+      id
+    }
+  }
+}

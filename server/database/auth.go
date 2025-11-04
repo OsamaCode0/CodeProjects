@@ -80,19 +80,20 @@ func GetUserByEmail(ctx context.Context, pool *pgxpool.Pool, email string) (stri
 	return id, pwHash, nil
 }
 
-func GetUserCreatedAt(ctx context.Context, pool *pgxpool.Pool, email string) (time.Time, error) {
-	const q = `SELECT created_at FROM users WHERE email=$1`
+func GetUserEmailCreatedAt(ctx context.Context, pool *pgxpool.Pool, userID string) (string, time.Time, error) {
+	const q = `SELECT email, created_at FROM users WHERE id=$1`
 
 	var created_at time.Time
+	var email string
 
-	err := pool.QueryRow(ctx, q, email).Scan(&created_at)
+	err := pool.QueryRow(ctx, q, userID).Scan(&email, &created_at)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return time.Time{} ,  pgx.ErrNoRows
+			return "", time.Time{} ,  pgx.ErrNoRows
 		}
-		return time.Time{},  err
+		return "", time.Time{},  err
 	}
 
-	return created_at, nil
+	return email, created_at, nil
 }
 
