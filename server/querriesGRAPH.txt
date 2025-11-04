@@ -24,3 +24,48 @@ mutation{
     }
   }
 }
+
+
+query GetUser($userID: ID!) {
+  user(id: $userID) {
+  userID,
+  email,
+  profilePicture
+    profile{
+      name,
+      languages,
+      childName,
+      addressCity,
+      ChildInterests
+    }
+    bio{
+      childBirthday,
+      play_styles
+    }
+  }
+}
+
+
+
+query GetBio($userID: ID!) {
+  bio(userID: $userID) {
+  userID,
+  parentGender,
+  limitations,
+  preferredDistance,
+    user{
+      email
+    }
+  }
+}
+
+query GetMeProfile {
+  myProfile{
+  userID,
+  name,
+  about,
+  childName,
+  ChildInterests,
+    lat
+  }
+}

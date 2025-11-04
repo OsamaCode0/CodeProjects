@@ -42,17 +42,20 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, email string, passw
 		return nil, fmt.Errorf("internal server error (db)")
 	}
 
+	_, profilePicture := database.GetUserNamePhotoURL(ctx, r.DB, id)
+
 	//    Note: gqlgen models are pointers
 	return &model.User{
-		UserID:    id,
-		Email:     email,
-		CreatedAt: createdAt,
+		UserID:         id,
+		Email:          email,
+		CreatedAt:      createdAt,
+		ProfilePicture: &profilePicture,
 	}, nil
 }
 
 // LoginUser is the resolver for the loginUser field.
 func (r *mutationResolver) LoginUser(ctx context.Context, email string, password string) (*model.LoginResponse, error) {
-	id, pwHash, err := database.GetUserByEmail(ctx, r.DB, email)
+	userID, pwHash, err := database.GetUserByEmail(ctx, r.DB, email)
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, fmt.Errorf("user does not exist")
@@ -66,21 +69,16 @@ func (r *mutationResolver) LoginUser(ctx context.Context, email string, password
 		return nil, fmt.Errorf("invalid email or password")
 	}
 
-	_, created_at, err := database.GetUserEmailCreatedAt(ctx, r.DB, id)
+	user, err := r.GetUser(ctx, userID)
 	if err != nil {
-		log.Println(err)
-		return nil, fmt.Errorf("internal server error (db)")
+		return nil, err
 	}
 
-	access, err := helpers.MakeAccessToken(id)
+	access, err := helpers.MakeAccessToken(userID)
 	if err != nil {
 		return nil, fmt.Errorf("internal server error(access token)")
 	}
-	user := &model.User{
-		UserID:    id,
-		Email:     email,
-		CreatedAt: created_at,
-	}
+
 	return &model.LoginResponse{
 		Token: access,
 		User:  user,
@@ -98,25 +96,29 @@ func (r *mutationResolver) UpdateBio(ctx context.Context, userID *string, parent
 }
 
 // User is the resolver for the user field.
-func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {
+func (r *queryResolver) User(ctx context.Context, userID string) (*model.User, error) {
 	_, ok := middleware.GetUserIDFromContext(ctx) //just check that it is auth user
 	if !ok {
-		// User is not logged in.
 		return nil, gqlerror.Errorf("Not authenticated")
 	}
-	email, created_at, err := database.GetUserEmailCreatedAt(ctx, r.DB, id)
+
+	user, err := r.GetUser(ctx, userID)
 	if err != nil {
-		return nil, gqlerror.Errorf("DB error")
+		return nil, err
 	}
 
-	_, profilePicture := database.GetUserNamePhotoURL(ctx, r.DB, id)
-
-	user := &model.User{
-		UserID:         id,
-		Email:          email,
-		CreatedAt:      created_at,
-		ProfilePicture: &profilePicture,
+	profile, err := r.GetProfile(ctx, userID)
+	if err != nil {
+		return nil, err
 	}
+
+	bio, err := r.GetBio(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	user.Profile = profile
+	user.Bio = bio
 
 	return user, nil
 }
@@ -129,53 +131,17 @@ func (r *queryResolver) Profile(ctx context.Context, userID string) (*model.Prof
 		return nil, gqlerror.Errorf("Not authenticated")
 	}
 
-	p, err := database.GetUserProfile(ctx, r.DB, userID)
+	profile, err := r.GetProfile(ctx, userID)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			// Return a GraphQL "not found" error
-			return nil, gqlerror.Errorf("Profile not found for user ID: %s", userID)
-		}
-		// Return a generic server error
-		log.Println(err)
-		return nil, gqlerror.Errorf("Database error fetching parent.")
+		return nil, err
 	}
 
-	// Fetch Child data
-	ch, err := database.GetChildProfile(ctx, r.DB, userID)
+	user, err := r.GetUser(ctx, userID)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			// This is a data integrity issue, but we'll treat it as "not found"
-			return nil, gqlerror.Errorf("Child profile not found for user ID: %s", userID)
-		}
-		log.Println(err)
-		return nil, gqlerror.Errorf("Database error fetching child")
-	}
-	var latPtr *float64
-	if p.Lat != 0.0 {
-		temp := float64(p.Lat)
-		latPtr = &temp
+		return nil, err
 	}
 
-	var lonPtr *float64
-	if p.Lon != 0.0 {
-		temp := float64(p.Lon)
-		lonPtr = &temp
-	}
-
-	// Create the final response object
-	profile := &model.Profile{
-		UserID:         p.UserID,
-		Name:           p.Name,
-		About:          p.About,
-		AddressCity:    p.AddressCity,
-		Lat:            latPtr,
-		Lon:            lonPtr,
-		ChildName:      ch.Name,
-		ChildAbout:     ch.About_short,
-		ChildInterests: ch.Interests,
-
-		User: nil,
-	}
+	profile.User = user
 
 	return profile, nil
 }
@@ -184,52 +150,95 @@ func (r *queryResolver) Profile(ctx context.Context, userID string) (*model.Prof
 func (r *queryResolver) Bio(ctx context.Context, userID string) (*model.Bio, error) {
 	_, ok := middleware.GetUserIDFromContext(ctx) //just check that it is auth user
 	if !ok {
+		return nil, gqlerror.Errorf("Not authenticated")
+	}
+
+	bio, err := r.GetBio(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := r.GetUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	bio.User = user
+
+	return bio, nil
+}
+
+// Me is the resolver for the me field.
+func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
+	userID, ok := middleware.GetUserIDFromContext(ctx) 
+	if !ok {
+		return nil, gqlerror.Errorf("Not authenticated")
+	}
+
+	user, err := r.GetUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	profile, err := r.GetProfile(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	bio, err := r.GetBio(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	user.Profile = profile
+	user.Bio = bio
+
+	return user, nil
+}
+
+// MyBio is the resolver for the myBio field.
+func (r *queryResolver) MyBio(ctx context.Context) (*model.Bio, error) {
+	userID, ok := middleware.GetUserIDFromContext(ctx) //just check that it is auth user
+	if !ok {
+		return nil, gqlerror.Errorf("Not authenticated")
+	}
+
+	bio, err := r.GetBio(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := r.GetUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	bio.User = user
+
+	return bio, nil
+}
+
+// MyProfile is the resolver for the myProfile field.
+func (r *queryResolver) MyProfile(ctx context.Context) (*model.Profile, error) {
+	userID, ok := middleware.GetUserIDFromContext(ctx) //just check that it is auth user
+	if !ok {
 		// User is not logged in.
 		return nil, gqlerror.Errorf("Not authenticated")
 	}
 
-	p, err := database.GetUserProfile(ctx, r.DB, userID)
+	profile, err := r.GetProfile(ctx, userID)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			// Return a GraphQL "not found" error
-			return nil, gqlerror.Errorf("Profile not found for user ID: %s", userID)
-		}
-		// Return a generic server error
-		log.Println(err)
-		return nil, gqlerror.Errorf("Database error fetching parent.")
+		return nil, err
 	}
 
-	// Fetch Child data
-	ch, err := database.GetChildProfile(ctx, r.DB, userID)
+	user, err := r.GetUser(ctx, userID)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			// This is a data integrity issue, but we'll treat it as "not found"
-			return nil, gqlerror.Errorf("Child profile not found for user ID: %s", userID)
-		}
-		log.Println(err)
-		return nil, gqlerror.Errorf("Database error fetching child")
+		return nil, err
 	}
 
-	var preferredDistPtr *int32
-	if p.PreferredDistance != 0 {
-		temp := int32(p.PreferredDistance) // 1. Convert int to int32
-		preferredDistPtr = &temp           // 2. Get a pointer to the int32
-	}
+	profile.User = user
 
-	bio := &model.Bio{
-		UserID:             p.UserID,
-		ParentGender:       model.GenderEnum(p.Gender),
-		PreferredDistance:  preferredDistPtr,
-		ChildBirthday:      ch.Birthday.String(),
-		ChildGender:        model.ChidGenderEnum(ch.Gender),
-		ChildActivityLevel: model.ChildActivityLevelEnum(ch.Activity_level),
-		Limitations:        stringSliceToPtrSlice(ch.Limitations),
-		Allergies:          stringSliceToPtrSlice(ch.Allergies),
-		PlayStyles:         stringSliceToPtrSlice(ch.Play_styles),
-
-		User: nil,
-	}
-	return bio, nil
+	return profile, nil
 }
 
 // Mutation returns MutationResolver implementation.
@@ -240,4 +249,3 @@ func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
-

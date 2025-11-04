@@ -88,9 +88,12 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Bio     func(childComplexity int, userID string) int
-		Profile func(childComplexity int, userID string) int
-		User    func(childComplexity int, id string) int
+		Bio       func(childComplexity int, userID string) int
+		Me        func(childComplexity int) int
+		MyBio     func(childComplexity int) int
+		MyProfile func(childComplexity int) int
+		Profile   func(childComplexity int, userID string) int
+		User      func(childComplexity int, userID string) int
 	}
 
 	User struct {
@@ -110,9 +113,12 @@ type MutationResolver interface {
 	UpdateBio(ctx context.Context, userID *string, parentGender *string, preferredDistance *int32, childBirthday *string, childGender *string, childActivityLevel *string, limitations []*string, allergies []*string, playStyles []*string) (*model.Bio, error)
 }
 type QueryResolver interface {
-	User(ctx context.Context, id string) (*model.User, error)
+	User(ctx context.Context, userID string) (*model.User, error)
 	Profile(ctx context.Context, userID string) (*model.Profile, error)
 	Bio(ctx context.Context, userID string) (*model.Bio, error)
+	Me(ctx context.Context) (*model.User, error)
+	MyBio(ctx context.Context) (*model.Bio, error)
+	MyProfile(ctx context.Context) (*model.Profile, error)
 }
 
 type executableSchema struct {
@@ -331,6 +337,24 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.Bio(childComplexity, args["userID"].(string)), true
+	case "Query.me":
+		if e.complexity.Query.Me == nil {
+			break
+		}
+
+		return e.complexity.Query.Me(childComplexity), true
+	case "Query.myBio":
+		if e.complexity.Query.MyBio == nil {
+			break
+		}
+
+		return e.complexity.Query.MyBio(childComplexity), true
+	case "Query.myProfile":
+		if e.complexity.Query.MyProfile == nil {
+			break
+		}
+
+		return e.complexity.Query.MyProfile(childComplexity), true
 	case "Query.profile":
 		if e.complexity.Query.Profile == nil {
 			break
@@ -352,7 +376,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.User(childComplexity, args["id"].(string)), true
+		return e.complexity.Query.User(childComplexity, args["userID"].(string)), true
 
 	case "User.bio":
 		if e.complexity.User.Bio == nil {
@@ -694,11 +718,11 @@ func (ec *executionContext) field_Query_profile_args(ctx context.Context, rawArg
 func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userID", ec.unmarshalNID2string)
 	if err != nil {
 		return nil, err
 	}
-	args["id"] = arg0
+	args["userID"] = arg0
 	return args, nil
 }
 
@@ -1701,7 +1725,7 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 		ec.fieldContext_Query_user,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().User(ctx, fc.Args["id"].(string))
+			return ec.resolvers.Query().User(ctx, fc.Args["userID"].(string))
 		},
 		nil,
 		ec.marshalOUser2ᚖmatchmeᚑserverᚋgraphᚋmodelᚐUser,
@@ -1872,6 +1896,153 @@ func (ec *executionContext) fieldContext_Query_bio(ctx context.Context, field gr
 	if fc.Args, err = ec.field_Query_bio_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_me,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().Me(ctx)
+		},
+		nil,
+		ec.marshalOUser2ᚖmatchmeᚑserverᚋgraphᚋmodelᚐUser,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_me(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "userID":
+				return ec.fieldContext_User_userID(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "created_at":
+				return ec.fieldContext_User_created_at(ctx, field)
+			case "profilePicture":
+				return ec.fieldContext_User_profilePicture(ctx, field)
+			case "profile":
+				return ec.fieldContext_User_profile(ctx, field)
+			case "bio":
+				return ec.fieldContext_User_bio(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myBio(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myBio,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().MyBio(ctx)
+		},
+		nil,
+		ec.marshalOBio2ᚖmatchmeᚑserverᚋgraphᚋmodelᚐBio,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myBio(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "userID":
+				return ec.fieldContext_Bio_userID(ctx, field)
+			case "parentGender":
+				return ec.fieldContext_Bio_parentGender(ctx, field)
+			case "preferredDistance":
+				return ec.fieldContext_Bio_preferredDistance(ctx, field)
+			case "childBirthday":
+				return ec.fieldContext_Bio_childBirthday(ctx, field)
+			case "childGender":
+				return ec.fieldContext_Bio_childGender(ctx, field)
+			case "childActivity_level":
+				return ec.fieldContext_Bio_childActivity_level(ctx, field)
+			case "limitations":
+				return ec.fieldContext_Bio_limitations(ctx, field)
+			case "allergies":
+				return ec.fieldContext_Bio_allergies(ctx, field)
+			case "play_styles":
+				return ec.fieldContext_Bio_play_styles(ctx, field)
+			case "user":
+				return ec.fieldContext_Bio_user(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Bio", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myProfile(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myProfile,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().MyProfile(ctx)
+		},
+		nil,
+		ec.marshalOProfile2ᚖmatchmeᚑserverᚋgraphᚋmodelᚐProfile,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myProfile(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "userID":
+				return ec.fieldContext_Profile_userID(ctx, field)
+			case "name":
+				return ec.fieldContext_Profile_name(ctx, field)
+			case "about":
+				return ec.fieldContext_Profile_about(ctx, field)
+			case "languages":
+				return ec.fieldContext_Profile_languages(ctx, field)
+			case "addressCity":
+				return ec.fieldContext_Profile_addressCity(ctx, field)
+			case "lat":
+				return ec.fieldContext_Profile_lat(ctx, field)
+			case "lon":
+				return ec.fieldContext_Profile_lon(ctx, field)
+			case "childName":
+				return ec.fieldContext_Profile_childName(ctx, field)
+			case "childAbout":
+				return ec.fieldContext_Profile_childAbout(ctx, field)
+			case "ChildInterests":
+				return ec.fieldContext_Profile_ChildInterests(ctx, field)
+			case "user":
+				return ec.fieldContext_Profile_user(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Profile", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -3988,6 +4159,63 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_bio(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "me":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_me(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myBio":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myBio(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myProfile":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myProfile(ctx, field)
 				return res
 			}
 

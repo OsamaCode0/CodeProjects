@@ -72,9 +72,13 @@ type LoginResponse {
 
 
 type Query {
-  user(id: ID!): User
+  user(userID: ID!): User
   profile(userID: ID!): Profile
   bio(userID: ID!): Bio
+  me: User
+  myBio: Bio
+  myProfile: Profile
+  recommendations(limit: Int = 10, offset: Int = 0): [User!]!
 }
 
 type Mutation {
