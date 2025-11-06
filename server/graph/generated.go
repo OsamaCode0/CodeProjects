@@ -69,8 +69,8 @@ type ComplexityRoot struct {
 	Mutation struct {
 		LoginUser     func(childComplexity int, email string, password string) int
 		RegisterUser  func(childComplexity int, email string, password string) int
-		UpdateBio     func(childComplexity int, userID *string, parentGender *string, preferredDistance *int32, childBirthday *string, childGender *string, childActivityLevel *string, limitations []*string, allergies []*string, playStyles []*string) int
-		UpdateProfile func(childComplexity int, userID *string, name *string, about *string, languages []*string, addressCity *string, lat *float64, lon *float64, childName *string, childAge *int32, childAbout *string, childInterests []*string) int
+		UpdateBio     func(childComplexity int, parentGender *model.GenderEnum, preferredDistance *int32, childBirthday *string, childGender *model.ChidGenderEnum, childActivityLevel *string, limitations []*string, allergies []*string, playStyles []*string) int
+		UpdateProfile func(childComplexity int, name *string, about *string, languages []*string, addressCity *string, lat *float64, lon *float64, childName *string, childAbout *string, childInterests []*string) int
 	}
 
 	Profile struct {
@@ -88,12 +88,13 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Bio       func(childComplexity int, userID string) int
-		Me        func(childComplexity int) int
-		MyBio     func(childComplexity int) int
-		MyProfile func(childComplexity int) int
-		Profile   func(childComplexity int, userID string) int
-		User      func(childComplexity int, userID string) int
+		Bio             func(childComplexity int, userID string) int
+		Me              func(childComplexity int) int
+		MyBio           func(childComplexity int) int
+		MyProfile       func(childComplexity int) int
+		Profile         func(childComplexity int, userID string) int
+		Recommendations func(childComplexity int, limit *int32, offset *int32) int
+		User            func(childComplexity int, userID string) int
 	}
 
 	User struct {
@@ -109,8 +110,8 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	RegisterUser(ctx context.Context, email string, password string) (*model.User, error)
 	LoginUser(ctx context.Context, email string, password string) (*model.LoginResponse, error)
-	UpdateProfile(ctx context.Context, userID *string, name *string, about *string, languages []*string, addressCity *string, lat *float64, lon *float64, childName *string, childAge *int32, childAbout *string, childInterests []*string) (*model.Profile, error)
-	UpdateBio(ctx context.Context, userID *string, parentGender *string, preferredDistance *int32, childBirthday *string, childGender *string, childActivityLevel *string, limitations []*string, allergies []*string, playStyles []*string) (*model.Bio, error)
+	UpdateProfile(ctx context.Context, name *string, about *string, languages []*string, addressCity *string, lat *float64, lon *float64, childName *string, childAbout *string, childInterests []*string) (*model.Profile, error)
+	UpdateBio(ctx context.Context, parentGender *model.GenderEnum, preferredDistance *int32, childBirthday *string, childGender *model.ChidGenderEnum, childActivityLevel *string, limitations []*string, allergies []*string, playStyles []*string) (*model.Bio, error)
 }
 type QueryResolver interface {
 	User(ctx context.Context, userID string) (*model.User, error)
@@ -119,6 +120,7 @@ type QueryResolver interface {
 	Me(ctx context.Context) (*model.User, error)
 	MyBio(ctx context.Context) (*model.Bio, error)
 	MyProfile(ctx context.Context) (*model.Profile, error)
+	Recommendations(ctx context.Context, limit *int32, offset *int32) ([]*model.User, error)
 }
 
 type executableSchema struct {
@@ -246,7 +248,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateBio(childComplexity, args["userID"].(*string), args["parentGender"].(*string), args["preferredDistance"].(*int32), args["childBirthday"].(*string), args["childGender"].(*string), args["childActivity_level"].(*string), args["limitations"].([]*string), args["allergies"].([]*string), args["play_styles"].([]*string)), true
+		return e.complexity.Mutation.UpdateBio(childComplexity, args["parentGender"].(*model.GenderEnum), args["preferredDistance"].(*int32), args["childBirthday"].(*string), args["childGender"].(*model.ChidGenderEnum), args["childActivity_level"].(*string), args["limitations"].([]*string), args["allergies"].([]*string), args["play_styles"].([]*string)), true
 	case "Mutation.updateProfile":
 		if e.complexity.Mutation.UpdateProfile == nil {
 			break
@@ -257,7 +259,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateProfile(childComplexity, args["userID"].(*string), args["name"].(*string), args["about"].(*string), args["languages"].([]*string), args["addressCity"].(*string), args["lat"].(*float64), args["lon"].(*float64), args["childName"].(*string), args["childAge"].(*int32), args["childAbout"].(*string), args["ChildInterests"].([]*string)), true
+		return e.complexity.Mutation.UpdateProfile(childComplexity, args["name"].(*string), args["about"].(*string), args["languages"].([]*string), args["addressCity"].(*string), args["lat"].(*float64), args["lon"].(*float64), args["childName"].(*string), args["childAbout"].(*string), args["childInterests"].([]*string)), true
 
 	case "Profile.about":
 		if e.complexity.Profile.About == nil {
@@ -277,7 +279,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Profile.ChildAbout(childComplexity), true
-	case "Profile.ChildInterests":
+	case "Profile.childInterests":
 		if e.complexity.Profile.ChildInterests == nil {
 			break
 		}
@@ -366,6 +368,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.Profile(childComplexity, args["userID"].(string)), true
+	case "Query.recommendations":
+		if e.complexity.Query.Recommendations == nil {
+			break
+		}
+
+		args, err := ec.field_Query_recommendations_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Recommendations(childComplexity, args["limit"].(*int32), args["offset"].(*int32)), true
 	case "Query.user":
 		if e.complexity.Query.User == nil {
 			break
@@ -573,112 +586,97 @@ func (ec *executionContext) field_Mutation_registerUser_args(ctx context.Context
 func (ec *executionContext) field_Mutation_updateBio_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userID", ec.unmarshalOID2ᚖstring)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "parentGender", ec.unmarshalOGenderEnum2ᚖmatchmeᚑserverᚋgraphᚋmodelᚐGenderEnum)
 	if err != nil {
 		return nil, err
 	}
-	args["userID"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "parentGender", ec.unmarshalOString2ᚖstring)
+	args["parentGender"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "preferredDistance", ec.unmarshalOInt2ᚖint32)
 	if err != nil {
 		return nil, err
 	}
-	args["parentGender"] = arg1
-	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "preferredDistance", ec.unmarshalOInt2ᚖint32)
+	args["preferredDistance"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "childBirthday", ec.unmarshalOString2ᚖstring)
 	if err != nil {
 		return nil, err
 	}
-	args["preferredDistance"] = arg2
-	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "childBirthday", ec.unmarshalOString2ᚖstring)
+	args["childBirthday"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "childGender", ec.unmarshalOChidGenderEnum2ᚖmatchmeᚑserverᚋgraphᚋmodelᚐChidGenderEnum)
 	if err != nil {
 		return nil, err
 	}
-	args["childBirthday"] = arg3
-	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "childGender", ec.unmarshalOString2ᚖstring)
+	args["childGender"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "childActivity_level", ec.unmarshalOString2ᚖstring)
 	if err != nil {
 		return nil, err
 	}
-	args["childGender"] = arg4
-	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "childActivity_level", ec.unmarshalOString2ᚖstring)
+	args["childActivity_level"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "limitations", ec.unmarshalOString2ᚕᚖstring)
 	if err != nil {
 		return nil, err
 	}
-	args["childActivity_level"] = arg5
-	arg6, err := graphql.ProcessArgField(ctx, rawArgs, "limitations", ec.unmarshalOString2ᚕᚖstring)
+	args["limitations"] = arg5
+	arg6, err := graphql.ProcessArgField(ctx, rawArgs, "allergies", ec.unmarshalOString2ᚕᚖstring)
 	if err != nil {
 		return nil, err
 	}
-	args["limitations"] = arg6
-	arg7, err := graphql.ProcessArgField(ctx, rawArgs, "allergies", ec.unmarshalOString2ᚕᚖstring)
+	args["allergies"] = arg6
+	arg7, err := graphql.ProcessArgField(ctx, rawArgs, "play_styles", ec.unmarshalOString2ᚕᚖstring)
 	if err != nil {
 		return nil, err
 	}
-	args["allergies"] = arg7
-	arg8, err := graphql.ProcessArgField(ctx, rawArgs, "play_styles", ec.unmarshalOString2ᚕᚖstring)
-	if err != nil {
-		return nil, err
-	}
-	args["play_styles"] = arg8
+	args["play_styles"] = arg7
 	return args, nil
 }
 
 func (ec *executionContext) field_Mutation_updateProfile_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userID", ec.unmarshalOID2ᚖstring)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "name", ec.unmarshalOString2ᚖstring)
 	if err != nil {
 		return nil, err
 	}
-	args["userID"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "name", ec.unmarshalOString2ᚖstring)
+	args["name"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "about", ec.unmarshalOString2ᚖstring)
 	if err != nil {
 		return nil, err
 	}
-	args["name"] = arg1
-	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "about", ec.unmarshalOString2ᚖstring)
+	args["about"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "languages", ec.unmarshalOString2ᚕᚖstring)
 	if err != nil {
 		return nil, err
 	}
-	args["about"] = arg2
-	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "languages", ec.unmarshalOString2ᚕᚖstring)
+	args["languages"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "addressCity", ec.unmarshalOString2ᚖstring)
 	if err != nil {
 		return nil, err
 	}
-	args["languages"] = arg3
-	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "addressCity", ec.unmarshalOString2ᚖstring)
+	args["addressCity"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "lat", ec.unmarshalOFloat2ᚖfloat64)
 	if err != nil {
 		return nil, err
 	}
-	args["addressCity"] = arg4
-	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "lat", ec.unmarshalOFloat2ᚖfloat64)
+	args["lat"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "lon", ec.unmarshalOFloat2ᚖfloat64)
 	if err != nil {
 		return nil, err
 	}
-	args["lat"] = arg5
-	arg6, err := graphql.ProcessArgField(ctx, rawArgs, "lon", ec.unmarshalOFloat2ᚖfloat64)
+	args["lon"] = arg5
+	arg6, err := graphql.ProcessArgField(ctx, rawArgs, "childName", ec.unmarshalOString2ᚖstring)
 	if err != nil {
 		return nil, err
 	}
-	args["lon"] = arg6
-	arg7, err := graphql.ProcessArgField(ctx, rawArgs, "childName", ec.unmarshalOString2ᚖstring)
+	args["childName"] = arg6
+	arg7, err := graphql.ProcessArgField(ctx, rawArgs, "childAbout", ec.unmarshalOString2ᚖstring)
 	if err != nil {
 		return nil, err
 	}
-	args["childName"] = arg7
-	arg8, err := graphql.ProcessArgField(ctx, rawArgs, "childAge", ec.unmarshalOInt2ᚖint32)
+	args["childAbout"] = arg7
+	arg8, err := graphql.ProcessArgField(ctx, rawArgs, "childInterests", ec.unmarshalOString2ᚕᚖstring)
 	if err != nil {
 		return nil, err
 	}
-	args["childAge"] = arg8
-	arg9, err := graphql.ProcessArgField(ctx, rawArgs, "childAbout", ec.unmarshalOString2ᚖstring)
-	if err != nil {
-		return nil, err
-	}
-	args["childAbout"] = arg9
-	arg10, err := graphql.ProcessArgField(ctx, rawArgs, "ChildInterests", ec.unmarshalOString2ᚕᚖstring)
-	if err != nil {
-		return nil, err
-	}
-	args["ChildInterests"] = arg10
+	args["childInterests"] = arg8
 	return args, nil
 }
 
@@ -712,6 +710,22 @@ func (ec *executionContext) field_Query_profile_args(ctx context.Context, rawArg
 		return nil, err
 	}
 	args["userID"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_recommendations_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalOInt2ᚖint32)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "offset", ec.unmarshalOInt2ᚖint32)
+	if err != nil {
+		return nil, err
+	}
+	args["offset"] = arg1
 	return args, nil
 }
 
@@ -875,9 +889,9 @@ func (ec *executionContext) _Bio_childBirthday(ctx context.Context, field graphq
 			return obj.ChildBirthday, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		ec.marshalOString2ᚖstring,
 		true,
-		true,
+		false,
 	)
 }
 
@@ -1264,7 +1278,7 @@ func (ec *executionContext) _Mutation_updateProfile(ctx context.Context, field g
 		ec.fieldContext_Mutation_updateProfile,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateProfile(ctx, fc.Args["userID"].(*string), fc.Args["name"].(*string), fc.Args["about"].(*string), fc.Args["languages"].([]*string), fc.Args["addressCity"].(*string), fc.Args["lat"].(*float64), fc.Args["lon"].(*float64), fc.Args["childName"].(*string), fc.Args["childAge"].(*int32), fc.Args["childAbout"].(*string), fc.Args["ChildInterests"].([]*string))
+			return ec.resolvers.Mutation().UpdateProfile(ctx, fc.Args["name"].(*string), fc.Args["about"].(*string), fc.Args["languages"].([]*string), fc.Args["addressCity"].(*string), fc.Args["lat"].(*float64), fc.Args["lon"].(*float64), fc.Args["childName"].(*string), fc.Args["childAbout"].(*string), fc.Args["childInterests"].([]*string))
 		},
 		nil,
 		ec.marshalOProfile2ᚖmatchmeᚑserverᚋgraphᚋmodelᚐProfile,
@@ -1299,8 +1313,8 @@ func (ec *executionContext) fieldContext_Mutation_updateProfile(ctx context.Cont
 				return ec.fieldContext_Profile_childName(ctx, field)
 			case "childAbout":
 				return ec.fieldContext_Profile_childAbout(ctx, field)
-			case "ChildInterests":
-				return ec.fieldContext_Profile_ChildInterests(ctx, field)
+			case "childInterests":
+				return ec.fieldContext_Profile_childInterests(ctx, field)
 			case "user":
 				return ec.fieldContext_Profile_user(ctx, field)
 			}
@@ -1329,7 +1343,7 @@ func (ec *executionContext) _Mutation_updateBio(ctx context.Context, field graph
 		ec.fieldContext_Mutation_updateBio,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateBio(ctx, fc.Args["userID"].(*string), fc.Args["parentGender"].(*string), fc.Args["preferredDistance"].(*int32), fc.Args["childBirthday"].(*string), fc.Args["childGender"].(*string), fc.Args["childActivity_level"].(*string), fc.Args["limitations"].([]*string), fc.Args["allergies"].([]*string), fc.Args["play_styles"].([]*string))
+			return ec.resolvers.Mutation().UpdateBio(ctx, fc.Args["parentGender"].(*model.GenderEnum), fc.Args["preferredDistance"].(*int32), fc.Args["childBirthday"].(*string), fc.Args["childGender"].(*model.ChidGenderEnum), fc.Args["childActivity_level"].(*string), fc.Args["limitations"].([]*string), fc.Args["allergies"].([]*string), fc.Args["play_styles"].([]*string))
 		},
 		nil,
 		ec.marshalOBio2ᚖmatchmeᚑserverᚋgraphᚋmodelᚐBio,
@@ -1423,9 +1437,9 @@ func (ec *executionContext) _Profile_name(ctx context.Context, field graphql.Col
 			return obj.Name, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		ec.marshalOString2ᚖstring,
 		true,
-		true,
+		false,
 	)
 }
 
@@ -1452,9 +1466,9 @@ func (ec *executionContext) _Profile_about(ctx context.Context, field graphql.Co
 			return obj.About, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		ec.marshalOString2ᚖstring,
 		true,
-		true,
+		false,
 	)
 }
 
@@ -1481,9 +1495,9 @@ func (ec *executionContext) _Profile_languages(ctx context.Context, field graphq
 			return obj.Languages, nil
 		},
 		nil,
-		ec.marshalNString2ᚕstringᚄ,
+		ec.marshalOString2ᚕᚖstring,
 		true,
-		true,
+		false,
 	)
 }
 
@@ -1510,9 +1524,9 @@ func (ec *executionContext) _Profile_addressCity(ctx context.Context, field grap
 			return obj.AddressCity, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		ec.marshalOString2ᚖstring,
 		true,
-		true,
+		false,
 	)
 }
 
@@ -1597,9 +1611,9 @@ func (ec *executionContext) _Profile_childName(ctx context.Context, field graphq
 			return obj.ChildName, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		ec.marshalOString2ᚖstring,
 		true,
-		true,
+		false,
 	)
 }
 
@@ -1626,9 +1640,9 @@ func (ec *executionContext) _Profile_childAbout(ctx context.Context, field graph
 			return obj.ChildAbout, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		ec.marshalOString2ᚖstring,
 		true,
-		true,
+		false,
 	)
 }
 
@@ -1645,23 +1659,23 @@ func (ec *executionContext) fieldContext_Profile_childAbout(_ context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _Profile_ChildInterests(ctx context.Context, field graphql.CollectedField, obj *model.Profile) (ret graphql.Marshaler) {
+func (ec *executionContext) _Profile_childInterests(ctx context.Context, field graphql.CollectedField, obj *model.Profile) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Profile_ChildInterests,
+		ec.fieldContext_Profile_childInterests,
 		func(ctx context.Context) (any, error) {
 			return obj.ChildInterests, nil
 		},
 		nil,
-		ec.marshalNString2ᚕstringᚄ,
+		ec.marshalOString2ᚕᚖstring,
 		true,
-		true,
+		false,
 	)
 }
 
-func (ec *executionContext) fieldContext_Profile_ChildInterests(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Profile_childInterests(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Profile",
 		Field:      field,
@@ -1815,8 +1829,8 @@ func (ec *executionContext) fieldContext_Query_profile(ctx context.Context, fiel
 				return ec.fieldContext_Profile_childName(ctx, field)
 			case "childAbout":
 				return ec.fieldContext_Profile_childAbout(ctx, field)
-			case "ChildInterests":
-				return ec.fieldContext_Profile_ChildInterests(ctx, field)
+			case "childInterests":
+				return ec.fieldContext_Profile_childInterests(ctx, field)
 			case "user":
 				return ec.fieldContext_Profile_user(ctx, field)
 			}
@@ -2036,13 +2050,68 @@ func (ec *executionContext) fieldContext_Query_myProfile(_ context.Context, fiel
 				return ec.fieldContext_Profile_childName(ctx, field)
 			case "childAbout":
 				return ec.fieldContext_Profile_childAbout(ctx, field)
-			case "ChildInterests":
-				return ec.fieldContext_Profile_ChildInterests(ctx, field)
+			case "childInterests":
+				return ec.fieldContext_Profile_childInterests(ctx, field)
 			case "user":
 				return ec.fieldContext_Profile_user(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Profile", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_recommendations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_recommendations,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().Recommendations(ctx, fc.Args["limit"].(*int32), fc.Args["offset"].(*int32))
+		},
+		nil,
+		ec.marshalNUser2ᚕᚖmatchmeᚑserverᚋgraphᚋmodelᚐUserᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_recommendations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "userID":
+				return ec.fieldContext_User_userID(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "created_at":
+				return ec.fieldContext_User_created_at(ctx, field)
+			case "profilePicture":
+				return ec.fieldContext_User_profilePicture(ctx, field)
+			case "profile":
+				return ec.fieldContext_User_profile(ctx, field)
+			case "bio":
+				return ec.fieldContext_User_bio(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_recommendations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -2313,8 +2382,8 @@ func (ec *executionContext) fieldContext_User_profile(_ context.Context, field g
 				return ec.fieldContext_Profile_childName(ctx, field)
 			case "childAbout":
 				return ec.fieldContext_Profile_childAbout(ctx, field)
-			case "ChildInterests":
-				return ec.fieldContext_Profile_ChildInterests(ctx, field)
+			case "childInterests":
+				return ec.fieldContext_Profile_childInterests(ctx, field)
 			case "user":
 				return ec.fieldContext_Profile_user(ctx, field)
 			}
@@ -3854,9 +3923,6 @@ func (ec *executionContext) _Bio(ctx context.Context, sel ast.SelectionSet, obj 
 			out.Values[i] = ec._Bio_preferredDistance(ctx, field, obj)
 		case "childBirthday":
 			out.Values[i] = ec._Bio_childBirthday(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "childGender":
 			out.Values[i] = ec._Bio_childGender(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -4027,43 +4093,22 @@ func (ec *executionContext) _Profile(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "name":
 			out.Values[i] = ec._Profile_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "about":
 			out.Values[i] = ec._Profile_about(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "languages":
 			out.Values[i] = ec._Profile_languages(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "addressCity":
 			out.Values[i] = ec._Profile_addressCity(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "lat":
 			out.Values[i] = ec._Profile_lat(ctx, field, obj)
 		case "lon":
 			out.Values[i] = ec._Profile_lon(ctx, field, obj)
 		case "childName":
 			out.Values[i] = ec._Profile_childName(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "childAbout":
 			out.Values[i] = ec._Profile_childAbout(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "ChildInterests":
-			out.Values[i] = ec._Profile_ChildInterests(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
+		case "childInterests":
+			out.Values[i] = ec._Profile_childInterests(ctx, field, obj)
 		case "user":
 			out.Values[i] = ec._Profile_user(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -4216,6 +4261,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_myProfile(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "recommendations":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_recommendations(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 
@@ -4754,36 +4821,6 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
-	var vSlice []any
-	vSlice = graphql.CoerceList(v)
-	var err error
-	res := make([]string, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
-	}
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
 func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v any) (time.Time, error) {
 	res, err := graphql.UnmarshalTime(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -4802,6 +4839,50 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 
 func (ec *executionContext) marshalNUser2matchmeᚑserverᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v model.User) graphql.Marshaler {
 	return ec._User(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUser2ᚕᚖmatchmeᚑserverᚋgraphᚋmodelᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.User) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUser2ᚖmatchmeᚑserverᚋgraphᚋmodelᚐUser(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNUser2ᚖmatchmeᚑserverᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
@@ -5114,6 +5195,22 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
+func (ec *executionContext) unmarshalOChidGenderEnum2ᚖmatchmeᚑserverᚋgraphᚋmodelᚐChidGenderEnum(ctx context.Context, v any) (*model.ChidGenderEnum, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.ChidGenderEnum)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOChidGenderEnum2ᚖmatchmeᚑserverᚋgraphᚋmodelᚐChidGenderEnum(ctx context.Context, sel ast.SelectionSet, v *model.ChidGenderEnum) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
 func (ec *executionContext) unmarshalOFloat2ᚖfloat64(ctx context.Context, v any) (*float64, error) {
 	if v == nil {
 		return nil, nil
@@ -5131,22 +5228,20 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 	return graphql.WrapContextMarshaler(ctx, res)
 }
 
-func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v any) (*string, error) {
+func (ec *executionContext) unmarshalOGenderEnum2ᚖmatchmeᚑserverᚋgraphᚋmodelᚐGenderEnum(ctx context.Context, v any) (*model.GenderEnum, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := graphql.UnmarshalID(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
+	var res = new(model.GenderEnum)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+func (ec *executionContext) marshalOGenderEnum2ᚖmatchmeᚑserverᚋgraphᚋmodelᚐGenderEnum(ctx context.Context, sel ast.SelectionSet, v *model.GenderEnum) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	_ = sel
-	_ = ctx
-	res := graphql.MarshalID(*v)
-	return res
+	return v
 }
 
 func (ec *executionContext) unmarshalOInt2ᚖint32(ctx context.Context, v any) (*int32, error) {

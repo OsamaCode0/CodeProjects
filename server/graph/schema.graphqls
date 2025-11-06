@@ -38,15 +38,15 @@ type User {
  
 type Profile {
   userID: ID!
-  name: String!
-  about: String!
-  languages: [String!]!
-	addressCity: String!
+  name: String
+  about: String
+  languages: [String]
+	addressCity: String
   lat: Float
   lon: Float
-	childName: String!
-	childAbout:  String!
-	ChildInterests: [String!]!
+	childName: String
+	childAbout:  String
+	childInterests: [String]
   
   user: User!
 }
@@ -55,7 +55,7 @@ type Bio {
   userID: ID!
 	parentGender: GenderEnum!
 	preferredDistance: Int
-	childBirthday: String!
+	childBirthday: String
 	childGender: ChidGenderEnum!
 	childActivity_level: childActivity_levelEnum!
 	limitations: [String]
@@ -86,7 +86,6 @@ type Mutation {
   loginUser(email: String!, password: String!): LoginResponse!
 
   updateProfile (
-  userID: ID
   name: String
   about: String
   languages: [String]
@@ -94,17 +93,15 @@ type Mutation {
   lat: Float
   lon: Float
 	childName: String
-	childAge:   Int
 	childAbout:  String
-	ChildInterests: [String]
+	childInterests: [String]
   ):Profile
 
   updateBio (
-  userID: ID
-	parentGender: String
+	parentGender: GenderEnum
 	preferredDistance: Int
 	childBirthday: String
-	childGender: String
+	childGender: ChidGenderEnum
 	childActivity_level: String
 	limitations: [String]
 	allergies: [String]

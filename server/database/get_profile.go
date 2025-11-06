@@ -54,7 +54,7 @@ func GetChildProfile(ctx context.Context, pool *pgxpool.Pool, id string) (*struc
         SELECT 
             user_id::text,
             COALESCE(name, '') AS name,
-            COALESCE(birthday, now()::date) AS birthday,
+            COALESCE(birthday, '0001-01-01'::date) AS birthday,
             COALESCE(gender, '') AS gender,
             COALESCE(about_short, '') AS about_short,
             COALESCE(interests, '{}'::text[]) AS interests,

@@ -14,7 +14,7 @@ type Bio struct {
 	UserID             string                 `json:"userID"`
 	ParentGender       GenderEnum             `json:"parentGender"`
 	PreferredDistance  *int32                 `json:"preferredDistance,omitempty"`
-	ChildBirthday      string                 `json:"childBirthday"`
+	ChildBirthday      *string                `json:"childBirthday,omitempty"`
 	ChildGender        ChidGenderEnum         `json:"childGender"`
 	ChildActivityLevel ChildActivityLevelEnum `json:"childActivity_level"`
 	Limitations        []*string              `json:"limitations,omitempty"`
@@ -32,17 +32,17 @@ type Mutation struct {
 }
 
 type Profile struct {
-	UserID         string   `json:"userID"`
-	Name           string   `json:"name"`
-	About          string   `json:"about"`
-	Languages      []string `json:"languages"`
-	AddressCity    string   `json:"addressCity"`
-	Lat            *float64 `json:"lat,omitempty"`
-	Lon            *float64 `json:"lon,omitempty"`
-	ChildName      string   `json:"childName"`
-	ChildAbout     string   `json:"childAbout"`
-	ChildInterests []string `json:"ChildInterests"`
-	User           *User    `json:"user"`
+	UserID         string    `json:"userID"`
+	Name           *string   `json:"name,omitempty"`
+	About          *string   `json:"about,omitempty"`
+	Languages      []*string `json:"languages,omitempty"`
+	AddressCity    *string   `json:"addressCity,omitempty"`
+	Lat            *float64  `json:"lat,omitempty"`
+	Lon            *float64  `json:"lon,omitempty"`
+	ChildName      *string   `json:"childName,omitempty"`
+	ChildAbout     *string   `json:"childAbout,omitempty"`
+	ChildInterests []*string `json:"childInterests,omitempty"`
+	User           *User     `json:"user"`
 }
 
 type Query struct {

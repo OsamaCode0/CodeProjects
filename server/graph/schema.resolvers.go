@@ -13,6 +13,7 @@ import (
 	"matchme-server/graph/model"
 	"matchme-server/helpers"
 	"matchme-server/middleware"
+	"matchme-server/services"
 
 	pgx "github.com/jackc/pgx/v5"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -86,13 +87,150 @@ func (r *mutationResolver) LoginUser(ctx context.Context, email string, password
 }
 
 // UpdateProfile is the resolver for the updateProfile field.
-func (r *mutationResolver) UpdateProfile(ctx context.Context, userID *string, name *string, about *string, languages []*string, addressCity *string, lat *float64, lon *float64, childName *string, childAge *int32, childAbout *string, childInterests []*string) (*model.Profile, error) {
-	panic(fmt.Errorf("not implemented: UpdateProfile - updateProfile"))
+func (r *mutationResolver) UpdateProfile(ctx context.Context, name *string, about *string, languages []*string, addressCity *string, lat *float64, lon *float64, childName *string, childAbout *string, childInterests []*string) (*model.Profile, error) {
+	userID, ok := middleware.GetUserIDFromContext(ctx)
+	if !ok {
+		return nil, gqlerror.Errorf("not authenticated")
+	}
+
+	// Convert []*string to []string for DB
+	var langs []string
+	for _, l := range languages {
+		if l != nil {
+			langs = append(langs, *l)
+		}
+	}
+
+	var interests []string
+	for _, i := range childInterests {
+		if i != nil {
+			interests = append(interests, *i)
+		}
+	}
+
+	input := database.UpdateProfileInput{
+		Name:           name,
+		About:          about,
+		AddressCity:    addressCity,
+		Lat:            lat,
+		Lon:            lon,
+		ChildName:      childName,
+		ChildAbout:     childAbout,
+		Languages:      &langs,
+		ChildInterests: &interests,
+	}
+
+	if err := database.UpdateProfile(ctx, r.DB, userID, input); err != nil {
+		return nil, gqlerror.Errorf("failed to update profile: %v", err)
+	}
+
+	// Fetch the updated profile to return it
+	dbProfile, err := database.GetUserProfile(ctx, r.DB, userID)
+	if err != nil {
+		return nil, gqlerror.Errorf("failed to load updated profile: %v", err)
+	}
+
+	dbProfileCh, err := database.GetChildProfile(ctx, r.DB, userID)
+	if err != nil {
+		return nil, gqlerror.Errorf("failed to load updated profile: %v", err)
+	}
+
+	// Convert DB struct to GraphQL model
+	return &model.Profile{
+		UserID:         dbProfile.UserID,
+		Name:           &dbProfile.Name,
+		About:          &dbProfile.About,
+		Languages:      stringSliceToPtrSlice(dbProfile.Languages),
+		AddressCity:    &dbProfile.AddressCity,
+		Lat:            &dbProfile.Lat,
+		Lon:            &dbProfile.Lon,
+		ChildName:      &dbProfileCh.Name,
+		ChildAbout:     &dbProfileCh.About_short,
+		ChildInterests: stringSliceToPtrSlice(dbProfileCh.Interests),
+	}, nil
 }
 
 // UpdateBio is the resolver for the updateBio field.
-func (r *mutationResolver) UpdateBio(ctx context.Context, userID *string, parentGender *string, preferredDistance *int32, childBirthday *string, childGender *string, childActivityLevel *string, limitations []*string, allergies []*string, playStyles []*string) (*model.Bio, error) {
-	panic(fmt.Errorf("not implemented: UpdateBio - updateBio"))
+func (r *mutationResolver) UpdateBio(ctx context.Context, parentGender *model.GenderEnum, preferredDistance *int32, childBirthday *string, childGender *model.ChidGenderEnum, childActivityLevel *string, limitations []*string, allergies []*string, playStyles []*string) (*model.Bio, error) {
+	userID, ok := middleware.GetUserIDFromContext(ctx)
+	if !ok {
+		return nil, gqlerror.Errorf("not authenticated")
+	}
+
+	// Convert []*string to []string for DB
+	var limit []string
+	for _, l := range limitations {
+		if l != nil {
+			limit = append(limit, *l)
+		}
+	}
+
+	var allerg []string
+	for _, i := range allergies {
+		if i != nil {
+			allerg = append(allerg, *i)
+		}
+	}
+
+	var playst []string
+	for _, i := range playStyles {
+		if i != nil {
+			playst = append(playst, *i)
+		}
+	}
+
+	input := database.UpdateBioInput{
+		ParentGender:       parentGender,
+		PreferredDistance:  preferredDistance,
+		ChildBirthday:      childBirthday,
+		ChildGender:        childGender,
+		ChildActivityLevel: childActivityLevel,
+		Limitations:        &limit,
+		Allergies:          &allerg,
+		PlayStyles:         &playst,
+	}
+
+	if err := database.UpdateBio(ctx, r.DB, userID, input); err != nil {
+		return nil, gqlerror.Errorf("failed to update profile: %v", err)
+	}
+
+	// Fetch the updated profile to return it
+	dbProfile, err := database.GetUserProfile(ctx, r.DB, userID)
+	if err != nil {
+		return nil, gqlerror.Errorf("failed to load updated profile: %v", err)
+	}
+
+	dbProfileCh, err := database.GetChildProfile(ctx, r.DB, userID)
+	if err != nil {
+		return nil, gqlerror.Errorf("failed to load updated profile: %v", err)
+	}
+
+	// Convert DB struct to GraphQL model
+
+	var birthdayStrPtr *string
+
+	if !dbProfileCh.Birthday.IsZero() {
+		tempStr := dbProfileCh.Birthday.Format("2006-01-02")
+		birthdayStrPtr = &tempStr
+	}
+
+	var preferredDistPtr *int32
+	if dbProfile.PreferredDistance != 0 {
+		temp := int32(dbProfile.PreferredDistance) // 1. Convert int to int32
+		preferredDistPtr = &temp                   // 2. Get a pointer to the int32
+	}
+
+	return &model.Bio{
+		UserID:             dbProfile.UserID,
+		ParentGender:       model.GenderEnum(dbProfile.Gender),
+		PreferredDistance:  preferredDistPtr,
+		ChildBirthday:      birthdayStrPtr,
+		ChildGender:        model.ChidGenderEnum(dbProfileCh.Gender),
+		ChildActivityLevel: model.ChildActivityLevelEnum(dbProfileCh.Activity_level),
+		Limitations:        stringSliceToPtrSlice(dbProfileCh.Limitations),
+		Allergies:          stringSliceToPtrSlice(dbProfileCh.Allergies),
+		PlayStyles:         stringSliceToPtrSlice(dbProfileCh.Play_styles),
+	}, nil
 }
 
 // User is the resolver for the user field.
@@ -170,7 +308,7 @@ func (r *queryResolver) Bio(ctx context.Context, userID string) (*model.Bio, err
 
 // Me is the resolver for the me field.
 func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
-	userID, ok := middleware.GetUserIDFromContext(ctx) 
+	userID, ok := middleware.GetUserIDFromContext(ctx)
 	if !ok {
 		return nil, gqlerror.Errorf("Not authenticated")
 	}
@@ -239,6 +377,82 @@ func (r *queryResolver) MyProfile(ctx context.Context) (*model.Profile, error) {
 	profile.User = user
 
 	return profile, nil
+}
+
+// Recommendations is the resolver for the recommendations field.
+func (r *queryResolver) Recommendations(ctx context.Context, limit *int32, offset *int32) ([]*model.User, error) {
+	userID, ok := middleware.GetUserIDFromContext(ctx)
+	if !ok {
+		return nil, gqlerror.Errorf("unauthorized")
+	}
+
+	// 3. Profile Completion Check (Same as before)
+	percent, err := database.GetProfileCompletionPercent(ctx, r.DB, userID)
+	if err != nil {
+		log.Println(err)
+		return nil, gqlerror.Errorf("db error")
+	}
+
+	if percent < 100 {
+		return nil, gqlerror.Errorf("Profile filled only %.1f%% — please complete your profile before viewing recommendations.", percent)
+	}
+
+	currentProfile, err := database.GetMatchingProfile(ctx, r.DB, userID)
+	if err != nil || currentProfile == nil {
+		log.Println(err)
+		return nil, gqlerror.Errorf("db error")
+
+	}
+
+	currentPrefs, err := database.GetUserMatchingPreferences(ctx, r.DB, userID)
+	if err != nil {
+		log.Println(err)
+		return nil, gqlerror.Errorf("db error")
+
+	}
+
+	candidates, err := database.GetPotentialMatches(ctx, r.DB, userID)
+	if err != nil {
+		log.Println(err)
+		return nil, gqlerror.Errorf("db error")
+
+	}
+	matches := services.CalculateMatchingScores(currentProfile, currentPrefs, candidates, ctx)
+
+	if len(matches) > 10 {
+		matches = matches[:*limit]
+	}
+
+	var recommendations []string
+
+	for _, match := range matches {
+		recommendations = append(recommendations, string(match.UserID))
+	}
+
+	var users []*model.User
+
+	for _, recommendedUserId := range recommendations {
+		user, err := r.GetUser(ctx, recommendedUserId)
+		if err != nil {
+			return nil, err
+		}
+
+		profile, err := r.GetProfile(ctx, userID)
+		if err != nil {
+			return nil, err
+		}
+
+		bio, err := r.GetBio(ctx, userID)
+		if err != nil {
+			return nil, err
+		}
+
+		user.Profile = profile
+		user.Bio = bio
+		users = append(users, user)
+	}
+
+	return users, nil
 }
 
 // Mutation returns MutationResolver implementation.

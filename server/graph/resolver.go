@@ -72,15 +72,15 @@ func (r *Resolver) GetProfile(ctx context.Context, userID string) (*model.Profil
 	// Create the final response object
 	profile := &model.Profile{
 		UserID:         p.UserID,
-		Name:           p.Name,
-		About:          p.About,
-		Languages:      p.Languages,
-		AddressCity:    p.AddressCity,
+		Name:           &p.Name,
+		About:          &p.About,
+		Languages:      stringSliceToPtrSlice(p.Languages),
+		AddressCity:    &p.AddressCity,
 		Lat:            latPtr,
 		Lon:            lonPtr,
-		ChildName:      ch.Name,
-		ChildAbout:     ch.About_short,
-		ChildInterests: ch.Interests,
+		ChildName:      &ch.Name,
+		ChildAbout:     &ch.About_short,
+		ChildInterests: stringSliceToPtrSlice(ch.Interests),
 	}
 
 	return profile, nil
@@ -98,18 +98,25 @@ func (r *Resolver) GetBio(ctx context.Context, userID string) (*model.Bio, error
 		preferredDistPtr = &temp           // 2. Get a pointer to the int32
 	}
 
+	var birthdayStrPtr *string
+
+	if !ch.Birthday.IsZero() {
+		tempStr := ch.Birthday.Format("2006-01-02")
+		birthdayStrPtr = &tempStr
+	}
+
 	bio := &model.Bio{
 		UserID:             p.UserID,
 		ParentGender:       model.GenderEnum(p.Gender),
 		PreferredDistance:  preferredDistPtr,
-		ChildBirthday:      ch.Birthday.String(),
+		ChildBirthday:      birthdayStrPtr,
 		ChildGender:        model.ChidGenderEnum(ch.Gender),
 		ChildActivityLevel: model.ChildActivityLevelEnum(ch.Activity_level),
 		Limitations:        stringSliceToPtrSlice(ch.Limitations),
 		Allergies:          stringSliceToPtrSlice(ch.Allergies),
 		PlayStyles:         stringSliceToPtrSlice(ch.Play_styles),
 	}
-	
+
 	return bio, nil
 }
 
@@ -139,4 +146,3 @@ func (r *Resolver) LoadProfiles(ctx context.Context, userID string) (*structs.Pa
 	// Success: return the two models
 	return p, ch, nil
 }
-

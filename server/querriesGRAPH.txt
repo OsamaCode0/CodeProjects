@@ -20,7 +20,7 @@ mutation{
   loginUser(email:"graph1@gmail.com", password:"12345a"){
     token
     user{
-      id
+      userID
     }
   }
 }
@@ -67,5 +67,27 @@ query GetMeProfile {
   childName,
   ChildInterests,
     lat
+  }
+}
+
+
+mutation UpdateBio {
+  updateBio(
+    parentGender: "FEMALE"
+    preferredDistance: 15
+    childBirthday: "2020-09-17"
+    childActivity_level: "HIGH"
+    limitations: ["None"]
+    allergies: ["Peanuts"]
+    play_styles: ["Outdoor", "Creative"]
+  ) {
+    parentGender
+    preferredDistance
+    childBirthday
+    childGender
+    childActivity_level
+    limitations
+    allergies
+    play_styles
   }
 }
