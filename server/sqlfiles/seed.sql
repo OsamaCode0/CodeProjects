@@ -16,7 +16,7 @@ new_users AS (
   SELECT
     'user_' || to_char(seq_n, 'FM000000') || '@example.com' AS email,
     -- Using a placeholder hash. In production, this would be a real bcrypt hash.
-    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92s.ag/iHjO8fL.vWe/co' AS password_hash
+    '$2a$10$3b3LkuIcx1m4q1E5mMYIfu5pAMis0H.1PSOfF55nnSJ9OZ80ZEFKS' AS password_hash
   FROM seq
   RETURNING id, email
 ),

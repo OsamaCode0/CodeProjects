@@ -15,7 +15,7 @@ type UpdateProfileInput struct {
 	// parent_profiles
 	Name        *string
 	About       *string
-	Languages   *[]string
+	Languages   []string
 	AddressCity *string
 	Lat         *float64
 	Lon         *float64
@@ -23,7 +23,7 @@ type UpdateProfileInput struct {
 	// children
 	ChildName      *string
 	ChildAbout     *string // maps to children.about_short
-	ChildInterests *[]string
+	ChildInterests []string
 }
 
 type UpdateBioInput struct {
@@ -35,9 +35,9 @@ type UpdateBioInput struct {
 	ChildBirthday      *string // expected format: "YYYY-MM-DD"
 	ChildGender        *model.ChidGenderEnum 
 	ChildActivityLevel *string
-	Limitations        *[]string
-	Allergies          *[]string
-	PlayStyles         *[]string
+	Limitations        []string
+	Allergies          []string
+	PlayStyles         []string
 }
 
 
@@ -71,7 +71,7 @@ func UpdateProfile(ctx context.Context, db *pgxpool.Pool, userID string, in Upda
 		p.add("about = $"+strconv.Itoa(len(p.args)+1), *in.About)
 	}
 	if in.Languages != nil {
-		p.add("languages = $"+strconv.Itoa(len(p.args)+1), *in.Languages)
+		p.add("languages = $"+strconv.Itoa(len(p.args)+1), in.Languages)
 	}
 	if in.AddressCity != nil {
 		p.add("address_city = $"+strconv.Itoa(len(p.args)+1), *in.AddressCity)
@@ -106,7 +106,7 @@ func UpdateProfile(ctx context.Context, db *pgxpool.Pool, userID string, in Upda
 		c.add("about_short = $"+strconv.Itoa(len(c.args)+1), *in.ChildAbout)
 	}
 	if in.ChildInterests != nil {
-		c.add("interests = $"+strconv.Itoa(len(c.args)+1), *in.ChildInterests)
+		c.add("interests = $"+strconv.Itoa(len(c.args)+1), in.ChildInterests)
 	}
 
 	if !c.empty() {
@@ -171,13 +171,13 @@ func UpdateBio(ctx context.Context, db *pgxpool.Pool, userID string, in UpdateBi
 		c.add("activity_level = $"+strconv.Itoa(len(c.args)+1), *in.ChildActivityLevel)
 	}
 	if in.Limitations != nil {
-		c.add("limitations = $"+strconv.Itoa(len(c.args)+1), *in.Limitations)
+		c.add("limitations = $"+strconv.Itoa(len(c.args)+1), in.Limitations)
 	}
 	if in.Allergies != nil {
-		c.add("allergies = $"+strconv.Itoa(len(c.args)+1), *in.Allergies)
+		c.add("allergies = $"+strconv.Itoa(len(c.args)+1), in.Allergies)
 	}
 	if in.PlayStyles != nil {
-		c.add("play_styles = $"+strconv.Itoa(len(c.args)+1), *in.PlayStyles)
+		c.add("play_styles = $"+strconv.Itoa(len(c.args)+1), in.PlayStyles)
 	}
 
 	if !c.empty() {

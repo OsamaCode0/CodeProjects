@@ -23,6 +23,11 @@ type Bio struct {
 	User               *User                  `json:"user"`
 }
 
+type Connection struct {
+	ConnectionID string             `json:"connectionID"`
+	ConType      ConnectionTypeEnum `json:"conType"`
+}
+
 type LoginResponse struct {
 	Token string `json:"token"`
 	User  *User  `json:"user"`
@@ -227,6 +232,116 @@ func (e *ChildActivityLevelEnum) UnmarshalJSON(b []byte) error {
 }
 
 func (e ChildActivityLevelEnum) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type ConnectionTypeEnum string
+
+const (
+	ConnectionTypeEnumAccept ConnectionTypeEnum = "accept"
+	ConnectionTypeEnumReject ConnectionTypeEnum = "reject"
+)
+
+var AllConnectionTypeEnum = []ConnectionTypeEnum{
+	ConnectionTypeEnumAccept,
+	ConnectionTypeEnumReject,
+}
+
+func (e ConnectionTypeEnum) IsValid() bool {
+	switch e {
+	case ConnectionTypeEnumAccept, ConnectionTypeEnumReject:
+		return true
+	}
+	return false
+}
+
+func (e ConnectionTypeEnum) String() string {
+	return string(e)
+}
+
+func (e *ConnectionTypeEnum) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ConnectionTypeEnum(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid connectionTypeEnum", str)
+	}
+	return nil
+}
+
+func (e ConnectionTypeEnum) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *ConnectionTypeEnum) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e ConnectionTypeEnum) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type ReactionTypeEnum string
+
+const (
+	ReactionTypeEnumLike    ReactionTypeEnum = "like"
+	ReactionTypeEnumDislike ReactionTypeEnum = "dislike"
+)
+
+var AllReactionTypeEnum = []ReactionTypeEnum{
+	ReactionTypeEnumLike,
+	ReactionTypeEnumDislike,
+}
+
+func (e ReactionTypeEnum) IsValid() bool {
+	switch e {
+	case ReactionTypeEnumLike, ReactionTypeEnumDislike:
+		return true
+	}
+	return false
+}
+
+func (e ReactionTypeEnum) String() string {
+	return string(e)
+}
+
+func (e *ReactionTypeEnum) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ReactionTypeEnum(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid reactionTypeEnum", str)
+	}
+	return nil
+}
+
+func (e ReactionTypeEnum) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *ReactionTypeEnum) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e ReactionTypeEnum) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

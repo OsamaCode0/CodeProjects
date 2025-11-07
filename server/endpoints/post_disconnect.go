@@ -47,27 +47,14 @@ func PostDisconnect(c *gin.Context) {
 		return
 	}
 
-	// 2. Delete the connection
-	_, err = internal.DB.Exec(ctx, `
-		DELETE FROM connections 
-		WHERE (requester_user_id = $1 AND target_user_id = $2)
-		   OR (requester_user_id = $2 AND target_user_id = $1)
-	`, userID, req.TargetUserID)
-	
+	err = database.DeleteConnectionAndChat(ctx, internal.DB, userID, req.TargetUserID)
 	if err != nil {
-		log.Printf("ERROR deleting connection: %v", err)
-	} 
-
-	// 3. Delete the chat
-	_, err = internal.DB.Exec(ctx, `
-		DELETE FROM chats 
-		WHERE (user1_id = $1 AND user2_id = $2)
-		   OR (user1_id = $2 AND user2_id = $1)
-	`, userID, req.TargetUserID)
-	
-	if err != nil {
-		log.Printf("ERROR deleting chat: %v", err)
-	} 
+		log.Println(err)
+		c.JSON(500, structs.ErrorResponse{
+			Message: "db error",
+		})
+		return 
+	}
 
 	c.JSON(200, gin.H{
 		"status":         "ok",
@@ -77,3 +64,5 @@ func PostDisconnect(c *gin.Context) {
 	})
 
 }
+
+

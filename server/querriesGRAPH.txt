@@ -1,4 +1,3 @@
---get profile
 query GetProfile($userID: ID!) {
   profile(userID: $userID) {
   userID,
@@ -65,7 +64,7 @@ query GetMeProfile {
   name,
   about,
   childName,
-  ChildInterests,
+  childInterests,
     lat
   }
 }
@@ -89,5 +88,63 @@ mutation UpdateBio {
     limitations
     allergies
     play_styles
+  }
+}
+
+
+mutation UpdateProfile {
+  updateProfile(
+    name: "Irina"
+    childInterests: ["reading", "writing"]
+  ) {
+    userID
+    name
+    about
+    languages
+    addressCity
+    lat
+    lon
+    childName
+    childAbout
+    childInterests
+  }
+}
+
+
+query GetRec{
+  recommendations {
+    userID
+    bio{
+      limitations
+      childGender
+    }
+    profile{
+      name
+      childAbout
+    }
+  }
+}
+
+mutation DeletePhoto{
+  deletePhoto
+}
+
+mutation UpsertReaction{
+  upsertReaction(targetedUserID: "9b6a2aa5-5ea8-4ada-a850-37e849ce498c", reaction: like)
+}
+
+query GetCon{
+  connections {
+    userID
+    bio{
+      preferredDistance
+      childBirthday
+      childGender
+    }
+    profile{
+      name
+      childAbout
+      childInterests
+    }
   }
 }

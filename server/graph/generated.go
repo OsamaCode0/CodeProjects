@@ -61,16 +61,25 @@ type ComplexityRoot struct {
 		UserID             func(childComplexity int) int
 	}
 
+	Connection struct {
+		ConType      func(childComplexity int) int
+		ConnectionID func(childComplexity int) int
+	}
+
 	LoginResponse struct {
 		Token func(childComplexity int) int
 		User  func(childComplexity int) int
 	}
 
 	Mutation struct {
-		LoginUser     func(childComplexity int, email string, password string) int
-		RegisterUser  func(childComplexity int, email string, password string) int
-		UpdateBio     func(childComplexity int, parentGender *model.GenderEnum, preferredDistance *int32, childBirthday *string, childGender *model.ChidGenderEnum, childActivityLevel *string, limitations []*string, allergies []*string, playStyles []*string) int
-		UpdateProfile func(childComplexity int, name *string, about *string, languages []*string, addressCity *string, lat *float64, lon *float64, childName *string, childAbout *string, childInterests []*string) int
+		DeletePhoto      func(childComplexity int) int
+		DisconnectUsers  func(childComplexity int, targetedUserID string) int
+		LoginUser        func(childComplexity int, email string, password string) int
+		RegisterUser     func(childComplexity int, email string, password string) int
+		UpdateBio        func(childComplexity int, parentGender *model.GenderEnum, preferredDistance *int32, childBirthday *string, childGender *model.ChidGenderEnum, childActivityLevel *string, limitations []*string, allergies []*string, playStyles []*string) int
+		UpdateProfile    func(childComplexity int, name *string, about *string, languages []*string, addressCity *string, lat *float64, lon *float64, childName *string, childAbout *string, childInterests []*string) int
+		UpsertConnection func(childComplexity int, connectionID string, conType model.ConnectionTypeEnum) int
+		UpsertReaction   func(childComplexity int, targetedUserID string, reaction model.ReactionTypeEnum) int
 	}
 
 	Profile struct {
@@ -89,6 +98,8 @@ type ComplexityRoot struct {
 
 	Query struct {
 		Bio             func(childComplexity int, userID string) int
+		ConnectReguests func(childComplexity int, limit *int32, offset *int32) int
+		Connections     func(childComplexity int, limit *int32, offset *int32) int
 		Me              func(childComplexity int) int
 		MyBio           func(childComplexity int) int
 		MyProfile       func(childComplexity int) int
@@ -110,6 +121,10 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	RegisterUser(ctx context.Context, email string, password string) (*model.User, error)
 	LoginUser(ctx context.Context, email string, password string) (*model.LoginResponse, error)
+	DeletePhoto(ctx context.Context) (bool, error)
+	UpsertReaction(ctx context.Context, targetedUserID string, reaction model.ReactionTypeEnum) (bool, error)
+	UpsertConnection(ctx context.Context, connectionID string, conType model.ConnectionTypeEnum) (bool, error)
+	DisconnectUsers(ctx context.Context, targetedUserID string) (bool, error)
 	UpdateProfile(ctx context.Context, name *string, about *string, languages []*string, addressCity *string, lat *float64, lon *float64, childName *string, childAbout *string, childInterests []*string) (*model.Profile, error)
 	UpdateBio(ctx context.Context, parentGender *model.GenderEnum, preferredDistance *int32, childBirthday *string, childGender *model.ChidGenderEnum, childActivityLevel *string, limitations []*string, allergies []*string, playStyles []*string) (*model.Bio, error)
 }
@@ -121,6 +136,8 @@ type QueryResolver interface {
 	MyBio(ctx context.Context) (*model.Bio, error)
 	MyProfile(ctx context.Context) (*model.Profile, error)
 	Recommendations(ctx context.Context, limit *int32, offset *int32) ([]*model.User, error)
+	ConnectReguests(ctx context.Context, limit *int32, offset *int32) ([]*model.User, error)
+	Connections(ctx context.Context, limit *int32, offset *int32) ([]*model.User, error)
 }
 
 type executableSchema struct {
@@ -203,6 +220,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Bio.UserID(childComplexity), true
 
+	case "Connection.conType":
+		if e.complexity.Connection.ConType == nil {
+			break
+		}
+
+		return e.complexity.Connection.ConType(childComplexity), true
+	case "Connection.connectionID":
+		if e.complexity.Connection.ConnectionID == nil {
+			break
+		}
+
+		return e.complexity.Connection.ConnectionID(childComplexity), true
+
 	case "LoginResponse.token":
 		if e.complexity.LoginResponse.Token == nil {
 			break
@@ -216,6 +246,23 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.LoginResponse.User(childComplexity), true
 
+	case "Mutation.deletePhoto":
+		if e.complexity.Mutation.DeletePhoto == nil {
+			break
+		}
+
+		return e.complexity.Mutation.DeletePhoto(childComplexity), true
+	case "Mutation.disconnectUsers":
+		if e.complexity.Mutation.DisconnectUsers == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_disconnectUsers_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DisconnectUsers(childComplexity, args["targetedUserID"].(string)), true
 	case "Mutation.loginUser":
 		if e.complexity.Mutation.LoginUser == nil {
 			break
@@ -260,6 +307,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.UpdateProfile(childComplexity, args["name"].(*string), args["about"].(*string), args["languages"].([]*string), args["addressCity"].(*string), args["lat"].(*float64), args["lon"].(*float64), args["childName"].(*string), args["childAbout"].(*string), args["childInterests"].([]*string)), true
+	case "Mutation.upsertConnection":
+		if e.complexity.Mutation.UpsertConnection == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_upsertConnection_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpsertConnection(childComplexity, args["connectionID"].(string), args["conType"].(model.ConnectionTypeEnum)), true
+	case "Mutation.upsertReaction":
+		if e.complexity.Mutation.UpsertReaction == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_upsertReaction_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpsertReaction(childComplexity, args["targetedUserID"].(string), args["reaction"].(model.ReactionTypeEnum)), true
 
 	case "Profile.about":
 		if e.complexity.Profile.About == nil {
@@ -339,6 +408,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.Bio(childComplexity, args["userID"].(string)), true
+	case "Query.connectReguests":
+		if e.complexity.Query.ConnectReguests == nil {
+			break
+		}
+
+		args, err := ec.field_Query_connectReguests_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ConnectReguests(childComplexity, args["limit"].(*int32), args["offset"].(*int32)), true
+	case "Query.connections":
+		if e.complexity.Query.Connections == nil {
+			break
+		}
+
+		args, err := ec.field_Query_connections_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Connections(childComplexity, args["limit"].(*int32), args["offset"].(*int32)), true
 	case "Query.me":
 		if e.complexity.Query.Me == nil {
 			break
@@ -551,6 +642,17 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
+func (ec *executionContext) field_Mutation_disconnectUsers_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "targetedUserID", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["targetedUserID"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_loginUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -680,6 +782,38 @@ func (ec *executionContext) field_Mutation_updateProfile_args(ctx context.Contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_upsertConnection_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "connectionID", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["connectionID"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "conType", ec.unmarshalNconnectionTypeEnum2matchmeᚑserverᚋgraphᚋmodelᚐConnectionTypeEnum)
+	if err != nil {
+		return nil, err
+	}
+	args["conType"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_upsertReaction_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "targetedUserID", ec.unmarshalNID2string)
+	if err != nil {
+		return nil, err
+	}
+	args["targetedUserID"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "reaction", ec.unmarshalNreactionTypeEnum2matchmeᚑserverᚋgraphᚋmodelᚐReactionTypeEnum)
+	if err != nil {
+		return nil, err
+	}
+	args["reaction"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -699,6 +833,38 @@ func (ec *executionContext) field_Query_bio_args(ctx context.Context, rawArgs ma
 		return nil, err
 	}
 	args["userID"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_connectReguests_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalOInt2ᚖint32)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "offset", ec.unmarshalOInt2ᚖint32)
+	if err != nil {
+		return nil, err
+	}
+	args["offset"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_connections_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalOInt2ᚖint32)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "offset", ec.unmarshalOInt2ᚖint32)
+	if err != nil {
+		return nil, err
+	}
+	args["offset"] = arg1
 	return args, nil
 }
 
@@ -1096,6 +1262,64 @@ func (ec *executionContext) fieldContext_Bio_user(_ context.Context, field graph
 	return fc, nil
 }
 
+func (ec *executionContext) _Connection_connectionID(ctx context.Context, field graphql.CollectedField, obj *model.Connection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Connection_connectionID,
+		func(ctx context.Context) (any, error) {
+			return obj.ConnectionID, nil
+		},
+		nil,
+		ec.marshalNID2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Connection_connectionID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Connection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Connection_conType(ctx context.Context, field graphql.CollectedField, obj *model.Connection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Connection_conType,
+		func(ctx context.Context) (any, error) {
+			return obj.ConType, nil
+		},
+		nil,
+		ec.marshalNconnectionTypeEnum2matchmeᚑserverᚋgraphᚋmodelᚐConnectionTypeEnum,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Connection_conType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Connection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type connectionTypeEnum does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _LoginResponse_token(ctx context.Context, field graphql.CollectedField, obj *model.LoginResponse) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -1264,6 +1488,158 @@ func (ec *executionContext) fieldContext_Mutation_loginUser(ctx context.Context,
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_loginUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deletePhoto(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_deletePhoto,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Mutation().DeletePhoto(ctx)
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deletePhoto(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_upsertReaction(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_upsertReaction,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpsertReaction(ctx, fc.Args["targetedUserID"].(string), fc.Args["reaction"].(model.ReactionTypeEnum))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_upsertReaction(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_upsertReaction_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_upsertConnection(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_upsertConnection,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpsertConnection(ctx, fc.Args["connectionID"].(string), fc.Args["conType"].(model.ConnectionTypeEnum))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_upsertConnection(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_upsertConnection_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_disconnectUsers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_disconnectUsers,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().DisconnectUsers(ctx, fc.Args["targetedUserID"].(string))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_disconnectUsers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_disconnectUsers_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -2110,6 +2486,116 @@ func (ec *executionContext) fieldContext_Query_recommendations(ctx context.Conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_recommendations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_connectReguests(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_connectReguests,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().ConnectReguests(ctx, fc.Args["limit"].(*int32), fc.Args["offset"].(*int32))
+		},
+		nil,
+		ec.marshalNUser2ᚕᚖmatchmeᚑserverᚋgraphᚋmodelᚐUserᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_connectReguests(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "userID":
+				return ec.fieldContext_User_userID(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "created_at":
+				return ec.fieldContext_User_created_at(ctx, field)
+			case "profilePicture":
+				return ec.fieldContext_User_profilePicture(ctx, field)
+			case "profile":
+				return ec.fieldContext_User_profile(ctx, field)
+			case "bio":
+				return ec.fieldContext_User_bio(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_connectReguests_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_connections(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_connections,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().Connections(ctx, fc.Args["limit"].(*int32), fc.Args["offset"].(*int32))
+		},
+		nil,
+		ec.marshalNUser2ᚕᚖmatchmeᚑserverᚋgraphᚋmodelᚐUserᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_connections(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "userID":
+				return ec.fieldContext_User_userID(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "created_at":
+				return ec.fieldContext_User_created_at(ctx, field)
+			case "profilePicture":
+				return ec.fieldContext_User_profilePicture(ctx, field)
+			case "profile":
+				return ec.fieldContext_User_profile(ctx, field)
+			case "bio":
+				return ec.fieldContext_User_bio(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_connections_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -3967,6 +4453,50 @@ func (ec *executionContext) _Bio(ctx context.Context, sel ast.SelectionSet, obj 
 	return out
 }
 
+var connectionImplementors = []string{"Connection"}
+
+func (ec *executionContext) _Connection(ctx context.Context, sel ast.SelectionSet, obj *model.Connection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, connectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Connection")
+		case "connectionID":
+			out.Values[i] = ec._Connection_connectionID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "conType":
+			out.Values[i] = ec._Connection_conType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var loginResponseImplementors = []string{"LoginResponse"}
 
 func (ec *executionContext) _LoginResponse(ctx context.Context, sel ast.SelectionSet, obj *model.LoginResponse) graphql.Marshaler {
@@ -4040,6 +4570,34 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "loginUser":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_loginUser(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deletePhoto":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deletePhoto(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "upsertReaction":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_upsertReaction(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "upsertConnection":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_upsertConnection(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "disconnectUsers":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_disconnectUsers(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -4280,6 +4838,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_recommendations(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "connectReguests":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_connectReguests(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "connections":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_connections(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -5155,6 +5757,26 @@ func (ec *executionContext) unmarshalNchildActivity_levelEnum2matchmeᚑserver�
 }
 
 func (ec *executionContext) marshalNchildActivity_levelEnum2matchmeᚑserverᚋgraphᚋmodelᚐChildActivityLevelEnum(ctx context.Context, sel ast.SelectionSet, v model.ChildActivityLevelEnum) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNconnectionTypeEnum2matchmeᚑserverᚋgraphᚋmodelᚐConnectionTypeEnum(ctx context.Context, v any) (model.ConnectionTypeEnum, error) {
+	var res model.ConnectionTypeEnum
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNconnectionTypeEnum2matchmeᚑserverᚋgraphᚋmodelᚐConnectionTypeEnum(ctx context.Context, sel ast.SelectionSet, v model.ConnectionTypeEnum) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNreactionTypeEnum2matchmeᚑserverᚋgraphᚋmodelᚐReactionTypeEnum(ctx context.Context, v any) (model.ReactionTypeEnum, error) {
+	var res model.ReactionTypeEnum
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNreactionTypeEnum2matchmeᚑserverᚋgraphᚋmodelᚐReactionTypeEnum(ctx context.Context, sel ast.SelectionSet, v model.ReactionTypeEnum) graphql.Marshaler {
 	return v
 }
 

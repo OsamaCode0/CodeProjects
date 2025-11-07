@@ -18,6 +18,7 @@ func PostReaction(c *gin.Context) {
 	var req struct {
 		Reaction string `json:"reaction"` // "like" | "dislike"
 	}
+	
 	if err := c.BindJSON(&req); err != nil || (req.Reaction != "like" && req.Reaction != "dislike") {
 		c.JSON(400, structs.ErrorResponse{
 			Message: "reaction must be 'like' or 'dislike'",

@@ -23,6 +23,16 @@ enum childActivity_levelEnum {
   HIGH
 }
 
+enum reactionTypeEnum {
+  like
+  dislike
+}
+
+enum connectionTypeEnum {
+  accept
+  reject
+}
+
 
 
 type User {
@@ -70,6 +80,12 @@ type LoginResponse {
   user: User!
 }
 
+type Connection {
+  connectionID: ID!
+  conType: connectionTypeEnum!
+}
+
+
 
 type Query {
   user(userID: ID!): User
@@ -79,11 +95,18 @@ type Query {
   myBio: Bio
   myProfile: Profile
   recommendations(limit: Int = 10, offset: Int = 0): [User!]!
+  connectReguests(limit: Int = 20, offset: Int = 0): [User!]!
+  connections(limit: Int = 20, offset: Int = 0): [User!]!
 }
 
 type Mutation {
   registerUser(email: String!, password: String!): User!
   loginUser(email: String!, password: String!): LoginResponse!
+  deletePhoto: Boolean!
+  upsertReaction(targetedUserID: ID!, reaction: reactionTypeEnum!): Boolean!
+  upsertConnection(connectionID: ID!, conType: connectionTypeEnum!): Boolean!
+  disconnectUsers(targetedUserID: ID!): Boolean!
+  
 
   updateProfile (
   name: String

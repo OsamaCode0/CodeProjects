@@ -86,6 +86,118 @@ func (r *mutationResolver) LoginUser(ctx context.Context, email string, password
 	}, nil
 }
 
+// DeletePhoto is the resolver for the deletePhoto field.
+func (r *mutationResolver) DeletePhoto(ctx context.Context) (bool, error) {
+	userID, ok := middleware.GetUserIDFromContext(ctx)
+	if !ok {
+		return false, gqlerror.Errorf("not authenticated")
+	}
+
+	if err := database.DeleteUserPhoto(ctx, r.DB, userID); err != nil {
+		return false, gqlerror.Errorf("db error, failed to delete")
+	}
+
+	return true, nil
+}
+
+// UpsertReaction is the resolver for the upsertReaction field.
+func (r *mutationResolver) UpsertReaction(ctx context.Context, targetedUserID string, reaction model.ReactionTypeEnum) (bool, error) {
+	userID, ok := middleware.GetUserIDFromContext(ctx)
+	if !ok {
+		return false, gqlerror.Errorf("not authenticated")
+	}
+
+	if userID == targetedUserID {
+		return false, gqlerror.Errorf("self reaction")
+	}
+
+	if reaction != "like" && reaction != "dislike" {
+		return false, gqlerror.Errorf("reaction must be like or dislike")
+	}
+
+	if !helpers.IsValidID(targetedUserID) {
+		return false, gqlerror.Errorf("user id is invalid")
+	}
+
+	err := database.UpsertReaction(ctx, r.DB, userID, targetedUserID, database.Reaction(reaction))
+	if err != nil {
+		return false, gqlerror.Errorf("db error")
+	}
+
+	if reaction == "like" {
+		log.Printf("👍 User %s liked %s - creating connection request", userID, targetedUserID)
+
+		connectionID, err := database.CreateConnectionRequest(ctx, r.DB, userID, targetedUserID)
+		if err != nil {
+			if err == database.ErrConnectionExists {
+				log.Printf("Connection already exists between users")
+				return false, gqlerror.Errorf("Connection already exists between users")
+			} else {
+				log.Printf("ERROR creating connection request: %v", err)
+				return false, gqlerror.Errorf("db error")
+			}
+		} else {
+			log.Printf("✅ Connection request created: %s (from %s to %s)", connectionID, userID, targetedUserID)
+		}
+	}
+
+	return true, nil
+}
+
+// UpsertConnection is the resolver for the upsertConnection field.
+func (r *mutationResolver) UpsertConnection(ctx context.Context, connectionID string, conType model.ConnectionTypeEnum) (bool, error) {
+	userID, ok := middleware.GetUserIDFromContext(ctx)
+	if !ok {
+		return false, gqlerror.Errorf("not authenticated")
+	}
+
+	if conType != "accept" && conType != "reject" {
+		return false, gqlerror.Errorf("connection type must be accept or reject")
+	}
+
+	if !helpers.IsValidID(connectionID) {
+		return false, gqlerror.Errorf("connection id is invalid")
+	}
+
+	status := conType + "ed"
+
+	err := database.UpdateConnectionStatus(ctx, r.DB, connectionID, userID, string(status))
+	if err != nil {
+		if err == database.ErrConnectionNotFound {
+			return false, gqlerror.Errorf("connection request not found or already processed")
+		}
+		log.Printf("Error updating connection status: %v", err)
+		return false, gqlerror.Errorf("db error")
+	}
+
+	log.Printf("✅ Connection %s %s by user %s", connectionID, status, userID)
+	return true, nil
+}
+
+// DisconnectUsers is the resolver for the disconnectUsers field.
+func (r *mutationResolver) DisconnectUsers(ctx context.Context, targetedUserID string) (bool, error) {
+	userID, ok := middleware.GetUserIDFromContext(ctx)
+	if !ok {
+		return false, gqlerror.Errorf("not authenticated")
+	}
+
+	if userID == targetedUserID {
+		return false, gqlerror.Errorf("self disconnect")
+	}
+
+	err := database.UpsertReaction(ctx, r.DB, userID, targetedUserID, database.ReactionDislike)
+	if err != nil {
+		return false, gqlerror.Errorf("db error")
+	}
+
+	err = database.DeleteConnectionAndChat(ctx, r.DB, userID, targetedUserID)
+	if err != nil {
+		return false, gqlerror.Errorf("db error")
+	}
+
+	return true, nil
+}
+
 // UpdateProfile is the resolver for the updateProfile field.
 func (r *mutationResolver) UpdateProfile(ctx context.Context, name *string, about *string, languages []*string, addressCity *string, lat *float64, lon *float64, childName *string, childAbout *string, childInterests []*string) (*model.Profile, error) {
 	userID, ok := middleware.GetUserIDFromContext(ctx)
@@ -116,38 +228,20 @@ func (r *mutationResolver) UpdateProfile(ctx context.Context, name *string, abou
 		Lon:            lon,
 		ChildName:      childName,
 		ChildAbout:     childAbout,
-		Languages:      &langs,
-		ChildInterests: &interests,
+		Languages:      langs,
+		ChildInterests: interests,
 	}
 
 	if err := database.UpdateProfile(ctx, r.DB, userID, input); err != nil {
 		return nil, gqlerror.Errorf("failed to update profile: %v", err)
 	}
 
-	// Fetch the updated profile to return it
-	dbProfile, err := database.GetUserProfile(ctx, r.DB, userID)
+	profile, err := r.GetProfile(ctx, userID)
 	if err != nil {
-		return nil, gqlerror.Errorf("failed to load updated profile: %v", err)
+		return nil, err
 	}
 
-	dbProfileCh, err := database.GetChildProfile(ctx, r.DB, userID)
-	if err != nil {
-		return nil, gqlerror.Errorf("failed to load updated profile: %v", err)
-	}
-
-	// Convert DB struct to GraphQL model
-	return &model.Profile{
-		UserID:         dbProfile.UserID,
-		Name:           &dbProfile.Name,
-		About:          &dbProfile.About,
-		Languages:      stringSliceToPtrSlice(dbProfile.Languages),
-		AddressCity:    &dbProfile.AddressCity,
-		Lat:            &dbProfile.Lat,
-		Lon:            &dbProfile.Lon,
-		ChildName:      &dbProfileCh.Name,
-		ChildAbout:     &dbProfileCh.About_short,
-		ChildInterests: stringSliceToPtrSlice(dbProfileCh.Interests),
-	}, nil
+	return profile, nil
 }
 
 // UpdateBio is the resolver for the updateBio field.
@@ -185,52 +279,21 @@ func (r *mutationResolver) UpdateBio(ctx context.Context, parentGender *model.Ge
 		ChildBirthday:      childBirthday,
 		ChildGender:        childGender,
 		ChildActivityLevel: childActivityLevel,
-		Limitations:        &limit,
-		Allergies:          &allerg,
-		PlayStyles:         &playst,
+		Limitations:        limit,
+		Allergies:          allerg,
+		PlayStyles:         playst,
 	}
 
 	if err := database.UpdateBio(ctx, r.DB, userID, input); err != nil {
 		return nil, gqlerror.Errorf("failed to update profile: %v", err)
 	}
 
-	// Fetch the updated profile to return it
-	dbProfile, err := database.GetUserProfile(ctx, r.DB, userID)
+	bio, err := r.GetBio(ctx, userID)
 	if err != nil {
-		return nil, gqlerror.Errorf("failed to load updated profile: %v", err)
+		return nil, err
 	}
 
-	dbProfileCh, err := database.GetChildProfile(ctx, r.DB, userID)
-	if err != nil {
-		return nil, gqlerror.Errorf("failed to load updated profile: %v", err)
-	}
-
-	// Convert DB struct to GraphQL model
-
-	var birthdayStrPtr *string
-
-	if !dbProfileCh.Birthday.IsZero() {
-		tempStr := dbProfileCh.Birthday.Format("2006-01-02")
-		birthdayStrPtr = &tempStr
-	}
-
-	var preferredDistPtr *int32
-	if dbProfile.PreferredDistance != 0 {
-		temp := int32(dbProfile.PreferredDistance) // 1. Convert int to int32
-		preferredDistPtr = &temp                   // 2. Get a pointer to the int32
-	}
-
-	return &model.Bio{
-		UserID:             dbProfile.UserID,
-		ParentGender:       model.GenderEnum(dbProfile.Gender),
-		PreferredDistance:  preferredDistPtr,
-		ChildBirthday:      birthdayStrPtr,
-		ChildGender:        model.ChidGenderEnum(dbProfileCh.Gender),
-		ChildActivityLevel: model.ChildActivityLevelEnum(dbProfileCh.Activity_level),
-		Limitations:        stringSliceToPtrSlice(dbProfileCh.Limitations),
-		Allergies:          stringSliceToPtrSlice(dbProfileCh.Allergies),
-		PlayStyles:         stringSliceToPtrSlice(dbProfileCh.Play_styles),
-	}, nil
+	return bio, nil
 }
 
 // User is the resolver for the user field.
@@ -437,12 +500,111 @@ func (r *queryResolver) Recommendations(ctx context.Context, limit *int32, offse
 			return nil, err
 		}
 
-		profile, err := r.GetProfile(ctx, userID)
+		profile, err := r.GetProfile(ctx, recommendedUserId)
 		if err != nil {
 			return nil, err
 		}
 
-		bio, err := r.GetBio(ctx, userID)
+		bio, err := r.GetBio(ctx, recommendedUserId)
+		if err != nil {
+			return nil, err
+		}
+
+		user.Profile = profile
+		user.Bio = bio
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+// ConnectReguests is the resolver for the connectReguests field.
+func (r *queryResolver) ConnectReguests(ctx context.Context, limit *int32, offset *int32) ([]*model.User, error) {
+	userID, ok := middleware.GetUserIDFromContext(ctx)
+	if !ok {
+		return nil, gqlerror.Errorf("unauthorized")
+	}
+
+	// 3. Profile Completion Check (Same as before)
+	percent, err := database.GetProfileCompletionPercent(ctx, r.DB, userID)
+	if err != nil {
+		log.Println(err)
+		return nil, gqlerror.Errorf("db error")
+	}
+
+	if percent < 100 {
+		return nil, gqlerror.Errorf("Profile is not complete")
+	}
+	
+	// Get connection requests (with connection IDs)
+	connectionRequests, err := database.GetIncomingConnectionRequests(ctx, r.DB, userID)
+	if err != nil {
+		return nil, gqlerror.Errorf("db error")
+	}
+	
+	// Extract requester user IDs for response
+	var users []*model.User
+
+	for _, conn := range connectionRequests {
+		user, err := r.GetUser(ctx, conn.RequesterUserID)
+		if err != nil {
+			return nil, err
+		}
+
+		profile, err := r.GetProfile(ctx, conn.RequesterUserID)
+		if err != nil {
+			return nil, err
+		}
+
+		bio, err := r.GetBio(ctx, conn.RequesterUserID)
+		if err != nil {
+			return nil, err
+		}
+
+		user.Profile = profile
+		user.Bio = bio
+		users = append(users, user)
+	}
+
+	return users, nil
+	
+}
+
+// Connections is the resolver for the connections field.
+func (r *queryResolver) Connections(ctx context.Context, limit *int32, offset *int32) ([]*model.User, error) {
+	userID, ok := middleware.GetUserIDFromContext(ctx)
+	if !ok {
+		return nil, gqlerror.Errorf("unauthorized")
+	}
+
+	percent, err := database.GetProfileCompletionPercent(ctx, r.DB, userID)
+	if err != nil {
+		return nil, gqlerror.Errorf("db error")
+	}
+
+	if percent < 100 {
+		return nil, gqlerror.Errorf("profile is not complete")
+	}
+
+	connections, err := database.GetConnections(ctx, r.DB, userID)
+	if err != nil {
+		return nil, gqlerror.Errorf("db error")
+	}
+
+	var users []*model.User
+
+	for _, connectionUserID := range connections {
+		user, err := r.GetUser(ctx, connectionUserID)
+		if err != nil {
+			return nil, err
+		}
+
+		profile, err := r.GetProfile(ctx, connectionUserID)
+		if err != nil {
+			return nil, err
+		}
+
+		bio, err := r.GetBio(ctx, connectionUserID)
 		if err != nil {
 			return nil, err
 		}
