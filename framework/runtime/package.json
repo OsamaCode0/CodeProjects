@@ -1,0 +1,27 @@
+{
+  "name": "frontend-framework",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/frontend-framework.js",
+  "files": [
+    "dist/frontend-framework.js"
+  ],
+  "scripts": {
+    "prepack": "npm run build",
+    "build": "rollup -c",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^9.39.1",
+    "jsdom": "^27.1.0",
+    "rollup-plugin-cleanup": "^3.2.1",
+    "rollup-plugin-filesize": "^10.0.0",
+    "vitest": "^4.0.7"
+  }
+}

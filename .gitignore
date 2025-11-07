@@ -1,5 +1,6 @@
 # any hidden files
 .*
+!.eslintrc.js
 
 # any postential bigger file
 *.jpg
@@ -36,4 +37,7 @@ logs
 *.pem
 
 # modules
-*node_module*
+node_modules
+
+# this will be the folder where the build file existed.
+dist
