@@ -2,9 +2,12 @@
 
 ## Example
 * example/
-    * todo/
-        * todo.html
-        * todo.js
+    * counter/
+        * counter.html
+        * counter.js
+    * .gitignore
+        # list all your unplublished example here
+    * Readme.md
 
 ## Framework
 * framework/
