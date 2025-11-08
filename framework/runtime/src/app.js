@@ -1,8 +1,9 @@
 import { destroyDOM } from './destroy-dom.js'
 import { Dispatcher } from './dispatcher.js'
 import { mountDOM } from './mount-dom.js'
+import { patch } from './patch.js'
 
-export function createApp({state, view, reducers = {}}) {
+export function createApp({ state, view, reducers = {} }) {
     let parentEl = null
     let vdom = null
 
@@ -24,13 +25,16 @@ export function createApp({state, view, reducers = {}}) {
     }
 
     function renderApp() {
-        if (vdom) {
-            destroyDOM(vdom)
+        const newVdom = view(state, emit);
+        if (!vdom) {
+            vdom = newVdom;
+            mountDOM(vdom, parentEl);
+        } else {
+            patch(vdom, newVdom, parentEl);
+            vdom = newVdom;
         }
-
-        vdom = view(state, emit)
-        mountDOM(vdom, parentEl)
     }
+
 
     return {
         mount(_parentEl) {
