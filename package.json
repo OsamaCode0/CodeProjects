@@ -11,8 +11,8 @@
   ],
   "private": true,
   "scripts": {
-    "serve:examples": "live-server",
-    "serve:test": "live-server",
+    "comment": "you can change your file destination as you like",
+    "example": "npx http-server . -o ./example/compare/todo_fw/todo_fw.html",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -22,6 +22,6 @@
     "live-server": "^1.2.0"
   },
   "dependencies": {
-    "todo": "^1.0.0"
+    "frontend-framework": "^1.0.0"
   }
 }
