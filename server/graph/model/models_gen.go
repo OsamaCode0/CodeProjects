@@ -23,6 +23,12 @@ type Bio struct {
 	User               *User                  `json:"user"`
 }
 
+type Chat struct {
+	ID           string     `json:"id"`
+	Participants []*User    `json:"participants"`
+	Messages     []*Message `json:"messages"`
+}
+
 type Connection struct {
 	ConnectionID string             `json:"connectionID"`
 	ConType      ConnectionTypeEnum `json:"conType"`
@@ -31,6 +37,13 @@ type Connection struct {
 type LoginResponse struct {
 	Token string `json:"token"`
 	User  *User  `json:"user"`
+}
+
+type Message struct {
+	ID        string `json:"id"`
+	Content   string `json:"content"`
+	CreatedAt string `json:"createdAt"`
+	Sender    *User  `json:"sender"`
 }
 
 type Mutation struct {
@@ -51,6 +64,9 @@ type Profile struct {
 }
 
 type Query struct {
+}
+
+type Subscription struct {
 }
 
 type User struct {

@@ -4,16 +4,19 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"log"
+	"matchme-server/logx"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
+
 // A private key type to prevent context key collisions
 type contextKey string
 
-const userIDKey = contextKey("userID")
+const UserIDKey = contextKey("userID")
 
 // AuthRequired is a middleware that checks for a valid JWT in the Authorization header.
 // It expects the header in the form: "Authorization: Bearer <token>".
@@ -21,17 +24,17 @@ const userIDKey = contextKey("userID")
 // Otherwise, it aborts the request with HTTP 401 Unauthorized.
 func AuthRequired(secret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-    // Get the Authorization header from the request
+		// Get the Authorization header from the request
 		auth := c.GetHeader("Authorization")
-    // Check if the header starts with "Bearer " (the required format)
+		// Check if the header starts with "Bearer " (the required format)
 		if !strings.HasPrefix(auth, "Bearer ") {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "missing bearer token"})
 			return
 		}
-    // Strip the "Bearer " prefix, leaving only the token string
+		// Strip the "Bearer " prefix, leaving only the token string
 		tokenStr := strings.TrimPrefix(auth, "Bearer ")
 
-    // Parse the token and validate its claims
+		// Parse the token and validate its claims
 		// - Pass an empty RegisteredClaims struct to bind claims into
 		// - The key function checks that the token was signed with HMAC
 		//   and returns the secret used for verification
@@ -58,7 +61,7 @@ func AuthRequired(secret string) gin.HandlerFunc {
 		c.Set("userID", userID)
 
 		//for GRAPH
-		ctx := context.WithValue(c.Request.Context(), userIDKey, userID)
+		ctx := context.WithValue(c.Request.Context(), UserIDKey, userID)
 		c.Request = c.Request.WithContext(ctx)
 
 		c.Next()
@@ -67,9 +70,33 @@ func AuthRequired(secret string) gin.HandlerFunc {
 
 func GinGqlAuthMiddleware(secret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		isWS := logx.IsWSUpgrade(c.GetHeader("Upgrade"))
+		method := c.Request.Method
+		path := c.FullPath()
+
+	
 		auth := c.GetHeader("Authorization")
+		log.Printf("[AUTH] path=%s method=%s ws=%v origin=%s proto=%s auth=%s",
+			path, method, isWS,
+			c.GetHeader("Origin"),
+			c.GetHeader("Sec-WebSocket-Protocol"),
+			logx.MaskToken(auth),
+		)
+
+		if method == http.MethodOptions || isWS {
+			log.Printf("[AUTH] bypass (method=%s ws=%v) → NEXT", method, isWS)
+			c.Next()
+			return
+		}
+
 		if !strings.HasPrefix(auth, "Bearer ") {
+			log.Printf("[AUTH] reject: missing/invalid Authorization")
 			c.Next() // No token, but that's okay
+			return
+		}
+
+		if strings.EqualFold(c.GetHeader("Upgrade"), "websocket") {
+			c.Next()
 			return
 		}
 
@@ -93,15 +120,17 @@ func GinGqlAuthMiddleware(secret string) gin.HandlerFunc {
 
 		// Token is valid! Add the userID to the context.
 		userID := claims.Subject
-		c.Set("userID", userID) // For Gin
-		ctx := context.WithValue(c.Request.Context(), userIDKey, userID) // For GQLGEN
+		c.Set("userID", userID)                                          // For Gin
+		ctx := context.WithValue(c.Request.Context(), UserIDKey, userID) // For GQLGEN
 		c.Request = c.Request.WithContext(ctx)
+		
+		log.Printf("[AUTH] HTTP authorized")
 
 		c.Next()
 	}
 }
 
 func GetUserIDFromContext(ctx context.Context) (string, bool) {
-	userID, ok := ctx.Value(userIDKey).(string)
+	userID, ok := ctx.Value(UserIDKey).(string)
 	return userID, ok
 }

@@ -21,6 +21,8 @@ type Resolver struct {
 	DB *pgxpool.Pool
 }
 
+var GlobalPubSub = NewPubSub()
+
 func stringSliceToPtrSlice(s []string) []*string {
 	if s == nil {
 		return nil

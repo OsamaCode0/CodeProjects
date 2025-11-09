@@ -32,7 +32,7 @@ func SetupRouter(IsDevMode bool, db *pgxpool.Pool) *gin.Engine {
 	router.Use(gin.Recovery())
 
 	tokenRegex := regexp.MustCompile(`token=[^&\s]+`)
-	
+
 	router.Use(gin.LoggerWithConfig(gin.LoggerConfig{
 		Formatter: func(param gin.LogFormatterParams) string {
 			path := param.Request.URL.Path
@@ -72,7 +72,7 @@ func SetupRouter(IsDevMode bool, db *pgxpool.Pool) *gin.Engine {
 	router.GET("/rest/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "pong!"})
 	})
-	
+
 	gqlGroup := router.Group("/") // You can use / or /graphql
 	gqlGroup.Use(middleware.GinGqlAuthMiddleware(internal.Cfg.JWTSecret))
 	setupGraphQL(gqlGroup, IsDevMode, db)
@@ -81,8 +81,6 @@ func SetupRouter(IsDevMode bool, db *pgxpool.Pool) *gin.Engine {
 	router.POST("/users/register", services.Register)
 	router.POST("/users/login", services.Login)
 
-	
-
 	router.GET("/ws", HandleWebSocket(GlobalHub))
 
 	auth := router.Group("/")
@@ -90,7 +88,6 @@ func SetupRouter(IsDevMode bool, db *pgxpool.Pool) *gin.Engine {
 	auth.GET("/users/:id", endpoints.GetNameAndPhoto)
 	auth.GET("/users/:id/profile", endpoints.GetUserProfileByID)
 	auth.GET("/users/:id/bio", endpoints.GetUserBioByID)
-
 
 	auth.PATCH("/me/profile", services.PatchMeProfile)
 	auth.PATCH("/me/child", services.PatchMeChild)
@@ -101,7 +98,7 @@ func SetupRouter(IsDevMode bool, db *pgxpool.Pool) *gin.Engine {
 	auth.GET("/me/child", endpoints.GetChildProfile)
 	auth.GET("/me/cloudinary-sign", endpoints.CloudinarySign)
 	auth.GET("/me/email", endpoints.GetMyEmail)
-	
+
 	auth.POST("/me/photo", endpoints.PostMePhoto)
 	auth.DELETE("/me/photo", endpoints.DeleteMePhoto)
 	auth.POST("/recommendations/:targetUserId/reaction", endpoints.PostReaction)

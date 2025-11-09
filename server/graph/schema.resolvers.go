@@ -14,6 +14,7 @@ import (
 	"matchme-server/helpers"
 	"matchme-server/middleware"
 	"matchme-server/services"
+	"time"
 
 	pgx "github.com/jackc/pgx/v5"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -196,6 +197,46 @@ func (r *mutationResolver) DisconnectUsers(ctx context.Context, targetedUserID s
 	}
 
 	return true, nil
+}
+
+// SendMessage is the resolver for the sendMessage field.
+func (r *mutationResolver) SendMessage(ctx context.Context, chatID string, content string) (*model.Message, error) {
+	userID, ok := middleware.GetUserIDFromContext(ctx)
+	if !ok {
+		return nil, gqlerror.Errorf("unauthorized")
+	}
+
+	sender, err := r.GetUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	chat, _ := database.GetChatByID(ctx, r.DB, chatID, userID)
+	if chat == nil {
+		return nil, gqlerror.Errorf("chat not found with ID: %s", chatID)
+	}
+
+	// Now save the message
+	messageId, err := database.SaveChatMessage(ctx, r.DB, chatID, userID, content)
+	if err != nil {
+		return nil, gqlerror.Errorf("failed to send message")
+	}
+
+	createdAt := time.Now()
+
+	newMessage := &model.Message{
+		ID:        messageId,
+		Content:   content,
+		CreatedAt: createdAt.Format(time.RFC3339),
+		Sender:    sender, // Assign the sender you fetched
+	}
+
+	// Publish and return
+	topic := fmt.Sprintf("chat:%s", chatID)
+	GlobalPubSub.Publish(topic, newMessage)
+	log.Printf("[MUT] publish topic=%s msgID=%s", topic, messageId)
+
+	return newMessage, nil
 }
 
 // UpdateProfile is the resolver for the updateProfile field.
@@ -535,13 +576,13 @@ func (r *queryResolver) ConnectReguests(ctx context.Context, limit *int32, offse
 	if percent < 100 {
 		return nil, gqlerror.Errorf("Profile is not complete")
 	}
-	
+
 	// Get connection requests (with connection IDs)
 	connectionRequests, err := database.GetIncomingConnectionRequests(ctx, r.DB, userID)
 	if err != nil {
 		return nil, gqlerror.Errorf("db error")
 	}
-	
+
 	// Extract requester user IDs for response
 	var users []*model.User
 
@@ -567,7 +608,6 @@ func (r *queryResolver) ConnectReguests(ctx context.Context, limit *int32, offse
 	}
 
 	return users, nil
-	
 }
 
 // Connections is the resolver for the connections field.
@@ -617,11 +657,41 @@ func (r *queryResolver) Connections(ctx context.Context, limit *int32, offset *i
 	return users, nil
 }
 
+// OnNewMessage is the resolver for the onNewMessage field.
+func (r *subscriptionResolver) OnNewMessage(ctx context.Context, chatID string) (<-chan *model.Message, error) {
+	userID, ok := middleware.GetUserIDFromContext(ctx)
+	if !ok {
+		return nil, gqlerror.Errorf("unauthorized")
+	}
+
+	chat, err := database.GetChatByID(ctx, r.DB, chatID, userID)
+	if err != nil || (chat.User1ID != userID && chat.User2ID != userID) {
+		// If chat is nil or the user is not user1 or user2
+		return nil, gqlerror.Errorf("access denied: you are not a member of this chat")
+	}
+
+	topic := fmt.Sprintf("chat:%s", chatID)
+
+	msgChan, unsubscribe := GlobalPubSub.Subscribe(topic)
+log.Printf("[SUB] OnNewMessage chatID=%s userID=%s ctxOK=%v", chatID, userID, ok)
+log.Printf("[SUB] subscribed topic=%s", topic)
+	go func() {
+		<-ctx.Done()
+		unsubscribe()
+	}()
+
+	return msgChan, nil
+}
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+// Subscription returns SubscriptionResolver implementation.
+func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
+
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type subscriptionResolver struct{ *Resolver }
