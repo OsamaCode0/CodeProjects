@@ -15,4 +15,5 @@ build:
 	@echo "Install Dependencies"
 	@npm install
 	@cd framework/runtime && npm install
+	@echo "Build the frontend-framework"
 	@cd framework/runtime && npm run build

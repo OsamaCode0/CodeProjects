@@ -1,3 +1,4 @@
+// 4.1.6 Setting the attributes
 export function setAttributes(el, attrs) {
     // split the attributes
     const { class: className, style, ...otherAttrs } = attrs;

@@ -1,3 +1,4 @@
+// 5.1.3 The dispatcher
 export class Dispatcher {
     #subs = new Map()
     #afterHandlers = []

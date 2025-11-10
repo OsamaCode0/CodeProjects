@@ -2,23 +2,29 @@ import { DOM_TYPES } from "./h.js";
 import { setAttributes } from './attributes.js'
 import { addEventListeners } from './events.js'
 
-export function mountDOM(vdom, parentEl) {
+// 4.1.1 Mounting virtual nodes into the DOM
+export function mountDOM(vdom, parentEl, index) {
+    if (!vdom || typeof vdom.type === 'undefined') {
+        console.warn('Invalid vdom passed to mountDOM:', vdom);
+        return;
+    }
+    
     switch (vdom.type) {
         case DOM_TYPES.TEXT: {
             console.log("start create text node")
-            createTextNode(vdom, parentEl)
+            createTextNode(vdom, parentEl, index)
             break
         }
 
         case DOM_TYPES.ELEMENT: {
             console.log("start create element node")
-            createElementNode(vdom, parentEl)
+            createElementNode(vdom, parentEl, index)
             break
         }
 
         case DOM_TYPES.FRAGMENT: {
             console.log('start create frament node')
-            createFragmentNode(vdom, parentEl)
+            createFragmentNode(vdom, parentEl, index)
             break
         }
 
@@ -29,24 +35,31 @@ export function mountDOM(vdom, parentEl) {
     }
 }
 
-function createTextNode(vdom, parentEl) {
+// 4.1.2 Mounting text nodes
+function createTextNode(vdom, parentEl, index) {
     const { value } = vdom
 
     const textNode = document.createTextNode(value)
     vdom.el = textNode
 
-    parentEl.append(textNode)
+    // parentEl.append(textNode)
+    insert(textNode, parentEl, index)
 }
 
-function createFragmentNode(vdom, parentEl) {
+// 4.1.3 Mounting fragment nodes
+function createFragmentNode(vdom, parentEl, index) {
     const { children } = vdom;
 
     vdom.el = parentEl;
 
-    children.forEach((child) => mountDOM(child, parentEl))
+    // children.forEach((child) => mountDOM(child, parentEl))
+    children.forEach((child, i) => {
+        mountDOM(child, parentEl, index ? index + i : null)
+    })
 }
 
-function createElementNode(vdom, parentEl) {
+// 4.1.4 Mounting element nodes
+function createElementNode(vdom, parentEl, index) {
     const { tag, props, children } = vdom;
 
     const element = document.createElement(tag);
@@ -54,9 +67,11 @@ function createElementNode(vdom, parentEl) {
     vdom.el = element;
 
     children.forEach((child) => mountDOM(child, element));
-    parentEl.append(element);
+    // parentEl.append(element);
+    insert(element, parentEl, index)
 }
 
+// 4.1.4 Mounting element nodes -> add props
 function addProps(el, props, vdom) {
     // split listeners from attributes
     const { on: events, ...attrs } = props;
@@ -65,4 +80,24 @@ function addProps(el, props, vdom) {
     vdom.listeners = addEventListeners(events, el);
     // set attributes
     setAttributes(el, attrs)
+}
+
+// 8.1 Mounting the DOM at an index
+function insert(el, parentEl, index) {
+    if (index == null) {
+        parentEl.append(el)
+        return
+    }
+
+    if (index < 0) {
+        throw new Error(`Index must be a positive integer, got ${index}`)
+    }
+
+    const children = parentEl.childNodes
+
+    if (index >= children.length) {
+        parentEl.append(el)
+    } else {
+        parentEl.insertBefore(el, children[index])
+    }
 }

@@ -1,6 +1,7 @@
 import { removeEventListeners } from './events.js'
 import { DOM_TYPES } from './h.js'
 
+// 4.2 Destroying the DOM
 export function destroyDOM(vdom) {
     const { type } = vdom;
 
@@ -25,11 +26,13 @@ export function destroyDOM(vdom) {
     delete vdom.el
 }
 
+// 4.2.1 Destroying a text node
 function removeTextNode(vdom) {
     const { el } = vdom;
     el.remove()
 }
 
+// 4.2.2 Destroying an element
 function removeElementNode(vdom) {
     const { el, children, listeners } = vdom;
 
@@ -42,6 +45,7 @@ function removeElementNode(vdom) {
     }
 }
 
+// 4.2.3 Destroying a fragment
 function removeFragmentNodes(vdom) {
     const { children } = vdom;
 

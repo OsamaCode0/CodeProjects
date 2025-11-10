@@ -1,4 +1,4 @@
-import { createApp, h, hString } from "../../framework/runtime/dist/frontend-framework.js";
+import { createApp, h, hString } from "./dist/frontend-framework.js";
 
 createApp({
     state: 0,
