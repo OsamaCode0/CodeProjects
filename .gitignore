@@ -1,5 +1,6 @@
 # any hidden files
 .*
+!.gitignore
 !.eslintrc.js
 
 # any postential bigger file

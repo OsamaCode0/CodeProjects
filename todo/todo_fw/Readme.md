@@ -7,7 +7,7 @@ from root folder
 make build
 
 # direct to the example folder
-cd example/compare/todo_fw
+cd todo/todo_fw
 
 # install the package
 npm install frontend-framework

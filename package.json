@@ -12,8 +12,9 @@
   "private": true,
   "scripts": {
     "comment": "you can change your file destination as you like",
-    "example": "npx http-server . -o ./example/compare/todo_fw/todo_fw.html",
-    "counter": "npx http-server . -o ./example/counter/counter.html",
+    "example": "npx http-server . -o ./example",
+    "todo_fw": "npx http-server . -o ./todo/todo_fw",
+    "counter": "npx http-server . -o ./counter",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
