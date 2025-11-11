@@ -14,7 +14,7 @@ npm install frontend-framework
 
 
 # start the example
-npm run example
+npm run todo_fw
 ```
 
 
@@ -30,3 +30,5 @@ Todo Plan for TODO APP:
 ## Collaborate with friends
 ## Chat Messaging to Friend
 ## Poke Friend
+## Database option: 1. mangoose, 2. postgresql, 3.mysql, 4.graphql + postgresql, 
+## Backend? 1.golang, 2.python, 3.javascript, 4.typescript
