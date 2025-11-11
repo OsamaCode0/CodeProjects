@@ -16,3 +16,17 @@ npm install frontend-framework
 # start the example
 npm run example
 ```
+
+
+Todo Plan for TODO APP:
+**To make our todo app standout, we have to implement extra features**
+## Front Page
+## Login Area
+## Todo Lists (todo without time or when will be doing)
+## Done Lists
+## Plan Lists (todo with time planning of doing it)
+## Reminder (set reminder 24 hrs, 12 hrs, 1 hr, 30 minutes, 10 minutes , 5 minutes)
+## Add Friendship
+## Collaborate with friends
+## Chat Messaging to Friend
+## Poke Friend
