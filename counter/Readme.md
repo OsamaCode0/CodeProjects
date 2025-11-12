@@ -7,7 +7,7 @@ from root folder
 make build
 
 # direct to the example folder
-cd example/counter
+cd counter
 
 # install the package
 npm install frontend-framework

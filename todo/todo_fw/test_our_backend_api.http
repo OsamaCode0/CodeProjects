@@ -1,0 +1,51 @@
+
+
+### variables
+@port = 8080
+@token = 8494edcf-1043-4619-89d4-080e67c68c08
+@user_id = 53e67a79-e210-42a5-a2e9-e5ad409e0326
+
+### Register a User
+### /register
+
+POST http://localhost:{{port}}/register
+Accept: application/json
+Content-Type: application/json
+
+{
+    "email": "user2@koodsisu.fi",
+    "name": "user two",
+    "password": "User@2"
+}
+
+
+### GET User
+### /user/{id}
+GET http://localhost:{{port}}/user/{{user_id}}
+Accept: application/json
+
+
+### Login a User
+### /login
+
+POST http://localhost:{{port}}/login
+Accept: application/json
+Content-Type: application/json
+
+{
+    "email": "user2@koodsisu.fi",
+    "password": "User@2"
+}
+
+### Login a User
+### /login
+
+POST http://localhost:{{port}}/user/todo
+Accept: application/json
+Content-Type: application/json
+
+{
+    "user_id": "{{user_id}}",
+    "content": "Do the task for today",
+    "due_time": "2025-11-14T15:30:00Z"
+}
