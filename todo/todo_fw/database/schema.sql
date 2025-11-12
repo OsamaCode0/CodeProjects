@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS todo (
   user_id UUID NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
   content TEXT NOT NULL DEFAULT ' ',
   created_at TIMESTAMP NOT NULL DEFAULT now(),
-  due_time TIMESTAMP,
+  due_time TIMESTAMP DEFAULT NULL,
   is_plan BOOLEAN GENERATED ALWAYS AS (due_time IS NOT NULL) STORED
 );
 
@@ -45,10 +45,10 @@ CREATE TABLE IF NOT EXISTS chat (
 
 -- Table persistance
 CREATE TABLE IF NOT EXISTS persistance (
-  user_id UUID NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL UNIQUE REFERENCES app_user(id) ON DELETE CASCADE,
   token UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   login_at TIMESTAMP NOT NULL DEFAULT now(),
-  logout_at TIMESTAMP
+  logout_at TIMESTAMP NULL
 );
 
 -- ==============================

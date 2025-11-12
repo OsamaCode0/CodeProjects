@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 	"todo/internal/types"
@@ -50,16 +51,19 @@ func (tx *Tx) Login(ctx context.Context, log *types.Login, pers *types.Persistan
 			FROM app_user
 			WHERE email = $1
 		)
-  		INSERT INTO persistance (user_id)
-  		SELECT u.id
+  		INSERT INTO persistance (user_id, token, login_at, logout_at)
+  		SELECT u.id, gen_random_uuid(), $3, NULL
   		FROM u
   		WHERE bcrypt_check($2, u.password_hash)
+		ON CONFLICT (user_id) DO UPDATE
+			SET token = gen_random_uuid(), login_at = $3, logout_at = NULL
 		RETURNING user_id, token, login_at;
 	`
 
 	err := tx.Tx.QueryRow(ctxInsert, query,
 		log.Email,    // $1
 		log.Password, // $2
+		pers.LoginAt, // $3
 	).Scan(&pers.UserId, &pers.Token, &pers.LoginAt)
 	if err != nil {
 		return fmt.Errorf("Login: %w", err)
@@ -72,6 +76,13 @@ func (tx *Tx) Login(ctx context.Context, log *types.Login, pers *types.Persistan
 func (tx *Tx) InsertIntoTableTodo(ctx context.Context, t *types.Todo) error {
 	ctxInsert, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
+
+	var dueTime sql.NullTime
+	if !t.DueTime.IsZero() || t.DueTime.Compare(time.Now()) >= 1 {
+		dueTime = sql.NullTime{Time: t.DueTime, Valid: true}
+	} else {
+		dueTime = sql.NullTime{Valid: false}
+	}
 
 	query := `
 		INSERT INTO todo (
@@ -91,7 +102,7 @@ func (tx *Tx) InsertIntoTableTodo(ctx context.Context, t *types.Todo) error {
 		t.UserId,
 		t.Content,
 		t.CreatedAt,
-		t.DueTime,
+		dueTime,
 	).Scan(&t.Id, &t.IsPlan)
 
 	if err != nil {

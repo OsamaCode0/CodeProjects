@@ -2,8 +2,8 @@
 
 ### variables
 @port = 8080
-@token = 8494edcf-1043-4619-89d4-080e67c68c08
-@user_id = 53e67a79-e210-42a5-a2e9-e5ad409e0326
+@token = ddf23e01-ecf8-4c02-bb82-186c140247eb
+@user_id = 58a90a10-2423-4457-91e5-c276f87bbe71
 
 ### Register a User
 ### /register
@@ -37,15 +37,43 @@ Content-Type: application/json
     "password": "User@2"
 }
 
-### Login a User
-### /login
+### Logout a User
+### /logout
 
+POST http://localhost:{{port}}/logout
+Accept: application/json
+Content-Type: application/json
+
+{
+    "user_id": "{{user_id}}",
+    "token": "{{token}}"
+}
+
+### Insert Todo User
+### /todo
 POST http://localhost:{{port}}/user/todo
 Accept: application/json
 Content-Type: application/json
 
 {
     "user_id": "{{user_id}}",
-    "content": "Do the task for today",
-    "due_time": "2025-11-14T15:30:00Z"
+    "content": "Do the task for today and tomorrow edit again",
+    "due_time": null
 }
+
+### Update Todo User
+### /todo
+PUT http://localhost:{{port}}/user/todo
+Accept: application/json
+Content-Type: application/json
+
+{
+    "id": 1,
+    "content": "try to change this todo?",
+    "due_time": "2025-11-15T19:23:00Z"
+}
+
+### Get todo user
+### /todo/{id}
+GET http://localhost:{{port}}/user/todo/{{user_id}}
+Accept: application/json

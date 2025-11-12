@@ -1,13 +1,17 @@
 package types
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type (
 	AppUser struct {
-		Id           string `json:"id"` // UUID we store as string
-		Email        string `json:"email"`
-		Name         string `json:"name"`
-		PasswordHash string `json:"password_hash"`
+		Id           uuid.UUID `json:"id"` // UUID we store as string
+		Email        string    `json:"email"`
+		Name         string    `json:"name"`
+		PasswordHash string    `json:"password_hash"`
 	}
 
 	Register struct {
@@ -22,7 +26,8 @@ type (
 	}
 
 	Logout struct {
-		Id string `json:"id"`
+		UserId uuid.UUID `json:"user_id"`
+		Token  uuid.UUID `json:"token"`
 	}
 
 	Connected struct {
@@ -36,7 +41,7 @@ type (
 
 	Todo struct {
 		Id        int       `json:"id"`
-		UserId    string    `json:"user_id"`
+		UserId    uuid.UUID `json:"user_id"`
 		Content   string    `json:"content"`
 		CreatedAt time.Time `json:"created_at"`
 		DueTime   time.Time `json:"due_time"`
@@ -44,16 +49,16 @@ type (
 	}
 
 	Chat struct {
-		Id          int    `json:"id"`
-		SenderId    string `json:"sender_id"`
-		RecipientId string `json:"recipient_id"`
-		Content     string `json:"content"`
-		IsRead      string `json:"is_read"`
+		Id          int       `json:"id"`
+		SenderId    uuid.UUID `json:"sender_id"`
+		RecipientId uuid.UUID `json:"recipient_id"`
+		Content     string    `json:"content"`
+		IsRead      string    `json:"is_read"`
 	}
 
 	Persistance struct {
-		UserId   string    `json:"user_id"`
-		Token    string    `json:"token"`
+		UserId   uuid.UUID `json:"user_id"`
+		Token    uuid.UUID `json:"token"`
 		LoginAt  time.Time `json:"login_at"`
 		LogoutAt time.Time `json:"logout_at"`
 	}

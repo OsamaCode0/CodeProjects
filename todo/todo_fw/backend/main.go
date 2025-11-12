@@ -40,8 +40,11 @@ func main() {
 
 	app.Router.HandleFunc("/register", hDb.RegisterUser).Methods("POST")
 	app.Router.HandleFunc("/login", hDb.LoginUser).Methods("POST")
+	app.Router.HandleFunc("/logout", hDb.LogoutUser).Methods("POST")
 	app.Router.HandleFunc("/user/{id}", hDb.FindUserById).Methods("GET")
 	app.Router.HandleFunc("/user/todo", hDb.SaveTodo).Methods("POST")
+	app.Router.HandleFunc("/user/todo", hDb.UpdateTodo).Methods("PUT")
+	app.Router.HandleFunc("/user/todo/{id}", hDb.GetAllTodo).Methods("GET")
 
 	authMiddleware := https.NewAuthMiddleware()
 	handler := https.CORS(authMiddleware.Handler(app.Router))

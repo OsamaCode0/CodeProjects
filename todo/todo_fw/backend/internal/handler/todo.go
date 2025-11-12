@@ -8,6 +8,9 @@ import (
 	"todo/internal/exception"
 	"todo/internal/helper"
 	"todo/internal/types"
+
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 func (db *DB) SaveTodo(w http.ResponseWriter, r *http.Request) {
@@ -60,9 +63,102 @@ func (db *DB) SaveTodo(w http.ResponseWriter, r *http.Request) {
 
 	// 3. Handle response body
 	webRespond := types.WebResponse{
-		Code:   http.StatusCreated,
-		Status: "StatusCreated",
+		Code:   http.StatusOK,
+		Status: "StatusOK",
 		Data:   todo, // change here
+	}
+
+	err = helper.WriteToResponseBody(w, webRespond)
+	if err != nil {
+		log.Printf("unable to write to response body: %v", err)
+		return
+	}
+}
+
+func (db *DB) UpdateTodo(w http.ResponseWriter, r *http.Request) {
+	// 1. Handle request body
+	updateTodo := &types.Todo{}
+	err := helper.ReadFromRequestBody(r, updateTodo)
+	if err != nil {
+		exception.HandleBadRequestError(w, fmt.Errorf("update todo handler: %v", err))
+		return
+	}
+
+	// 2. Handle business logic
+	tx, err := db.DB.BeginTransaction()
+	if err != nil {
+		exception.HandleResponseError(w, err)
+		return
+	}
+
+	todo := &types.Todo{
+		Id:      updateTodo.Id,
+		Content: updateTodo.Content,
+		DueTime: updateTodo.DueTime,
+	}
+	err = tx.UpdateTodo(r.Context(), todo)
+	if err != nil {
+		tx.Tx.Rollback(r.Context())
+		exception.HandleResponseError(w, fmt.Errorf("update todo: %v", err))
+		return
+	}
+
+	err = tx.CommitTransaction()
+	if err != nil {
+		exception.HandleResponseError(w, err)
+		return
+	}
+
+	// 3. Handle response body
+	webRespond := types.WebResponse{
+		Code:   http.StatusOK,
+		Status: "StatusOK",
+		Data:   todo,
+	}
+
+	err = helper.WriteToResponseBody(w, webRespond)
+	if err != nil {
+		log.Printf("unable to write to response body: %v", err)
+		return
+	}
+}
+
+func (db *DB) GetAllTodo(w http.ResponseWriter, r *http.Request) {
+	// 1. Handle request body
+	vars := mux.Vars(r)
+	id := vars["id"]
+	userIdUUID, err := uuid.Parse(id)
+	if err != nil {
+		exception.HandleResponseError(w, err)
+		return
+	}
+
+	// 2. Handle business logic
+	tx, err := db.DB.BeginTransaction()
+	if err != nil {
+		exception.HandleResponseError(w, err)
+		return
+	}
+
+	todos := &[]*types.Todo{}
+	err = tx.FindTodos(r.Context(), userIdUUID, todos)
+	if err != nil {
+		tx.Tx.Rollback(r.Context())
+		exception.HandleResponseError(w, fmt.Errorf("get all todo: %v", err))
+		return
+	}
+
+	err = tx.CommitTransaction()
+	if err != nil {
+		exception.HandleResponseError(w, err)
+		return
+	}
+
+	// 3. Handle response body
+	webRespond := types.WebResponse{
+		Code:   http.StatusOK,
+		Status: "StatusOK",
+		Data:   todos,
 	}
 
 	err = helper.WriteToResponseBody(w, webRespond)
