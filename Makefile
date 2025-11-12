@@ -13,7 +13,7 @@ info:
 # Build frontend-framework package and install dependencies
 build:
 	@echo "Install Dependencies"
-	@npm install
-	@cd framework/runtime && npm install
+	@SKIP_FRONTEND_FRAMEWORK_POSTINSTALL=1 npm install
+	@cd framework/runtime && SKIP_FRONTEND_FRAMEWORK_POSTINSTALL=1 npm install
 	@echo "Build the frontend-framework"
-	@cd framework/runtime && npm run build
+	@cd framework/runtime && SKIP_FRONTEND_FRAMEWORK_POSTINSTALL=1 npm run build
