@@ -234,7 +234,6 @@ func (r *mutationResolver) SendMessage(ctx context.Context, chatID string, conte
 	// Publish and return
 	topic := fmt.Sprintf("chat:%s", chatID)
 	GlobalPubSub.Publish(topic, newMessage)
-	log.Printf("[MUT] publish topic=%s msgID=%s", topic, messageId)
 
 	return newMessage, nil
 }
@@ -673,8 +672,6 @@ func (r *subscriptionResolver) OnNewMessage(ctx context.Context, chatID string) 
 	topic := fmt.Sprintf("chat:%s", chatID)
 
 	msgChan, unsubscribe := GlobalPubSub.Subscribe(topic)
-log.Printf("[SUB] OnNewMessage chatID=%s userID=%s ctxOK=%v", chatID, userID, ok)
-log.Printf("[SUB] subscribed topic=%s", topic)
 	go func() {
 		<-ctx.Done()
 		unsubscribe()

@@ -37,7 +37,7 @@ func LoadConfig() *Config {
 
 	var c Config
 	mode := os.Getenv("MODE")
-	if mode == "developer"{
+	if mode == "development"{
 		c.IsDevMode = true
 	}
 	c.Port = os.Getenv("PORT")

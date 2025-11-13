@@ -1,7 +1,6 @@
 package graph
 
 import (
-	"log"
 	"sync"
 
 	"matchme-server/graph/model"
@@ -48,8 +47,7 @@ func (ps *PubSub) Subscribe(topic string) (<-chan *model.Message, func()) {
 		}
 		close(ch)
 	}
-log.Printf("[PUBSUB] +sub topic=%s total=%d", topic, len(ps.subs[topic]))
-//log.Printf("[PUBSUB] publish topic=%s delivered=%d", topic, delivered)
+	
 	return ch, unsubscribe
 }
 
