@@ -4,9 +4,14 @@ import "net/http"
 
 func CORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		allowedOrigins := map[string]bool{
+			"http://127.0.0.1:3000": true,
+			"http://localhost:3000": true,
+			// add more if needed
+		}
 		origin := r.Header.Get("Origin")
 
-		if origin != "" {
+		if allowedOrigins[origin] {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Vary", "Origin")
 		}

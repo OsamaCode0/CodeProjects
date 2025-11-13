@@ -18,7 +18,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const port = 8080
+const port = 8081
 
 func main() {
 	var app = types.Application{}
