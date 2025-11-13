@@ -3,12 +3,14 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"matchme-server/endpoints"
 	"matchme-server/graphsetup"
 	"matchme-server/internal"
 	"matchme-server/middleware"
 	"matchme-server/services"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -56,15 +58,31 @@ func SetupRouter(IsDevMode bool, db *pgxpool.Pool) *gin.Engine {
 		},
 	}))
 
-	router.Use(cors.New(cors.Config{
+// --- CORS middleware that skips WebSocket upgrades ---
+router.Use(func(c *gin.Context) {
+	// Skip CORS if it's a WebSocket upgrade
+	if strings.EqualFold(c.GetHeader("Upgrade"), "websocket") {
+		log.Printf("[CORS] Skipping CORS for WebSocket upgrade on %s", c.Request.URL.Path)
+		c.Next()
+		return
+	}
+
+	// Otherwise apply standard CORS for HTTP
+	cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowOriginFunc: func(origin string) bool {
+			// Allow empty origins (Altair Desktop) or localhost frontend
+			return origin == "" || origin == "http://localhost:5173" || origin == "altair://-"
+		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		AllowWildcard:    false,
 		MaxAge:           12 * time.Hour,
-	}))
+	})(c)
+})
+
 	//router.Use(gin.Logger())
 	//router.Use(gin.Recovery())
 
@@ -73,13 +91,12 @@ func SetupRouter(IsDevMode bool, db *pgxpool.Pool) *gin.Engine {
 		c.JSON(200, gin.H{"message": "pong!"})
 	})
 
-	gqlGroup := router.Group("/") // You can use / or /graphql
-	gqlGroup.Use(middleware.GinGqlAuthMiddleware(internal.Cfg.JWTSecret))
-	setupGraphQL(gqlGroup, IsDevMode, db)
+	setupGraphQL(router, IsDevMode, db)
 
 
 	router.POST("/users/register", services.Register)
 	router.POST("/users/login", services.Login)
+
 
 	router.GET("/ws", HandleWebSocket(GlobalHub))
 

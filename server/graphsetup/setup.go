@@ -34,19 +34,22 @@ func RegisterGraphQL(router gin.IRouter, IsDevMode bool, db *pgxpool.Pool) {
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 
-	srv.AddTransport(&transport.Websocket{
+	ws := &transport.Websocket{
 		Upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
+				log.Printf("[GQL WS] CheckOrigin hit. Origin=%q", r.Header.Get("Origin"))
 				return true
 			},
 			ReadBufferSize:  1024,
 			WriteBufferSize: 1024,
+			Subprotocols:    []string{"graphql-transport-ws","graphql-ws"},
 		},
 
 		KeepAlivePingInterval: 25 * time.Second,
 
 		InitFunc: func(ctx context.Context, initPayload transport.InitPayload) (context.Context, *transport.InitPayload, error) {
-			// read Authorization from connectionParams (case-insensitive)
+			// Try to read "Authorization" from connectionParams (case-insensitive)
+			log.Printf("[WS INIT] payload keys: %#v", map[string]any(initPayload))
 			var tokenString string
 			if auth, ok := initPayload["Authorization"].(string); ok && auth != "" {
 				tokenString = strings.TrimPrefix(auth, "Bearer ")
@@ -56,7 +59,7 @@ func RegisterGraphQL(router gin.IRouter, IsDevMode bool, db *pgxpool.Pool) {
 				return nil, nil, fmt.Errorf("missing Authorization in connection payload")
 			}
 
-			// verify JWT
+			// Parse and verify JWT
 			token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 				return []byte(internal.Cfg.JWTSecret), nil
 			})
@@ -64,6 +67,7 @@ func RegisterGraphQL(router gin.IRouter, IsDevMode bool, db *pgxpool.Pool) {
 				return nil, nil, fmt.Errorf("invalid token")
 			}
 
+			// Extract user ID from claims
 			claims, ok := token.Claims.(jwt.MapClaims)
 			if !ok {
 				return nil, nil, fmt.Errorf("invalid token claims")
@@ -74,12 +78,14 @@ func RegisterGraphQL(router gin.IRouter, IsDevMode bool, db *pgxpool.Pool) {
 				return nil, nil, fmt.Errorf("missing user ID in token")
 			}
 
-			// put userID into context for resolvers
+			// Put userID into context for resolvers
 			newCtx := context.WithValue(ctx, middleware.UserIDKey, userID)
 			log.Printf("✅ WebSocket connected for user %s\n", userID)
+
 			return newCtx, &initPayload, nil
 		},
-	})
+	}
+	srv.AddTransport(ws)
 
 	srv.AddTransport(transport.Options{})
 
@@ -92,9 +98,9 @@ func RegisterGraphQL(router gin.IRouter, IsDevMode bool, db *pgxpool.Pool) {
 		Cache: lru.New[string](100),
 	})
 
-	router.OPTIONS("/graphql-ws", func(c *gin.Context) { c.Status(http.StatusNoContent) })
+	/*router.OPTIONS("/graphql-ws", func(c *gin.Context) { c.Status(http.StatusNoContent) })
 	router.GET("/graphql-ws", ginAdapter(srv))
-	router.GET("/graphql-ws/ping", func(c *gin.Context) { c.String(200, "ok") })
+	router.GET("/graphql-ws/ping", func(c *gin.Context) { c.String(200, "ok") })*/
 
 	playgroundHandler := playground.Handler("GraphQL playground", "/graphql")
 
@@ -102,12 +108,16 @@ func RegisterGraphQL(router gin.IRouter, IsDevMode bool, db *pgxpool.Pool) {
 	if rg, ok := router.(*gin.RouterGroup); ok {
 		base = strings.TrimRight(rg.BasePath(), "/")
 	}
-	log.Printf("[GRAPHQL] WS mounted at %s/graphql-ws", base)
+	log.Printf("[GRAPHQL] WS mounted at %s/graphql", base)
 
 	// 4. Mount endpoints onto the GIN router
 	// We'll use /graphql for the API and /playground for the IDE
-	router.POST("/graphql", ginAdapter(srv))
-	//router.GET("/graphql", ginAdapter(srv))
+	router.POST("/graphql",
+		middleware.GinGqlAuthMiddleware(internal.Cfg.JWTSecret),
+		ginAdapter(srv))
+	router.GET("/graphql", ginAdapter(srv))
+	router.GET("/graphql-ws",  ginAdapter(srv)) 
+	//router.GET("/graphql-ws", ginAdapter(srv))
 
 	if IsDevMode {
 		log.Println("Developer mode enabled. GraphQL Playground is available at /playground")
