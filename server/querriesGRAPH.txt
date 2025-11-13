@@ -148,3 +148,27 @@ query GetCon{
     }
   }
 }
+
+FOR SUBSCRIPTIONS
+
+subscription {
+  onNewMessage(chatID: "5493a4e8-7ebe-49b7-b8c9-b3108bf2a542") {
+    id
+    content
+    sender { userID, email }
+  }
+}
+HTTP header !IMPORTANT
+{
+  "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjMxMTk0MDYsImlhdCI6MTc2MzAzMzAwNiwic3ViIjoiNDdlYWIxNmYtNjliMi00ZmM1LTgyMjctMDBiYmM3MDRjMGJmIn0.iJ0j-AKPipzbNtIITySt3LQhitFSuXApbSd8wItd14c"
+}
+
+mutation send {
+  sendMessage(chatID: "5493a4e8-7ebe-49b7-b8c9-b3108bf2a542", content: "Hello, this is a test!") {
+    id
+    content
+    sender{
+      email
+    }
+  }
+}

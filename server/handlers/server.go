@@ -3,7 +3,6 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 	"matchme-server/endpoints"
 	"matchme-server/graphsetup"
 	"matchme-server/internal"
@@ -62,7 +61,6 @@ func SetupRouter(IsDevMode bool, db *pgxpool.Pool) *gin.Engine {
 router.Use(func(c *gin.Context) {
 	// Skip CORS if it's a WebSocket upgrade
 	if strings.EqualFold(c.GetHeader("Upgrade"), "websocket") {
-		log.Printf("[CORS] Skipping CORS for WebSocket upgrade on %s", c.Request.URL.Path)
 		c.Next()
 		return
 	}
@@ -71,7 +69,6 @@ router.Use(func(c *gin.Context) {
 	cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"},
 		AllowOriginFunc: func(origin string) bool {
-			// Allow empty origins (Altair Desktop) or localhost frontend
 			return origin == "" || origin == "http://localhost:5173" || origin == "altair://-"
 		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
@@ -83,10 +80,6 @@ router.Use(func(c *gin.Context) {
 	})(c)
 })
 
-	//router.Use(gin.Logger())
-	//router.Use(gin.Recovery())
-
-	//to check that REST is working
 	router.GET("/rest/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "pong!"})
 	})

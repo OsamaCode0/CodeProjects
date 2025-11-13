@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"matchme-server/logx"
 	"net/http"
 	"strings"
 
@@ -70,28 +69,12 @@ func AuthRequired(secret string) gin.HandlerFunc {
 
 func GinGqlAuthMiddleware(secret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		isWS := logx.IsWSUpgrade(c.GetHeader("Upgrade"))
-		method := c.Request.Method
-		path := c.FullPath()
-
 	
 		auth := c.GetHeader("Authorization")
-		log.Printf("[AUTH] path=%s method=%s ws=%v origin=%s proto=%s auth=%s",
-			path, method, isWS,
-			c.GetHeader("Origin"),
-			c.GetHeader("Sec-WebSocket-Protocol"),
-			logx.MaskToken(auth),
-		)
-
-		if method == http.MethodOptions || isWS {
-			log.Printf("[AUTH] bypass (method=%s ws=%v) → NEXT", method, isWS)
-			c.Next()
-			return
-		}
 
 		if !strings.HasPrefix(auth, "Bearer ") {
 			log.Printf("[AUTH] reject: missing/invalid Authorization")
-			c.Next() // No token, but that's okay
+			c.Next() 
 			return
 		}
 
@@ -108,20 +91,20 @@ func GinGqlAuthMiddleware(secret string) gin.HandlerFunc {
 			return []byte(secret), nil
 		})
 		if err != nil {
-			c.Next() // Invalid token, but that's okay.
+			c.Next() 
 			return
 		}
 
 		claims, ok := token.Claims.(*jwt.RegisteredClaims)
 		if !ok || !token.Valid {
-			c.Next() // Invalid claims, but that's okay.
+			c.Next() 
 			return
 		}
 
-		// Token is valid! Add the userID to the context.
+	
 		userID := claims.Subject
-		c.Set("userID", userID)                                          // For Gin
-		ctx := context.WithValue(c.Request.Context(), UserIDKey, userID) // For GQLGEN
+		c.Set("userID", userID)                                         
+		ctx := context.WithValue(c.Request.Context(), UserIDKey, userID) 
 		c.Request = c.Request.WithContext(ctx)
 		
 		log.Printf("[AUTH] HTTP authorized")
