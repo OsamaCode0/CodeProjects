@@ -130,7 +130,7 @@ function TodoList({ todos, edit }, emit) {
 }
 
 function App(state, emit) {
-    return hFragment([
+    return h('div', { class: 'todo-app' }, [
         h('h1', {}, ['My TODOs']),
         CreateTodo(state, emit),
         TodoList(state, emit),
