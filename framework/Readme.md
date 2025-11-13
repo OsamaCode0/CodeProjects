@@ -129,23 +129,33 @@ result:
 ## Complete Guide How To Start
 
 1. Install All Dependencies
+    
     On the root of the project:
+
 ```sh
 make build
 ```
+
 2. Create A Project Folder
+   
    On the root of the project:
+
 ```sh
 mkdir project-name #feel free to name your project folder as you like
 ```
+
 3. Install Frontend Framework Into Your Project
+   
    On the root of the project:
+
 ```sh
 cd project-name
 
 npm install frontend-framework
 ```
+
 4. Start Coding In Frontend Framework as shown at Get Started above
+
 **Happy Coding**
 
 ---
