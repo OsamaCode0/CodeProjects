@@ -132,6 +132,8 @@ Ensure you have the following installed on your system:
 
     ```bash
     # server/.env
+    # Enables GraphQL Playground
+    APP_ENV=development         
     # Server port
     PORT=8088
 
@@ -190,6 +192,8 @@ Ensure you have the following installed on your system:
     npm i && npm run dev
     # Frontend will be available at http://localhost:5173
     ```
+> 📖 **For detailed GraphQL API documentation, see [GraphQL API documentation](./GraphQL-README.md)**
+
 ### Database Management
 
     The backend includes helpful commands for managing the database during development or testing.
