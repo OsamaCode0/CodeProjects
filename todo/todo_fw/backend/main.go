@@ -42,8 +42,9 @@ func main() {
 	app.Router.HandleFunc("/login", hDb.LoginUser).Methods("POST")
 	app.Router.HandleFunc("/logout", hDb.LogoutUser).Methods("POST")
 	app.Router.HandleFunc("/user/{id}", hDb.FindUserById).Methods("GET")
-	app.Router.HandleFunc("/user/todo", hDb.SaveTodo).Methods("POST")
+	app.Router.HandleFunc("/user/todo", hDb.AddTodo).Methods("POST")
 	app.Router.HandleFunc("/user/todo", hDb.UpdateTodo).Methods("PUT")
+	app.Router.HandleFunc("/user/todo", hDb.DeleteTodo).Methods("DELETE")
 	app.Router.HandleFunc("/user/todo/{id}", hDb.GetAllTodo).Methods("GET")
 
 	authMiddleware := https.NewAuthMiddleware()

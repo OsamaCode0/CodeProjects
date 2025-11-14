@@ -13,7 +13,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (db *DB) SaveTodo(w http.ResponseWriter, r *http.Request) {
+func (db *DB) AddTodo(w http.ResponseWriter, r *http.Request) {
 	log.Println("save todo")
 	// 1. Handle request body
 	inputTodo := &types.Todo{}
@@ -160,6 +160,53 @@ func (db *DB) GetAllTodo(w http.ResponseWriter, r *http.Request) {
 		Code:   http.StatusOK,
 		Status: "StatusOK",
 		Data:   todos,
+	}
+
+	err = helper.WriteToResponseBody(w, webRespond)
+	if err != nil {
+		log.Printf("unable to write to response body: %v", err)
+		return
+	}
+}
+
+func (db *DB) DeleteTodo(w http.ResponseWriter, r *http.Request) {
+	// 1. Handle request body
+	deleteTodo := &types.Todo{}
+	err := helper.ReadFromRequestBody(r, deleteTodo)
+	if err != nil {
+		exception.HandleBadRequestError(w, fmt.Errorf("delete todo handler: %v", err))
+		return
+	}
+
+	// 2. Handle business logic
+	tx, err := db.DB.BeginTransaction()
+	if err != nil {
+		exception.HandleResponseError(w, err)
+		return
+	}
+
+	todo := &types.Todo{
+		Id:     deleteTodo.Id,
+		UserId: deleteTodo.UserId,
+	}
+	err = tx.DeleteTodo(r.Context(), todo)
+	if err != nil {
+		tx.Tx.Rollback(r.Context())
+		exception.HandleResponseError(w, fmt.Errorf("delete todo: %v", err))
+		return
+	}
+
+	err = tx.CommitTransaction()
+	if err != nil {
+		exception.HandleResponseError(w, err)
+		return
+	}
+
+	// 3. Handle response body
+	webRespond := types.WebResponse{
+		Code:   http.StatusOK,
+		Status: "StatusOK",
+		Data:   todo,
 	}
 
 	err = helper.WriteToResponseBody(w, webRespond)

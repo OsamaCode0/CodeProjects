@@ -170,6 +170,35 @@ function TodoItem({ todo, i, edit }, emit) {
         }
     }
 
+    const deleteTodo = async () => {
+        const user_id = localStorage.getItem('user_id') || ''
+        const token = localStorage.getItem('token') || ''
+        try {
+            const res = await fetch(`http://localhost:8081/user/todo`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                // some backends expect a body; remove if not needed
+                body: JSON.stringify({ 
+                    id: todo.id,
+                    user_id: user_id,
+                 }),
+            })
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}))
+                throw new Error(err.message || 'Fail to delete todo')
+            }
+
+            // remove locally by index (uses your existing reducer)
+            emit('remove-todo', i)
+        } catch (err) {
+            console.error('Error deleting todo:', err)
+        }
+    }
+
     return isEditing
         ? h('li', {}, [
             h('input', {
@@ -197,7 +226,7 @@ function TodoItem({ todo, i, edit }, emit) {
             }, [todo.content]),
             h('button', {
                 on: {
-                    click: () => emit('remove-todo', i)
+                    click: deleteTodo
                 }
             }, ['Done']),
         ])
