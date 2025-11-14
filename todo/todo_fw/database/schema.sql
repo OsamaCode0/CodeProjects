@@ -99,3 +99,20 @@ CREATE OR REPLACE FUNCTION is_connected(a UUID, b UUID) RETURNS BOOLEAN AS $$
        OR (user_a = b AND user_b = a)
   );
 $$ LANGUAGE SQL IMMUTABLE;
+
+-- Create a default admin user
+INSERT INTO app_user (email, name, password_hash)
+VALUES (
+  'admin@example.com',
+  'Admin User',
+  make_bcrypt_hash('admin123')  -- replace with a stronger password
+)
+ON CONFLICT (email) DO NOTHING;
+
+-- Create a starter todo for the admin
+INSERT INTO todo (user_id, content, due_time)
+VALUES (
+  (SELECT id FROM app_user WHERE email = 'admin@example.com'),
+  'Set up initial system configuration',
+  now() + interval '1 day'
+);

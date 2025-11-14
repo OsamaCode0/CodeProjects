@@ -14,6 +14,7 @@ import (
 )
 
 func (db *DB) SaveTodo(w http.ResponseWriter, r *http.Request) {
+	log.Println("save todo")
 	// 1. Handle request body
 	inputTodo := &types.Todo{}
 	err := helper.ReadFromRequestBody(r, inputTodo)

@@ -1,7 +1,8 @@
 import { createApp, h } from "../dist/frontend-framework.js"
+import { navigate } from "../index.js"
 // import './login.css'
 
-const state = {
+export const loginState = {
     currentName: '',
     currentPassword: '',
     isLoggedIn: false,
@@ -9,7 +10,7 @@ const state = {
     error: null,
 }
 
-const reducers = {
+export const loginReducers = {
     'update-name': (state, name) => ({
         ...state,
         currentName: name,
@@ -23,13 +24,17 @@ const reducers = {
         loading: true,
         error: null,
     }),
-    'login-success': (state, payload) => ({
-        ...state,
-        loading: false,
-        isLoggedIn: true,
-        user: payload.user,
-        token: payload.token,
-    }),
+    'login-success': (state, payload) => {
+        localStorage.setItem('user_id', payload.user_id)
+        localStorage.setItem('token', payload.token)
+        return {
+            ...state,
+            loading: false,
+            isLoggedIn: true,
+            user_id: payload.user_id,
+            token: payload.token,
+        }
+    },
     'login-failure': (state, errorMessage) => ({
         ...state,
         loading: false,
@@ -38,7 +43,14 @@ const reducers = {
     }),
 }
 
-export function LoginPage({ currentName, currentPassword, isLoggedIn }, emit) {
+export function LoginPage(state, emit) {
+    console.log('state: ', state)
+    if (state.isLoggedIn) {
+        console.log("redirect to /todo")
+        navigate('/todo');
+        return
+    }
+    const { currentName, currentPassword } = state;
     const submit = async (e) => {
         e.preventDefault()
         console.log('submit initiated', currentName, currentPassword)
@@ -70,10 +82,10 @@ export function LoginPage({ currentName, currentPassword, isLoggedIn }, emit) {
             const data = await res.json()
             console.log('login-success:', data)
             emit('login-success', {
-                user: data.data.user_id,
+                user_id: data.data.user_id,
                 token: data.data.token,
             })
-        } catch {
+        } catch (err) {
             emit('login-failure', err.message || 'Network error')
         }
     }
@@ -103,10 +115,21 @@ export function LoginPage({ currentName, currentPassword, isLoggedIn }, emit) {
             type: 'submit',
             disabled: state.loading,
             class: 'login-button',
-        }, [ state.loading ? 'Loggin in...' : 'Login']),
-        state.error ? h('p', { class: 'error' }, [state.error]) : null,
+        }, [state.loading ? 'Loggin in...' : 'Login']),
+        state.error ? h('p', { class: 'error' }, [state.error]) : h('span', {}, []),
         state.isLoggedIn ? h('p', {}, ['Logged In']) : null,
     ].filter(Boolean))
 }
 
-createApp({ state, reducers, view: LoginPage }).mount(document.body)
+// export function LoginPage(state, emit) {
+//     return Login(state, emit)
+
+    // if (document.querySelector('.login-form')) return;
+    // createApp({
+    //     state: loginState,
+    //     reducers: loginReducers,
+    //     view: Login, // pass function, not Login(state, emit)
+    // }).mount(document.body);
+// }
+
+// createApp({ state: loginState, reducers: loginReducers, view: Login }).mount(document.body)

@@ -3,19 +3,24 @@ How To Test This?:
 from root folder
 
 ```sh
-# build the framework package
-make build
-
 # direct to the example folder
 cd todo/todo_fw
 
-# install the package
-npm install frontend-framework
+# start docker
+# ensure your docker application is running
+make start-db
 
+# run backend
+make go-run
 
-# start the example
-npm run todo_fw
+# run frontend
+make start
 ```
+
+We created admin account for testing:
+
+email: admin@example.com
+password: admin123
 
 
 Todo Plan for TODO APP:

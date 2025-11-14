@@ -10,6 +10,7 @@ import (
 )
 
 func (db *DB) LoginUser(w http.ResponseWriter, r *http.Request) {
+	log.Println("user login")
 	// 1. handle request body
 	logs := &types.Login{}
 	err := helper.ReadFromRequestBody(r, logs)
@@ -17,6 +18,7 @@ func (db *DB) LoginUser(w http.ResponseWriter, r *http.Request) {
 		exception.HandleBadRequestError(w, err)
 		return
 	}
+	log.Println(logs)
 
 	// 2. handle business logic
 	tx, err := db.DB.BeginTransaction()

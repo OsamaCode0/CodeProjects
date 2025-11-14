@@ -1,9 +1,11 @@
 import { destroyDOM } from './destroy-dom.js'
 import { Dispatcher } from './dispatcher.js'
 import { mountDOM } from './mount-dom.js'
+export { helperMountDOM } from './mount-dom.js'
 // import { patch } from './patch.js'
 // 7.1.3 Change in rendering
 import { patchDOM } from './patch-dom.js'
+export { helperPatchDOM } from './patch-dom.js'
 
 
 // 5.2.2 The application instance's renderer

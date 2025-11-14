@@ -29,19 +29,24 @@ export function destroyDOM(vdom) {
 // 4.2.1 Destroying a text node
 function removeTextNode(vdom) {
     const { el } = vdom;
-    el.remove()
+    if (el) {
+        el.remove();
+    }
 }
 
 // 4.2.2 Destroying an element
 function removeElementNode(vdom) {
     const { el, children, listeners } = vdom;
 
-    el.remove()
-    children.forEach(destroyDOM)
-
-    if (listeners) {
-        removeEventListeners(listeners, el)
-        delete vdom.listeners
+    if (el) {
+        el.remove();
+    }
+    if (children) {
+        children.forEach(destroyDOM);
+    }
+    if (listeners && el) {
+        removeEventListeners(listeners, el);
+        delete vdom.listeners;
     }
 }
 
@@ -49,5 +54,7 @@ function removeElementNode(vdom) {
 function removeFragmentNodes(vdom) {
     const { children } = vdom;
 
-    children.forEach(destroyDOM)
+    if (children) {
+        children.forEach(destroyDOM);
+    }
 }

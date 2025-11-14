@@ -101,3 +101,35 @@ function insert(el, parentEl, index) {
         parentEl.insertBefore(el, children[index])
     }
 }
+
+export function helperMountDOM(vdom, parentEl, index) {
+    if (!vdom || typeof vdom.type === 'undefined') {
+        console.warn('Invalid vdom passed to mountDOM:', vdom);
+        return;
+    }
+    
+    switch (vdom.type) {
+        case DOM_TYPES.TEXT: {
+            console.log("start create text node")
+            createTextNode(vdom, parentEl, index)
+            break
+        }
+
+        case DOM_TYPES.ELEMENT: {
+            console.log("start create element node")
+            createElementNode(vdom, parentEl, index)
+            break
+        }
+
+        case DOM_TYPES.FRAGMENT: {
+            console.log('start create frament node')
+            createFragmentNode(vdom, parentEl, index)
+            break
+        }
+
+        default: {
+            console.log("an error happen")
+            throw new Error(`Can't mount DOM of type: ${vdom.type}`)
+        }
+    }
+}

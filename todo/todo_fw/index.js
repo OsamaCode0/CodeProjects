@@ -1,140 +1,91 @@
-import { h, hFragment, createApp } from './dist/frontend-framework.js'
+import { createApp, h, helperPatchDOM, helperMountDOM } from "./dist/frontend-framework.js";
+import { LoginPage, loginReducers, loginState } from "./component/login.js";
+import { TodoApp, todoReducers, todoState } from "./todo_fw.js";
 
+// 1) Single, merged state and reducers
 const state = {
-    currentTodo: '',
-    edit: {
-        idx: null,
-        original: null,
-        edited: null,
-    },
-    todos: ['walk the dog', 'water the plant'],
-}
+  // todo: {...todoState},
+  // login: {...loginState},
+  ...todoState,
+  ...loginState
+};
 
 const reducers = {
-    'update-current-todo': (state, currentTodo) => ({
-        ...state,
-        currentTodo,
-    }),
-    'add-todo': (state) => ({
-        ...state,
-        currentTodo: '',
-        todos: [...state.todos, state.currentTodo],
-    }),
-    'start-editing-todo': (state, idx) => ({
-        ...state,
-        edit: {
-            idx,
-            original: state.todos[idx],
-            edited: state.todos[idx],
-        },
-    }),
-    'edit-todo': (state, edited) => ({
-        ...state,
-        edit: { ...state.edit, edited },
-    }),
-    'save-edited-todo': (state) => {
-        const todos = [...state.todos]
-        todos[state.edit.idx] = state.edit.edited
+  ...todoReducers,
+  ...loginReducers,
+};
 
-        return {
-            ...state,
-            edit: {
-                idx: null,
-                original: null,
-                edited: null,
-            },
-            todos,
+// 2) Router: returns a single root node, no extra wrappers, no side effects
+function Router(state, emit) {
+  switch (window.location.pathname) {
+    case "/":
+      return HomePage();
+    case "/login":
+      return LoginPage(state, emit);
+    case "/todo":
+      return TodoApp(state, emit);
+    default:
+      return h("div", {}, [h("h1", {}, ["404 Not Found"])]);
+  }
+}
+
+// 3) App: mount ONCE
+const app = createApp({ state, reducers, view: Router });
+app.mount(document.body);
+
+// 4) Track current VDOM and render consistently
+let currentVdom = null;
+// let currentVdom = Router(state, app.emit);
+
+// function initialRender() {
+//   const vdom = Router(state, app.emit);
+//   helperMountDOM(vdom, document.body);  // first mount should use mount helper
+//   currentVdom = vdom;
+// }
+
+function rerender() {
+  const newVdom = Router(state, app.emit);
+  helperPatchDOM(currentVdom, newVdom, document.body);
+}
+
+// 5) Navigate: update URL and rerender
+export function navigate(path) {
+  window.history.pushState({}, "", path);
+  console.log('rerender()')
+  rerender();
+}
+
+// 6) Popstate: back/forward buttons
+window.addEventListener("popstate", rerender);
+
+// 7) Kick off initial render
+// initialRender();
+
+// 8) HomePage: pure, calls navigate
+function HomePage() {
+  return h("div", { class: "home" }, [
+    h("h1", {}, ["Welcome to My App"]),
+    h("p", {}, ["Choose where to go:"]),
+    h("nav", {}, [
+      h("a", {
+        href: "/login",
+        onclick: e => {
+          e.preventDefault();
+          navigate("/login");
+          return
         }
-    },
-    'cancel-editing-todo': (state) => ({
-        ...state,
-        edit: {
-            idx: null,
-            original: null,
-            edited: null,
-        },
-    }),
-    'remove-todo': (state, idx) => ({
-        ...state,
-        todos: state.todos.filter((_, i) => i !== idx),
-    }),
-}
-
-function CreateTodo({ currentTodo }, emit) {
-    return h('div', {}, [
-        h('label', { for: 'todo-input' }, ['New TODO']),
-        h('input', {
-            key: "todo-input",
-            type: 'text',
-            id: 'todo-input',
-            value: currentTodo,
-            on: {
-                input: ({ target }) =>
-                    emit('update-current-todo', target.value),
-                keydown: ({ key }) => {
-                    if (key === 'Enter' && currentTodo.length >= 3) {
-                        emit('add-todo')
-                    }
-                },
-            },
-        }),
-        h('button', {
-            disabled: currentTodo.length < 3,
-            on: { click: () => emit('add-todo') },
-        }, ['Add']),
+      }, ["Login"]),
+      h("span", {}, [" | "]),
+      // register route not implemented → keep as a normal link or add a case
+      h("a", { href: "/register" }, ["Register"]),
+      // h("span", {}, [" | "]),
+      // h("a", {
+      //   href: "/todo",
+      //   onclick: e => {
+      //     e.preventDefault();
+      //     navigate("/todo");
+      //   }
+      // }, ["Todo"]),
     ])
+  ]);
 }
-
-function TodoItem({ todo, i, edit }, emit) {
-    const isEditing = edit.idx === i
-
-    return isEditing
-        ? h('li', {}, [
-            h('input', {
-                value: edit.edited,
-                on: {
-                    input: ({ target }) => emit('edit-todo', target.value)
-                },
-            }),
-            h('button', {
-                on: {
-                    click: () => emit('save-edited-todo')
-                }
-            }, ['Save']),
-            h('button', {
-                on: {
-                    click: () => emit('cancel-editing-todo')
-                }
-            }, ['Cancle']),
-        ])
-        : h('li', {}, [
-            h('span', {
-                on: {
-                    dblclick: () => emit('start-editing-todo', i)
-                }
-            }, [todo]),
-            h('button', {
-                on: {
-                    click: () => emit('remove-todo', i)
-                }
-            }, ['Done']),
-        ])
-}
-
-function TodoList({ todos, edit }, emit) {
-    return h(
-        'ul',
-        {},
-        todos.map((todo, i) => TodoItem({ todo, i, edit }, emit))
-    )
-}
-
-function App(state, emit) {
-    return h('div', { class: 'todo-app' }, [
-        h('h1', {}, ['My TODOs']),
-        CreateTodo(state, emit),
-        TodoList(state, emit),
-    ])
-}
-
-createApp({ state, reducers, view: App }).mount(document.body)
