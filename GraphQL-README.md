@@ -246,8 +246,8 @@ mutation send {
 ### Environment Variables
 ```bash
 # GraphQL-specific settings
-APP_ENV=developer          # Enables GraphQL Playground
-PORT=8080                   # Server port
+APP_ENV=development         # Enables GraphQL Playground
+PORT=8088                   # Server port
 JWT_SECRET=your-secret-key  # JWT signing key
 ```
 
@@ -259,7 +259,8 @@ JWT_SECRET=your-secret-key  # JWT signing key
 ## 🧪 Testing & Development
 
 ### GraphQL Playground
-Access the interactive GraphQL Playground at `http://localhost:8080/graphql` in development mode to:
+In development mode, open the interactive GraphQL Playground at http://localhost:8088/playground.
+If you're using Altair or Apollo Sandbox, access the endpoint at http://localhost:8088/graphql. There you can:
 - Explore the schema
 - Test queries and mutations
 - View documentation
