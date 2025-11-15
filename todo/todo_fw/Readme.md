@@ -13,6 +13,9 @@ make start-db
 # run backend
 make go-run
 
+# install the dependencies of frontend-framework in advance
+make install
+
 # run frontend
 make start
 ```
