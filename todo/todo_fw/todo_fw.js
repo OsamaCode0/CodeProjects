@@ -1,4 +1,5 @@
 import { h, hFragment, createApp } from './dist/frontend-framework.js'
+import { navigate } from './index.js'
 
 export const todoState = {
     currentTodo: '',
@@ -89,7 +90,7 @@ function CreateTodo({ currentTodo }, emit) {
         try {
             const res = await fetch('http://localhost:8081/user/todo', {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
                 },
@@ -105,7 +106,7 @@ function CreateTodo({ currentTodo }, emit) {
                 const err = await res.json().catch(() => ({}))
                 throw new Error(err.message || 'Fail to save todo')
             }
-            
+
             const data = await res.json()
             emit('add-todo-success', data.data)
         } catch (err) {
@@ -146,7 +147,7 @@ function TodoItem({ todo, i, edit }, emit) {
         try {
             const res = await fetch(`http://localhost:8081/user/todo`, {
                 method: 'PUT',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
                 },
@@ -163,7 +164,7 @@ function TodoItem({ todo, i, edit }, emit) {
                 const err = await res.json().catch(() => ({}))
                 throw new Error(err.message || 'Fail to update todo')
             }
-            
+
             emit('save-edited-todo')
         } catch (err) {
             console.error('Error updating todo:', err)
@@ -181,10 +182,10 @@ function TodoItem({ todo, i, edit }, emit) {
                     'Authorization': `Bearer ${token}`,
                 },
                 // some backends expect a body; remove if not needed
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     id: todo.id,
                     user_id: user_id,
-                 }),
+                }),
             })
 
             if (!res.ok) {
@@ -265,6 +266,21 @@ async function loadTodos(emit) {
 }
 
 export function TodoApp(state, emit) {
+    const token = localStorage.getItem('token') || ''
+    if (token === '') {
+        // navigate('/login', state)
+        // throw new Error('You must login to be able to access this site')
+        return (
+            h('p', {}, ['Please Login In Advance --> ', h("a", {
+                href: "/login",
+                onclick: e => {
+                    e.preventDefault();
+                    navigate("/login");
+                    return
+                }
+            }, ["Login"])])
+        )
+    }
     if (state.todos.length === 0) {
         loadTodos(emit)
     }

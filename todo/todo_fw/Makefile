@@ -34,7 +34,10 @@ go-run:
 	@echo 'Running backend...'
 	@cd backend && go run .
 
+install:
+	@echo 'install dependency frontend-framework...'
+	@npm install frontend-framework
+
 start:
 	@echo 'Starting frontend...'
-	@npm install frontend-framework
 	@npm run todo_fw

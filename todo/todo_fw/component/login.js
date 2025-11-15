@@ -1,6 +1,5 @@
 import { createApp, h } from "../dist/frontend-framework.js"
 import { navigate } from "../index.js"
-// import './login.css'
 
 export const loginState = {
     currentName: '',
@@ -44,7 +43,6 @@ export const loginReducers = {
 }
 
 export function LoginPage(state, emit) {
-    console.log('state: ', state)
     if (state.isLoggedIn) {
         console.log("redirect to /todo")
         navigate('/todo');
