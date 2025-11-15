@@ -71,7 +71,7 @@ function patchElement(oldVdom, newVdom) {
         style: oldStyle,
         on: oldEvents,
         ...oldAttrs
-    } =  oldVdom.props
+    } = oldVdom.props
 
     const {
         class: newClass,
@@ -85,7 +85,7 @@ function patchElement(oldVdom, newVdom) {
     patchAttrs(el, oldAttrs, newAttrs)
     patchClasses(el, oldClass, newClass)
     patchStyles(el, oldStyle, newStyle)
-    newVdom.listeners = patchEvents(el, oldListeners, oldEvents, newEvents) 
+    newVdom.listeners = patchEvents(el, oldListeners, oldEvents, newEvents)
 }
 
 function patchAttrs(el, oldAttrs, newAttrs) {
@@ -117,8 +117,8 @@ function patchClasses(el, oldClass, newClass) {
 
 function toClassList(classes = '') {
     return Array.isArray(classes)
-    ? classes.filter(isNotBlankOrEmptyString)
-    : classes.split(/(\s+)/).filter(isNotBlankOrEmptyString)
+        ? classes.filter(isNotBlankOrEmptyString)
+        : classes.split(/(\s+)/).filter(isNotBlankOrEmptyString)
 }
 
 function patchStyles(el, oldStyle = {}, newStyle = {}) {
@@ -133,7 +133,7 @@ function patchStyles(el, oldStyle = {}, newStyle = {}) {
     }
 }
 
-function patchEvents(el, oldListeners = {}, oldEvents = {}, newEvents = {})  {
+function patchEvents(el, oldListeners = {}, oldEvents = {}, newEvents = {}) {
     const { removed, added, updated } = objectsDiff(oldEvents, newEvents)
 
     for (const eventName of removed.concat(updated)) {
@@ -150,7 +150,7 @@ function patchEvents(el, oldListeners = {}, oldEvents = {}, newEvents = {})  {
     return addedListeners
 }
 
-function  patchChildren(oldVdom, newVdom) {
+function patchChildren(oldVdom, newVdom) {
     const oldChildren = extractChildren(oldVdom)
     const newChildren = extractChildren(newVdom)
     const parentEl = oldVdom.el
@@ -198,9 +198,10 @@ function  patchChildren(oldVdom, newVdom) {
 
 export function helperPatchDOM(oldVdom, newVdom, parentEl) {
     if (!oldVdom) {
-    mountDOM(newVdom, parentEl);
-    return newVdom;
-  }
+        parentEl.replaceChildren()
+        mountDOM(newVdom, parentEl);
+        return newVdom;
+    }
     if (!areNodesEqual(oldVdom, newVdom)) {
         const index = findIndexInParent(parentEl, oldVdom.el)
         destroyDOM(oldVdom)
