@@ -1,4 +1,4 @@
-import { createApp, h, helperPatchDOM, helperMountDOM } from "./dist/frontend-framework.js";
+import { createApp, h } from "./dist/frontend-framework.js";
 import { LoginPage, loginReducers, loginState } from "./component/login.js";
 import { TodoApp, todoReducers, todoState } from "./todo_fw.js";
 
@@ -10,129 +10,91 @@ const state = {
 const reducers = {
   ...todoReducers,
   ...loginReducers,
+  '__navigate__': (state) => state, // ADD: dummy reducer to trigger rerender
 };
 
-function Router(state, emit) {
+function Router(state, emit, helpers) {
   switch (window.location.pathname) {
     case "/":
-      return HomePage();
+      return HomePage(helpers);
     case "/login":
-      return LoginPage(state, emit);
+      return LoginPage(state, emit, helpers);
     case "/todo":
-      return TodoApp(state, emit);
+      return TodoApp(state, emit, helpers);
     default:
       return h("div", {}, [h("h1", {}, ["404 Not Found"])]);
   }
 }
 
-const app = createApp({ state, reducers, view: Router });
-app.mount(document.body);
+let app; // declare first
 
-let currentVdom = null;
+// helpers: navigation + small API wrapper
+const helpers = {
+  navigate(path) {
+    window.history.pushState({}, "", path);
+    app.emit('__navigate__', null); // CHANGE: emit to trigger rerender
+  },
+  api: {
+    async request(path, { method = 'GET', body = null, headers = {} } = {}) {
+      const token = localStorage.getItem('token') || '';
+      console.log(`API ${method} ${path}`, { token, body })
+      const opts = {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      };
+      if (body != null) opts.body = JSON.stringify(body);
 
-function rerender() {
-  const newVdom = Router(state, app.emit);
-  helperPatchDOM(currentVdom, newVdom, document.body);
-}
+      try {
+        const res = await fetch(path, opts);
+        console.log(`Response status: ${res.status}`)
+        const json = await res.json().catch(() => null);
+        if (!res.ok) {
+          const err = (json && json.message) || res.statusText || 'Request failed';
+          const e = new Error(err);
+          e.response = json;
+          throw e;
+        }
+        return json;
+      } catch (err) {
+        console.error('API request failed:', err)
+        throw err;
+      }
+    },
+    get(path) { return this.request(path, { method: 'GET' }); },
+    post(path, body) { return this.request(path, { method: 'POST', body }); },
+    put(path, body) { return this.request(path, { method: 'PUT', body }); },
+    delete(path, body) { return this.request(path, { method: 'DELETE', body }); },
+  },
+};
 
-export function navigate(path) {
-  window.history.pushState({}, "", path);
-  rerender();
-}
-
-window.addEventListener("popstate", rerender);
-
-function HomePage() {
+function HomePage(helpers) {
   return h("div", { class: "home" }, [
     h("h1", {}, ["Welcome to My App"]),
     h("p", {}, ["Choose where to go:"]),
     h("nav", {}, [
       h("a", {
         href: "/login",
-        onclick: e => {
-          e.preventDefault();
-          navigate("/login");
-          return
+        on: {
+          click: (e) => {
+            e.preventDefault();
+            helpers.navigate("/login")
+          }
         }
       }, ["Login"]),
       h("span", {}, [" | "]),
-      // register route not implemented → keep as a normal link or add a case
       h("a", { href: "/register" }, ["Register"]),
-      // h("span", {}, [" | "]),
-      // h("a", {
-      //   href: "/todo",
-      //   onclick: e => {
-      //     e.preventDefault();
-      //     navigate("/todo");
-      //   }
-      // }, ["Todo"]),
     ])
   ]);
 }
 
+app = createApp({ state, reducers, view: Router, helpers });
+app.mount(document.body);
 
-// import { createApp, h, helperPatchDOM } from "./dist/frontend-framework.js";
-// import { LoginPage, loginReducers, loginState } from "./component/login.js";
-// import { TodoApp, todoReducers, todoState } from "./todo_fw.js";
-
-// const state = {
-//   ...todoState,
-//   ...loginState
-// };
-
-// const reducers = {
-//   ...todoReducers,
-//   ...loginReducers,
-// };
-
-// function Router(state, emit) {
-//   switch (window.location.pathname) {
-//     case "/":
-//       return HomePage(state, emit);
-//     case "/login":
-//       return LoginPage(state, emit);
-//     case "/todo":
-//       return TodoApp(state, emit);
-//     default:
-//       return h("div", {}, [h("h1", {}, ["404 Not Found"])]);
-//   }
-// }
-
-// const app = createApp({ state: state, reducers: reducers, view: Router });
-
-// let currentVdom = Router(app.state, app.emit);
-// helperPatchDOM(null, currentVdom, document.body);
-
-// function rerender() {
-//   const newVdom = Router(app.state, app.emit);
-//   helperPatchDOM(currentVdom, newVdom, document.body);
-//   currentVdom = newVdom;
-// }
-
-// export function navigate(path) {
-//   window.history.pushState({}, "", `${path}`);
-//   rerender();
-// }
-
-// window.addEventListener("popstate", () => {
-//   rerender();
-// });
-
-// function HomePage(state, emit) {
-//   return h("div", { class: "home" }, [
-//     h("h1", {}, ["Welcome to My App"]),
-//     h("p", {}, ["Choose where to go:"]),
-//     h("nav", {}, [
-//       h("a", {
-//         href: "/login",
-//         onclick: e => {
-//           e.preventDefault();
-//           navigate("/login");
-//           return
-//         }
-//       }, ["Login"]),
-//       h("span", {}, [" | "]),
-//       h("a", { href: "/register" }, ["Register"]),
-//     ])
-//   ]);
-// }
+// Handle browser back/forward
+window.addEventListener("popstate", () => {
+  app.emit('__navigate__', null);
+});

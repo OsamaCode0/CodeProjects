@@ -1,5 +1,4 @@
-import { h, hFragment, createApp } from './dist/frontend-framework.js'
-import { navigate } from './index.js'
+import { h, hFragment } from './dist/frontend-framework.js'
 
 export const todoState = {
     currentTodo: '',
@@ -82,32 +81,18 @@ export const todoReducers = {
     }),
 }
 
-function CreateTodo({ currentTodo }, emit) {
+function CreateTodo({ currentTodo }, emit, helpers) {
     const submitTodo = async () => {
         if (currentTodo.length < 3) return
         const id = localStorage.getItem('user_id') || ''
         const token = localStorage.getItem('token') || ''
         try {
-            const res = await fetch('http://localhost:8081/user/todo', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    user_id: id,
-                    content: currentTodo,
-                    due_time: null, // later also get from user input, for improvement
-                }),
+            const data = await helpers.api.post('http://localhost:8081/user/todo', {
+                user_id: id,
+                content: currentTodo,
+                due_time: null, // later also get from user input, for improvement
             })
 
-            if (!res.ok) {
-                console.log('submit todo: res not ok')
-                const err = await res.json().catch(() => ({}))
-                throw new Error(err.message || 'Fail to save todo')
-            }
-
-            const data = await res.json()
             emit('add-todo-success', data.data)
         } catch (err) {
             console.error('Error saving todo:', err)
@@ -138,33 +123,20 @@ function CreateTodo({ currentTodo }, emit) {
     ])
 }
 
-function TodoItem({ todo, i, edit }, emit) {
+function TodoItem({ todo, i, edit }, emit, helpers) {
     const isEditing = edit.idx === i
 
     const saveEditedTodo = async () => {
         const id = localStorage.getItem('user_id') || ''
         const token = localStorage.getItem('token') || ''
         try {
-            const res = await fetch(`http://localhost:8081/user/todo`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    id: todo.id,
-                    user_id: todo.user_id,
-                    content: edit.edited,
-                    due_time: todo.due_time,
-                    is_plan: todo.is_plan,
-                }),
+            await helpers.api.put(`http://localhost:8081/user/todo`, {
+                id: todo.id,
+                user_id: todo.user_id,
+                content: edit.edited,
+                due_time: todo.due_time,
+                is_plan: todo.is_plan,
             })
-
-            if (!res.ok) {
-                const err = await res.json().catch(() => ({}))
-                throw new Error(err.message || 'Fail to update todo')
-            }
-
             emit('save-edited-todo')
         } catch (err) {
             console.error('Error updating todo:', err)
@@ -172,27 +144,11 @@ function TodoItem({ todo, i, edit }, emit) {
     }
 
     const deleteTodo = async () => {
-        const user_id = localStorage.getItem('user_id') || ''
-        const token = localStorage.getItem('token') || ''
         try {
-            const res = await fetch(`http://localhost:8081/user/todo`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                // some backends expect a body; remove if not needed
-                body: JSON.stringify({
-                    id: todo.id,
-                    user_id: user_id,
-                }),
+            await helpers.api.delete(`http://localhost:8081/user/todo`, {
+                id: todo.id,
+                user_id: todo.user_id,
             })
-
-            if (!res.ok) {
-                const err = await res.json().catch(() => ({}))
-                throw new Error(err.message || 'Fail to delete todo')
-            }
-
             // remove locally by index (uses your existing reducer)
             emit('remove-todo', i)
         } catch (err) {
@@ -233,31 +189,19 @@ function TodoItem({ todo, i, edit }, emit) {
         ])
 }
 
-function TodoList({ todos, edit }, emit) {
+function TodoList({ todos, edit }, emit, helpers) {
     return h(
         'ul',
         {},
-        todos.map((todo, i) => TodoItem({ todo, i, edit }, emit))
+        todos.map((todo, i) => TodoItem({ todo, i, edit }, emit, helpers))
     )
 }
 
-async function loadTodos(emit) {
+async function loadTodos(emit, helpers) {
     const id = localStorage.getItem('user_id') || ''
-    const token = localStorage.getItem('token') || ''
 
     try {
-        const res = await fetch(`http://localhost:8081/user/todo/${id}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-            },
-        })
-
-        if (!res.ok) {
-            throw new Error('Failed to load todos')
-        }
-        const data = await res.json()
+        const data = await helpers.api.get(`http://localhost:8081/user/todo/${id}`)
         emit('load-todos-success', data.data || [])
     } catch (err) {
         console.error('Error loading todos:', err)
@@ -265,30 +209,27 @@ async function loadTodos(emit) {
     }
 }
 
-export function TodoApp(state, emit) {
+export function TodoApp(state, emit, helpers) {
     const token = localStorage.getItem('token') || ''
     if (token === '') {
-        // navigate('/login', state)
-        // throw new Error('You must login to be able to access this site')
         return (
             h('p', {}, ['Please Login In Advance --> ', h("a", {
                 href: "/login",
-                onclick: e => {
-                    e.preventDefault();
-                    navigate("/login");
-                    return
+                on: {
+                    click: (e) => {
+                        e.preventDefault();
+                        helpers.navigate("/login")
+                    }
                 }
             }, ["Login"])])
         )
     }
     if (state.todos.length === 0) {
-        loadTodos(emit)
+        loadTodos(emit, helpers)
     }
     return h('div', { class: 'todo-app' }, [
         h('h1', {}, ['My TODOs']),
-        CreateTodo(state, emit),
-        TodoList(state, emit),
+        CreateTodo(state, emit, helpers),
+        TodoList(state, emit, helpers),
     ])
 }
-
-// createApp({ state: todoState, reducers: todoReducers, view: TodoApp }).mount(document.body)

@@ -17,3 +17,8 @@ build:
 	@cd framework/runtime && SKIP_FRONTEND_FRAMEWORK_POSTINSTALL=1 npm install
 	@echo "Build the frontend-framework"
 	@cd framework/runtime && SKIP_FRONTEND_FRAMEWORK_POSTINSTALL=1 npm run build
+	@echo 'Remove unwanted files on root'
+	@rm -rf ./dist
+	@rm -rf ./index.html
+	@rm -rf ./index.css
+	@rm -rf ./index.js

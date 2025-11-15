@@ -1,5 +1,4 @@
-import { createApp, h } from "../dist/frontend-framework.js"
-import { navigate } from "../index.js"
+import { h } from "../dist/frontend-framework.js"
 
 export const loginState = {
     currentName: '',
@@ -42,13 +41,14 @@ export const loginReducers = {
     }),
 }
 
-export function LoginPage(state, emit) {
+export function LoginPage(state, emit, helpers) {
     if (state.isLoggedIn) {
         console.log("redirect to /todo")
-        navigate('/todo');
-        return
+        helpers.navigate('/todo');
+        return h('div', {}, [])
     }
     const { currentName, currentPassword } = state;
+
     const submit = async (e) => {
         e.preventDefault()
         console.log('submit initiated', currentName, currentPassword)
@@ -61,29 +61,18 @@ export function LoginPage(state, emit) {
 
         try {
             console.log('try fetch submit')
-            const res = await fetch('http://localhost:8081/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    email: currentName,
-                    password: currentPassword,
-                }),
+            const data = await helpers.api.post('http://localhost:8081/login', {
+                email: currentName,
+                password: currentPassword,
             })
-            if (!res.ok) {
-                console.log('res not ok')
-                const err = await res.json().catch(() => ({}))
-                throw new Error((err.message || 'Login failed'))
-            }
-            console.log('res ok')
-            const data = await res.json()
-            console.log('login-success:', data)
+
+            console.log('login-success', data)
             emit('login-success', {
                 user_id: data.data.user_id,
                 token: data.data.token,
             })
         } catch (err) {
+            console.error('Login error:', err)
             emit('login-failure', err.message || 'Network error')
         }
     }
@@ -118,16 +107,3 @@ export function LoginPage(state, emit) {
         state.isLoggedIn ? h('p', {}, ['Logged In']) : null,
     ].filter(Boolean))
 }
-
-// export function LoginPage(state, emit) {
-//     return Login(state, emit)
-
-    // if (document.querySelector('.login-form')) return;
-    // createApp({
-    //     state: loginState,
-    //     reducers: loginReducers,
-    //     view: Login, // pass function, not Login(state, emit)
-    // }).mount(document.body);
-// }
-
-// createApp({ state: loginState, reducers: loginReducers, view: Login }).mount(document.body)
