@@ -1,37 +1,55 @@
-/* Container */
+/* ===== GLOBAL STYLES ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background-color: #0b62d6;
+  color: #111;
+  min-height: 100vh;
+}
+
+/* ===== SHARED CONTAINER STYLES ===== */
+.home,
+.login-form,
+.todo-app {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(3, 10, 25, 0.25);
+  padding: 24px;
+}
+
+/* ===== HOMEPAGE STYLES ===== */
 .home {
-  max-width: 600px;
   margin: 80px auto;
   padding: 40px;
   text-align: center;
-  background: #f9f9f9;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  font-family: "Segoe UI", Arial, sans-serif;
+  max-width: 600px;
+  width: 90vw;
 }
 
-/* Title */
 .home h1 {
   font-size: 2.2rem;
   margin-bottom: 0.5rem;
   color: #333;
 }
 
-/* Subtitle */
 .home p {
   font-size: 1.1rem;
   margin-bottom: 2rem;
   color: #666;
 }
 
-/* Navigation */
 .home nav {
   display: flex;
   justify-content: center;
   gap: 20px;
+  flex-wrap: wrap;
 }
 
-/* Links */
 .home nav a {
   text-decoration: none;
   font-weight: 600;
@@ -46,7 +64,224 @@
   color: #fff;
 }
 
-/* Separator */
 .home nav span {
   color: #aaa;
+}
+
+/* ===== LOGIN FORM STYLES ===== */
+body {
+  display: grid;
+  place-items: center;
+}
+
+.login-form {
+  max-width: 600px;
+  width: 90vw;
+  height: auto;
+}
+
+.label-email,
+.label-password {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.input-email,
+.input-password {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: #fff;
+  color: #111;
+}
+
+.input-email:focus,
+.input-password:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.login-form button[type="submit"] {
+  display: inline-block;
+  padding: 10px 14px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.login-form button[type="submit"]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-form p {
+  margin-top: 12px;
+  font-size: 0.95rem;
+}
+
+.login-form p.error {
+  color: #dc2626;
+}
+
+/* ===== TODO APP STYLES ===== */
+.todo-app {
+  max-width: 800px;
+  width: 90vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  margin: 0 auto;
+}
+
+.todo-app h1 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 1.6rem;
+  text-align: center;
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+/* Input/label in todo */
+.todo-app label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.todo-app input[type="text"] {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.todo-app input[type="text"]:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* Button styles */
+.todo-app button {
+  padding: 10px 14px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  margin-right: 6px;
+  transition: background 0.2s ease;
+}
+
+.todo-app button:hover {
+  background: #1d4ed8;
+}
+
+.todo-app button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Todo list */
+.todo-app ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.todo-app li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.todo-app li:last-child {
+  border-bottom: none;
+}
+
+.todo-app li span {
+  flex-grow: 1;
+  cursor: pointer;
+  padding-right: 10px;
+  word-break: break-word;
+}
+
+.todo-app li input[type="text"] {
+  flex-grow: 1;
+  margin-right: 10px;
+  margin-bottom: 0;
+}
+
+.todo-app li button {
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  margin-left: 4px;
+  margin-right: 0;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 600px) {
+  .home {
+    margin: 40px auto;
+    padding: 20px;
+    width: 90vw;
+  }
+
+  .home h1 {
+    font-size: 1.8rem;
+  }
+
+  .home p {
+    font-size: 1rem;
+  }
+
+  .home nav {
+    gap: 10px;
+  }
+
+  .login-form {
+    width: 90vw;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 800px) {
+  .todo-app {
+    width: 90vw;
+    max-width: none;
+  }
+
+  .todo-app h1 {
+    font-size: 1.4rem;
+  }
+
+  .todo-app button {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+
+  .todo-app li button {
+    padding: 5px 8px;
+    font-size: 0.8rem;
+  }
 }
