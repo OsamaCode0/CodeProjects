@@ -34,6 +34,17 @@ CREATE TABLE IF NOT EXISTS todo (
   is_plan BOOLEAN GENERATED ALWAYS AS (due_time IS NOT NULL) STORED
 );
 
+-- Table archive
+CREATE TABLE IF NOT EXISTS archive (
+  todo_id INTEGER NOT NULL PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL,
+  due_time TIMESTAMP DEFAULT NULL,
+  is_plan BOOLEAN NOT NULL,
+  completed_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
 -- Table chat
 CREATE TABLE IF NOT EXISTS chat (
   id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -90,6 +101,22 @@ BEGIN
   );
 END;
 $$ LANGUAGE plpgsql STABLE;
+
+-- Function Insert Into Archive When Delete Todo
+CREATE OR REPLACE FUNCTION archive_todo_on_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO archive (todo_id, user_id, content, created_at, due_time, is_plan, completed_at)
+    VALUES (OLD.id, OLD.user_id, OLD.content, OLD.created_at, OLD.due_time, OLD.is_plan, now());
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_archive_todo
+AFTER DELETE ON todo
+FOR EACH ROW
+EXECUTE FUNCTION archive_todo_on_delete();
+
 
 -- Function to check is the user1 and user2 are connected
 CREATE OR REPLACE FUNCTION is_connected(a UUID, b UUID) RETURNS BOOLEAN AS $$

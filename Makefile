@@ -22,3 +22,4 @@ build:
 	@rm -rf ./index.html
 	@rm -rf ./index.css
 	@rm -rf ./index.js
+	@echo 'direct to todo example: cd todo/todo_fw'

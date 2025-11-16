@@ -1,9 +1,9 @@
 
 
 ### variables
-@port = 8080
-@token = ddf23e01-ecf8-4c02-bb82-186c140247eb
-@user_id = 58a90a10-2423-4457-91e5-c276f87bbe71
+@port = 8081
+@token = 93f4d188-d424-4ab2-a9fd-7b91f7695680
+@user_id = 9d887bbc-c8d1-4d15-8d79-2510f58ab517
 
 ### Register a User
 ### /register
@@ -33,8 +33,8 @@ Accept: application/json
 Content-Type: application/json
 
 {
-    "email": "user2@koodsisu.fi",
-    "password": "User@2"
+    "email": "admin@example.com",
+    "password": "admin123"
 }
 
 ### Logout a User
@@ -76,4 +76,13 @@ Content-Type: application/json
 ### Get todo user
 ### /todo/{id}
 GET http://localhost:{{port}}/user/todo/{{user_id}}
+Accept: application/json
+
+
+### keyword
+@keyword = up
+
+### Search todo by keywords
+### /todo/{user_id}/{keyword}
+GET http://localhost:{{port}}/user/todo/{{user_id}}/{{keyword}}
 Accept: application/json

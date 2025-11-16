@@ -1,7 +1,7 @@
 import { destroyDOM } from './destroy-dom.js'
 import { Dispatcher } from './dispatcher.js'
 import { mountDOM } from './mount-dom.js'
-export { helperMountDOM } from './mount-dom.js'
+// export { helperMountDOM } from './mount-dom.js'
 // 7.1.3 Change in rendering
 import { patchDOM } from './patch-dom.js'
 export { helperPatchDOM } from './patch-dom.js'

@@ -11,19 +11,19 @@ export function mountDOM(vdom, parentEl, index) {
     
     switch (vdom.type) {
         case DOM_TYPES.TEXT: {
-            console.log("start create text node")
+            // Mounts a text virtual node
             createTextNode(vdom, parentEl, index)
             break
         }
 
         case DOM_TYPES.ELEMENT: {
-            console.log("start create element node")
+            // Mounts an element virtual node
             createElementNode(vdom, parentEl, index)
             break
         }
 
         case DOM_TYPES.FRAGMENT: {
-            console.log('start create frament node')
+            // Mounts the children of a fragment virtual node
             createFragmentNode(vdom, parentEl, index)
             break
         }
@@ -39,10 +39,10 @@ export function mountDOM(vdom, parentEl, index) {
 function createTextNode(vdom, parentEl, index) {
     const { value } = vdom
 
-    const textNode = document.createTextNode(value)
-    vdom.el = textNode
+    const textNode = document.createTextNode(value) // Creates a text node
+    vdom.el = textNode // Saves a reference of the node
 
-    // parentEl.append(textNode)
+    // parentEl.append(textNode) // Append to the parent element
     insert(textNode, parentEl, index)
 }
 
@@ -102,34 +102,34 @@ function insert(el, parentEl, index) {
     }
 }
 
-export function helperMountDOM(vdom, parentEl, index) {
-    if (!vdom || typeof vdom.type === 'undefined') {
-        console.warn('Invalid vdom passed to mountDOM:', vdom);
-        return;
-    }
+// export function helperMountDOM(vdom, parentEl, index) {
+//     if (!vdom || typeof vdom.type === 'undefined') {
+//         console.warn('Invalid vdom passed to mountDOM:', vdom);
+//         return;
+//     }
     
-    switch (vdom.type) {
-        case DOM_TYPES.TEXT: {
-            console.log("start create text node")
-            createTextNode(vdom, parentEl, index)
-            break
-        }
+//     switch (vdom.type) {
+//         case DOM_TYPES.TEXT: {
+//             console.log("start create text node")
+//             createTextNode(vdom, parentEl, index)
+//             break
+//         }
 
-        case DOM_TYPES.ELEMENT: {
-            console.log("start create element node")
-            createElementNode(vdom, parentEl, index)
-            break
-        }
+//         case DOM_TYPES.ELEMENT: {
+//             console.log("start create element node")
+//             createElementNode(vdom, parentEl, index)
+//             break
+//         }
 
-        case DOM_TYPES.FRAGMENT: {
-            console.log('start create frament node')
-            createFragmentNode(vdom, parentEl, index)
-            break
-        }
+//         case DOM_TYPES.FRAGMENT: {
+//             console.log('start create frament node')
+//             createFragmentNode(vdom, parentEl, index)
+//             break
+//         }
 
-        default: {
-            console.log("an error happen")
-            throw new Error(`Can't mount DOM of type: ${vdom.type}`)
-        }
-    }
-}
+//         default: {
+//             console.log("an error happen")
+//             throw new Error(`Can't mount DOM of type: ${vdom.type}`)
+//         }
+//     }
+// }

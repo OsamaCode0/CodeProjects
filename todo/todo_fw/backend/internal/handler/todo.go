@@ -14,7 +14,6 @@ import (
 )
 
 func (db *DB) AddTodo(w http.ResponseWriter, r *http.Request) {
-	log.Println("save todo")
 	// 1. Handle request body
 	inputTodo := &types.Todo{}
 	err := helper.ReadFromRequestBody(r, inputTodo)
@@ -127,7 +126,7 @@ func (db *DB) UpdateTodo(w http.ResponseWriter, r *http.Request) {
 func (db *DB) GetAllTodo(w http.ResponseWriter, r *http.Request) {
 	// 1. Handle request body
 	vars := mux.Vars(r)
-	id := vars["id"]
+	id := vars["user_id"]
 	userIdUUID, err := uuid.Parse(id)
 	if err != nil {
 		exception.HandleResponseError(w, err)
@@ -210,6 +209,52 @@ func (db *DB) DeleteTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = helper.WriteToResponseBody(w, webRespond)
+	if err != nil {
+		log.Printf("unable to write to response body: %v", err)
+		return
+	}
+}
+
+func (db *DB) SearchTodoByContent(w http.ResponseWriter, r *http.Request) {
+	// 1. Handle request body
+	vars := mux.Vars(r)
+	keyWord := vars["key_word"]
+	userId := vars["user_id"]
+	userIdUUID, err := uuid.Parse(userId)
+	if err != nil {
+		exception.HandleBadRequestError(w, fmt.Errorf("user id not found: %v", err))
+		return
+	}
+
+	// 2. Handle business logic
+	tx, err := db.DB.BeginTransaction()
+	if err != nil {
+		exception.HandleResponseError(w, fmt.Errorf("search todo by content, begin transaction:\n%v", err))
+		return
+	}
+
+	todos := &[]*types.Todo{}
+	err = tx.SearchTodoByContentKeyWord(r.Context(), keyWord, userIdUUID, todos)
+	if err != nil {
+		tx.Tx.Rollback(r.Context())
+		exception.HandleResponseError(w, fmt.Errorf("search todo by content:\n%v", err))
+		return
+	}
+
+	err = tx.CommitTransaction()
+	if err != nil {
+		exception.HandleResponseError(w, fmt.Errorf("search todo by content, commit transaction:\n%v", err))
+		return
+	}
+
+	// 3. Handle response body
+	webResponse := &types.WebResponse{
+		Code:   http.StatusOK,
+		Status: "StatusOk",
+		Data:   todos,
+	}
+
+	err = helper.WriteToResponseBody(w, webResponse)
 	if err != nil {
 		log.Printf("unable to write to response body: %v", err)
 		return

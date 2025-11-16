@@ -71,3 +71,33 @@ func (tx *Tx) FindTodos(ctx context.Context, user_id uuid.UUID, todos *[]*types.
 
 	return nil
 }
+
+func (tx *Tx) SearchTodoByContentKeyWord(ctx context.Context, keyWord string, userId uuid.UUID, todosOut *[]*types.Todo) error {
+	ctxSearch, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	query := `
+		SELECT id, user_id, content, created_at, due_time, is_plan FROM todo
+		WHERE content ILIKE $1 AND user_id = $2
+	`
+
+	rows, err := tx.Tx.Query(ctxSearch, query, fmt.Sprintf("%s%s%s", "%", keyWord, "%"), userId)
+	if err != nil {
+		return fmt.Errorf("query search todo by content's keyword: %v", err)
+	}
+
+	for rows.Next() {
+		todo := &types.Todo{}
+		dueTime := sql.NullTime{}
+		err = rows.Scan(&todo.Id, &todo.UserId, &todo.Content, &todo.CreatedAt, &dueTime, &todo.IsPlan)
+		if err != nil {
+			return fmt.Errorf("scan search todo by content's keyword: %v", err)
+		}
+
+		todo.DueTime = dueTime.Time
+
+		*todosOut = append(*todosOut, todo)
+	}
+
+	return nil
+}
