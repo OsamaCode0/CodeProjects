@@ -109,6 +109,12 @@ router.Use(func(c *gin.Context) {
 	auth.GET("/me/cloudinary-sign", endpoints.CloudinarySign)
 	auth.GET("/me/email", endpoints.GetMyEmail)
 
+	auth.GET("/api/chats", GetUserChats)
+	auth.GET("/api/chats/:chatId/messages", GetChatMessages)
+	auth.GET("/users/:id/online", CheckOnlineStatus)
+	auth.POST("/api/chats/:chatId/messages", SendMessage)
+	auth.POST("/api/chats/:chatId/read", MarkMessagesAsRead)
+
 	auth.POST("/me/photo", endpoints.PostMePhoto)
 	auth.DELETE("/me/photo", endpoints.DeleteMePhoto)
 	auth.POST("/recommendations/:targetUserId/reaction", endpoints.PostReaction)

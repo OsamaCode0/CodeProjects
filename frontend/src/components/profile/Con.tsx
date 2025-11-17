@@ -17,70 +17,83 @@ export default function ConnectionsForm() {
   const openChat = async (userId: string) => {
     setChatLoading(userId);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API}/api/chats`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
-      const chatsData = await res.json();
-      const chat = chatsData.chats?.find((c: any) => 
-        c.user1_id === userId || c.user2_id === userId
+      const raw = await res.text();
+      console.log("RAW RESPONSE:", raw);
+
+      let chatsData;
+      try {
+        chatsData = JSON.parse(raw);
+      } catch (e) {
+        console.error("JSON PARSE ERROR:", e);
+        alert("The server returned invalid JSON. Check console.");
+        return;
+      }
+      const chat = chatsData.chats?.find(
+        (c: any) => c.user1_id === userId || c.user2_id === userId
       );
       if (chat) {
-        navigate('/chats', { state: { selectedChatId: chat.id } });
+        navigate("/chats", { state: { selectedChatId: chat.id } });
       } else {
-        alert('Chat not found. Please try again.');
+        alert("Chat not found. Please try again.");
       }
     } catch (err) {
-    
-      alert('Failed to open chat');
+      console.log(err);
+      alert("Failed to open chat");
     } finally {
       setChatLoading(null);
     }
   };
 
-const handleDisconnect = async (userId: string) => {
-    
-  if (!confirm('Are you sure you want to disconnect? This will remove the connection and chat history.')) {
-    console.log('User cancelled');
-    return;
-  }
-
-  setDisconnecting(userId);
-  
-  try {
-    const token = localStorage.getItem('token');
-    const url = `${API}/api/disconnect`;
-        
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ target_user_id: userId })
-    });
-    
-   
-    
-    if (res.ok) {
-      alert('Disconnected successfully');
-      window.location.reload();
-    } else {
-      const data = await res.json();
-      console.log('Error data:', data);
-      alert(`Failed to disconnect: ${data.message || 'Unknown error'}`);
+  const handleDisconnect = async (userId: string) => {
+    if (
+      !confirm(
+        "Are you sure you want to disconnect? This will remove the connection and chat history."
+      )
+    ) {
+      console.log("User cancelled");
+      return;
     }
-  } catch (err) {
-    console.error('Disconnect error:', err);
-    alert('Failed to disconnect');
-  } finally {
-    setDisconnecting(null);
-  }
-};
+
+    setDisconnecting(userId);
+
+    try {
+      const token = localStorage.getItem("token");
+      const url = `${API}/api/disconnect`;
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ target_user_id: userId }),
+      });
+
+      if (res.ok) {
+        alert("Disconnected successfully");
+        window.location.reload();
+      } else {
+        const data = await res.json();
+        console.log("Error data:", data);
+        alert(`Failed to disconnect: ${data.message || "Unknown error"}`);
+      }
+    } catch (err) {
+      console.error("Disconnect error:", err);
+      alert("Failed to disconnect");
+    } finally {
+      setDisconnecting(null);
+    }
+  };
 
   return (
     <section className="section has-background-light">
-      <Link to="/connections/requests" className="button connect is-link is-light">
+      <Link
+        to="/connections/requests"
+        className="button connect is-link is-light">
         View connection requests
       </Link>
       <UserHeader />
@@ -91,13 +104,12 @@ const handleDisconnect = async (userId: string) => {
         </div>
 
         <div className="container-err">
-        {loading && <p>Loading connections…</p>}
-        {error && <p className="error-text">No connections found.</p>}
-        {!loading && !error && data.length === 0 && (
-          <p>No connections found.</p>
-        )}
+          {loading && <p>Loading connections…</p>}
+          {error && <p className="error-text">No connections found.</p>}
+          {!loading && !error && data.length === 0 && (
+            <p>No connections found.</p>
+          )}
         </div>
-        
 
         {!loading && !error && data.length > 0 && (
           <div className="columns is-multiline">
@@ -113,19 +125,19 @@ const handleDisconnect = async (userId: string) => {
                       <strong>Age:</strong> {p.child.ageYears}
                     </p>
                     <div className="buttons-container mt-3">
-                      <button 
+                      <button
                         className="button con is-danger"
                         onClick={() => handleDisconnect(p.id)}
-                        disabled={disconnecting === p.id}
-                      >
-                        {disconnecting === p.id ? 'Disconnecting...' : 'Disconnect'}
+                        disabled={disconnecting === p.id}>
+                        {disconnecting === p.id
+                          ? "Disconnecting..."
+                          : "Disconnect"}
                       </button>
-                      <button 
+                      <button
                         className="button con is-success"
                         onClick={() => openChat(p.id)}
-                        disabled={chatLoading === p.id}
-                      >
-                        {chatLoading === p.id ? 'Opening...' : 'Chat'}
+                        disabled={chatLoading === p.id}>
+                        {chatLoading === p.id ? "Opening..." : "Chat"}
                       </button>
                     </div>
                   </article>
