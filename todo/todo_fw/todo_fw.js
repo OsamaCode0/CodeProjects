@@ -242,6 +242,20 @@ function TodoItem({ todo, i, edit }, emit, helpers) {
         }
     }
 
+    const dueTime = todo.due_time instanceof Date ? todo.due_time : new Date(todo.due_time)
+    const isSentinel =
+        dueTime.getUTCFullYear() < 2000
+    const displayDueTime = isSentinel
+        ? ''
+        : dueTime.toLocaleString('en-GB', {
+            timeZone: 'UTC',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        })
+
     return isEditing
         ? h('li', {}, [
             h('input', {
@@ -268,6 +282,7 @@ function TodoItem({ todo, i, edit }, emit, helpers) {
                     dblclick: () => emit('start-editing-todo', i)
                 }
             }, [todo.content]),
+            h('span', {}, [`${displayDueTime}`]),
             h('button', {
                 on: {
                     click: deleteTodo
@@ -324,27 +339,27 @@ export function TodoApp(state, emit, helpers) {
     }
     return hFragment([
         h('header', {}, [
-
             h('div', {}, [h('button', {}, ['Home'])]),
-            h('button', {
-                class: 'dropdown-btn',
-                on: {
-                    click: (e) => {
-                        e.preventDefault()
-                        helpers.navigate('/friends')
+            h('div', {}, [
+                h('button', {
+                    class: 'dropdown-btn',
+                    on: {
+                        click: (e) => {
+                            e.preventDefault()
+                            helpers.navigate('/friends')
+                        }
                     }
-                }
-            }, ['friends']),
-            h('button', {
-                class: 'dropdwon-btn',
-                on: {
-                    click: (e) => {
-                        e.preventDefault()
-                        helpers.navigate('/chat')
+                }, ['friends']),
+                h('button', {
+                    class: 'dropdwon-btn',
+                    on: {
+                        click: (e) => {
+                            e.preventDefault()
+                            helpers.navigate('/chat')
+                        }
                     }
-                }
-            }, ['chat'])
-
+                }, ['chat'])
+            ]),
         ]),
         h('div', { class: 'todo-app' }, [
             h('h1', {}, ['My TODOs']),
