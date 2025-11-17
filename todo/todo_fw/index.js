@@ -13,19 +13,6 @@ const reducers = {
   '__navigate__': (state) => state, // ADD: dummy reducer to trigger rerender
 };
 
-function Router(state, emit, helpers) {
-  switch (window.location.pathname) {
-    case "/":
-      return HomePage(helpers);
-    case "/login":
-      return LoginPage(state, emit, helpers);
-    case "/todo":
-      return TodoApp(state, emit, helpers);
-    default:
-      return h("div", {}, [h("h1", {}, ["404 Not Found"])]);
-  }
-}
-
 let app; // declare first
 
 // helpers: navigation + small API wrapper
@@ -71,7 +58,30 @@ const helpers = {
   },
 };
 
-function HomePage(helpers) {
+function Router(state, emit, helpers) {
+  const token = localStorage.getItem('token')
+  const path = window.location.pathname
+
+  if (token && (path === '/' || path === '/login' || path === '/register')) {
+    // ✅ Defer navigation to next tick to avoid infinite loop
+    setTimeout(() => helpers.navigate('/todo'), 0)
+    return h('div', {}, [])
+  }
+
+
+  switch (path) {
+    case "/":
+      return HomePage(state, emit, helpers);
+    case "/login":
+      return LoginPage(state, emit, helpers);
+    case "/todo":
+      return TodoApp(state, emit, helpers);
+    default:
+      return h("div", {}, [h("h1", {}, ["404 Not Found"])]);
+  }
+}
+
+function HomePage(state, emit, helpers) {
   return h("div", { class: "home" }, [
     h("h1", {}, ["Welcome to My App"]),
     h("p", {}, ["Choose where to go:"]),

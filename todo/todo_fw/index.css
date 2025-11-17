@@ -1,3 +1,11 @@
+:root{
+  --header-height: 64px;
+  --header-bg-start: #0f0f0f;
+  --header-bg-end: #1a1a1a;
+  --accent: #8aff00;
+  --accent-strong: #2563eb;
+}
+
 /* ===== GLOBAL STYLES ===== */
 * {
   margin: 0;
@@ -20,6 +28,10 @@ body {
   border-radius: 10px;
   box-shadow: 0 6px 20px rgba(3, 10, 25, 0.25);
   padding: 24px;
+}
+
+.todo-app {
+  border-radius: 0 0 10px 10px;
 }
 
 /* ===== HOMEPAGE STYLES ===== */
@@ -133,11 +145,82 @@ body {
   color: #dc2626;
 }
 
+/* ===== HEADER STYLES ===== */
+header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100vw;
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 20px;
+  background: #fff; /* same card background */
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 6px 20px rgba(3, 10, 25, 0.25); /* same shadow */
+  border-bottom: 1px solid #e2e8f0;
+  z-index: 1000;
+  font-family: inherit;
+}
+
+/* Grouping buttons */
+header > div:first-child,
+header > div:last-child {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Header buttons (same style as login/todo buttons) */
+header button {
+  padding: 10px 14px;
+  background: #2563eb; /* consistent accent */
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+header button:hover {
+  background: #1d4ed8;
+}
+
+header button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  header {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  header button {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+  }
+}
+
+/* ===== FOOTER STYLES ===== */
+footer {
+  padding: 12px 20px;
+  color: #555;
+  font-size: 0.9rem;
+}
+
 /* ===== TODO APP STYLES ===== */
+
 .todo-app {
   max-width: 800px;
   width: 90vw;
-  height: 100vh;
+  height: 90vh;
   display: flex;
   flex-direction: column;
   overflow-y: auto;

@@ -1,4 +1,4 @@
-import { h } from './dist/frontend-framework.js'
+import { h, hFragment } from './dist/frontend-framework.js'
 
 export const todoState = {
     currentTodo: '',
@@ -185,7 +185,7 @@ function CreateTodo({ currentTodo, searchQuery }, emit, helpers) {
 
                     // auto-search as user typing
                     debouncedSearch(query)
-                    
+
                     // clear search & reload when empty
                     if (query.length === 0) {
                         clearTimeout(searchTimer)
@@ -293,7 +293,7 @@ async function loadTodos(emit, helpers) {
         if (Array.isArray(data.data)) {
             emit('load-todos-success', data.data)
         } else {
-             emit('load-todos-failure', data.data)
+            emit('load-todos-failure', data.data)
         }
     } catch (err) {
         console.error('Error loading todos:', err)
@@ -322,9 +322,35 @@ export function TodoApp(state, emit, helpers) {
         emit('increment-load-attempt')
         loadTodos(emit, helpers)
     }
-    return h('div', { class: 'todo-app' }, [
-        h('h1', {}, ['My TODOs']),
-        CreateTodo(state, emit, helpers),
-        TodoList(state, emit, helpers),
+    return hFragment([
+        h('header', {}, [
+
+            h('div', {}, [h('button', {}, ['Home'])]),
+            h('button', {
+                class: 'dropdown-btn',
+                on: {
+                    click: (e) => {
+                        e.preventDefault()
+                        helpers.navigate('/friends')
+                    }
+                }
+            }, ['friends']),
+            h('button', {
+                class: 'dropdwon-btn',
+                on: {
+                    click: (e) => {
+                        e.preventDefault()
+                        helpers.navigate('/chat')
+                    }
+                }
+            }, ['chat'])
+
+        ]),
+        h('div', { class: 'todo-app' }, [
+            h('h1', {}, ['My TODOs']),
+            CreateTodo(state, emit, helpers),
+            TodoList(state, emit, helpers),
+        ]),
+        h('footer', {}, ['Powered by Kood/Sisu'])
     ])
 }
