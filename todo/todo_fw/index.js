@@ -1,6 +1,7 @@
 import { createApp, h } from "./dist/frontend-framework.js";
 import { LoginPage, loginReducers, loginState } from "./component/login.js";
 import { TodoApp, todoReducers, todoState } from "./todo_fw.js";
+import { RegisterPage, registerReducers, registerState } from "./component/register.js";
 
 const state = {
   ...todoState,
@@ -74,6 +75,8 @@ function Router(state, emit, helpers) {
       return HomePage(state, emit, helpers);
     case "/login":
       return LoginPage(state, emit, helpers);
+    case "/register":
+      return RegisterPage(state, emit, helpers);
     case "/todo":
       return TodoApp(state, emit, helpers);
     default:
