@@ -12,7 +12,7 @@
   "private": true,
   "scripts": {
     "comment": "you can change your file destination as you like",
-    "example": "npx http-server . -o ./example",
+    "example": "npx http-server . ./example/todo -o --proxy http://127.0.0.1:8080",
     "todo_fw": "npx http-server ./todo/todo_fw -o --proxy http://127.0.0.1:8080?",
     "counter": "npx http-server . -o ./counter",
     "test": "echo \"Error: no test specified\" && exit 1"

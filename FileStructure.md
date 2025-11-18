@@ -2,12 +2,28 @@
 
 ## Example
 * example/
-    * counter/
-        * counter.html
-        * counter.js
-    * .gitignore
-        # list all your unplublished example here
+  * todo/
+    * backend/
+    * component/
+      * login.js
+    * database/
+      * docker-compose.yml
+      * Readme.md
+      * schema.sql
+    * database-data/
+      * ...
+    * dist/
+      * frontend-framework.js
+    * index.css
+    * index.html
+    * index.js
+    * Makefile
     * Readme.md
+    * test_our_backend_api.http
+    * todo_fw.css
+    * todo_fw.js
+  * .gitignore
+  * Readme.md
 
 ## Framework
 * framework/
@@ -15,11 +31,14 @@
         * dist/
             * frontend-framework.js
         * node_modules/
+          * ...
         * src/
             * __test__ /
                 * sample.text.js
             * utils/
                 * arrays.js
+                * objects.js
+                * strings.js
             * app.js
             * attributes.js
             * destroy-dom.js
@@ -28,14 +47,26 @@
             * h.js
             * index.js
             * mount-dom.js
+            * nodex-equal.js
+            * patch-dom.js
+        * templates
+          * index.css
+          * index.html
+          * index.js
         * .eslintrc.js
+        * package-lock.json
         * package.json
+        * postinstall.js
         * rollup.config.mjs
         * vitest.config.js
+      * performance.md
+      * Readme.md
 
 ## General
-* Readme.md
 * .gitignore
-* package.json
+* FileStructure.md
+* Makefile
 * package-lock.json
-* node_modules
+* package.json
+* Readme.md
+* testing.md

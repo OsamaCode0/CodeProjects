@@ -8,6 +8,8 @@
 5. Examples
 6. Advanced Features
 7. [Get Started](#get-started)
+8. [Best Practices](#best-practices)
+9. [Performance](./performance.md)
 
 ---
 
