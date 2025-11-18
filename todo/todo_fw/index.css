@@ -101,6 +101,7 @@ body {
   height: auto;
 }
 
+.label-name,
 .label-email,
 .label-password {
   display: block;
@@ -109,6 +110,7 @@ body {
   font-size: 0.95rem;
 }
 
+.input-name,
 .input-email,
 .input-password {
   display: block;
