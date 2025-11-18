@@ -196,34 +196,34 @@ function patchChildren(oldVdom, newVdom) {
     }
 }
 
-export function helperPatchDOM(oldVdom, newVdom, parentEl) {
-    if (!oldVdom) {
-        parentEl.replaceChildren()
-        mountDOM(newVdom, parentEl);
-        return newVdom;
-    }
-    if (!areNodesEqual(oldVdom, newVdom)) {
-        const index = findIndexInParent(parentEl, oldVdom.el)
-        destroyDOM(oldVdom)
-        mountDOM(newVdom, parentEl, index)
+// export function helperPatchDOM(oldVdom, newVdom, parentEl) {
+//     if (!oldVdom) {
+//         parentEl.replaceChildren()
+//         mountDOM(newVdom, parentEl);
+//         return newVdom;
+//     }
+//     if (!areNodesEqual(oldVdom, newVdom)) {
+//         const index = findIndexInParent(parentEl, oldVdom.el)
+//         destroyDOM(oldVdom)
+//         mountDOM(newVdom, parentEl, index)
 
-        return newVdom
-    }
+//         return newVdom
+//     }
 
-    newVdom.el = oldVdom.el
-    switch (newVdom.type) {
-        case DOM_TYPES.TEXT: {
-            patchText(oldVdom, newVdom)
-            return newVdom
-        }
+//     newVdom.el = oldVdom.el
+//     switch (newVdom.type) {
+//         case DOM_TYPES.TEXT: {
+//             patchText(oldVdom, newVdom)
+//             return newVdom
+//         }
 
-        case DOM_TYPES.ELEMENT: {
-            patchElement(oldVdom, newVdom)
-            break
-        }
-    }
+//         case DOM_TYPES.ELEMENT: {
+//             patchElement(oldVdom, newVdom)
+//             break
+//         }
+//     }
 
-    patchChildren(oldVdom, newVdom)
+//     patchChildren(oldVdom, newVdom)
 
-    return newVdom
-}
+//     return newVdom
+// }
