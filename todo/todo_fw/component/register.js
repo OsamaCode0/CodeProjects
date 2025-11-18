@@ -69,18 +69,18 @@ export function RegisterPage(state, emit, helpers) {
         h('h2', { class: 'title' }, ['Register']),
 
         // Name
-        h('label', { htmlFor: 'reg-name', class: 'label-name' }, ['Name']),
+        h('label', { htmlFor: 'reg-name', class: 'label-name' }, ['Name: ']),
         h('input', {
             id: 'reg-name',
             type: 'text',
             class: 'input-name',
-            placeholder: 'Enter your name',
+            placeholder: 'Enter your username',
             value: '',
             on: { input: ({ target }) => emit('update-name', target.value) }
         }),
 
         // Email
-        h('label', { htmlFor: 'reg-email', class: 'label-email' }, ['Email']),
+        h('label', { htmlFor: 'reg-email', class: 'label-email' }, ['Email: ']),
         h('input', {
             id: 'reg-email',
             type: 'email',
@@ -91,7 +91,7 @@ export function RegisterPage(state, emit, helpers) {
         }),
 
         // Password
-        h('label', { htmlFor: 'reg-password', class: 'label-password' }, ['Password']),
+        h('label', { htmlFor: 'reg-password', class: 'label-password' }, ['Password: ']),
         h('input', {
             id: 'reg-password',
             type: 'password',

@@ -89,22 +89,24 @@ export function LoginPage(state, emit, helpers) {
         
         h('h2', { class: 'title' }, ['Login']),
         
-        h('label', { htmlFor: 'email', class: 'label-email' }, ['email']),
+        h('label', { htmlFor: 'email', class: 'label-email' }, ['Email: ']),
         h('input', {
             type: 'text',
             id: 'email',
             class: 'input-email',
+            placeholder: 'Enter your email',
             value: currentName,
             on: {
                 input: ({ target }) => emit('update-name', target.value),
             },
         }),
 
-        h('label', { htmlFor: 'password', class: 'label-password' }, ['password']),
+        h('label', { htmlFor: 'password', class: 'label-password' }, ['Password: ']),
         h('input', {
             type: 'password',
             id: 'password',
             class: 'input-password',
+            placeholder: 'Create a password',
             value: currentPassword,
             on: {
                 input: ({ target }) => emit('update-password', target.value)
