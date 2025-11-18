@@ -22,7 +22,7 @@
 
 # local bins and backup folder
 bin
-trash
+trash*
 backup
 
 # environtment
