@@ -77,7 +77,7 @@ export function LoginPage(state, emit, helpers) {
         }
     }
     return h('form', { class: 'login-form', on: { submit: submit } }, [
-       h('button', {
+       /* h('button', {
                 type: 'submit',
                 class: 'back-button',
                 on: {
@@ -85,7 +85,7 @@ export function LoginPage(state, emit, helpers) {
                         helpers.navigate('/'); // Navigate to home page
                     },
                 },
-            }, ['Back']),
+            }, ['Back']), */
         
         h('h2', { class: 'title' }, ['Login']),
         
@@ -120,7 +120,7 @@ export function LoginPage(state, emit, helpers) {
                 class: 'login-button',
             }, [state.loading ? 'Loggin in...' : 'Login']),
 
-           /*  h('button', {
+            h('button', {
                 type: 'submit',
                 class: 'back-button',
                 on: {
@@ -128,7 +128,7 @@ export function LoginPage(state, emit, helpers) {
                         helpers.navigate('/'); // Navigate to home page
                     },
                 },
-            }, ['Back']), */
+            }, ['Back']),
         ]),
         
         state.error ? h('p', { class: 'error' }, [state.error]) : h('span', {}, []),

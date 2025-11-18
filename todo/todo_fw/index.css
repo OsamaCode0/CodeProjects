@@ -5,7 +5,16 @@
   --accent: #8aff00;
   --accent-strong: #2563eb;
 }
-
+.title {
+  text-align: center;
+  margin-bottom: 16px;
+  padding: 20px;
+}
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
 /* ===== GLOBAL STYLES ===== */
 * {
   margin: 0;
