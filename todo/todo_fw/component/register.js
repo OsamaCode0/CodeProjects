@@ -37,13 +37,15 @@ export const registerReducers = {
 export function RegisterPage(state, emit, helpers) {
 
     const submit = async (e) => {
-        
-        const { name, email, password } = state;
         e.preventDefault();
-        if (!name || !email || !password || !confirmPassword) {
+
+        const { name, email, password } = state;
+
+        if (!name || !email || !password) {
             emit('register-failure', 'All fields required');
             return;
         }
+
         emit('start-register');
 
         try {
@@ -56,9 +58,7 @@ export function RegisterPage(state, emit, helpers) {
             console.log('Register success', data);
             emit('register-success');
 
-            // redirect to login
             helpers.navigate('/login');
-
         } catch (err) {
             console.error(err);
             emit('register-failure', err.message || "Network error");
@@ -67,13 +67,15 @@ export function RegisterPage(state, emit, helpers) {
 
     return h("form", { class: "register-form", on: { submit } }, [
         h('h2', { class: 'title' }, ['Register']),
+
         // Name
         h('label', { htmlFor: 'reg-name', class: 'label-name' }, ['Name']),
         h('input', {
             id: 'reg-name',
             type: 'text',
             class: 'input-name',
-            value: state.name,
+            placeholder: 'Enter your name',
+            value: '',
             on: { input: ({ target }) => emit('update-name', target.value) }
         }),
 
@@ -83,7 +85,8 @@ export function RegisterPage(state, emit, helpers) {
             id: 'reg-email',
             type: 'email',
             class: 'input-email',
-            value: state.email,
+            placeholder: 'Enter your email',
+            value: '',
             on: { input: ({ target }) => emit('update-email', target.value) }
         }),
 
@@ -93,20 +96,30 @@ export function RegisterPage(state, emit, helpers) {
             id: 'reg-password',
             type: 'password',
             class: 'input-password',
-            value: state.password,
+            placeholder: 'Create a password',
+            value: '',
             on: { input: ({ target }) => emit('update-password', target.value) }
         }),
 
-        // Submit
-        h('button', {
-            type: 'submit',
-            disabled: state.loading,
-            class: 'register-button'
-        }, [
-            state.loading ? 'Registering…' : 'Register'
+        // Buttons
+        h('div', { class: 'button-group' }, [
+            h('button', {
+                type: 'submit',
+                disabled: state.loading,
+                class: 'register-button'
+            }, [
+                state.loading ? 'Registering…' : 'Register'
+            ]),
+
+            h('button', {
+                type: 'button',
+                class: 'back-button',
+                on: {
+                    click: () => helpers.navigate('/')
+                }
+            }, ['Back']),
         ]),
 
-        // Errors
         state.error
             ? h('p', { class: 'error' }, [state.error])
             : null,

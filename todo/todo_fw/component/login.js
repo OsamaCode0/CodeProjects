@@ -77,7 +77,18 @@ export function LoginPage(state, emit, helpers) {
         }
     }
     return h('form', { class: 'login-form', on: { submit: submit } }, [
+       h('button', {
+                type: 'submit',
+                class: 'back-button',
+                on: {
+                    click: () => {
+                        helpers.navigate('/'); // Navigate to home page
+                    },
+                },
+            }, ['Back']),
+        
         h('h2', { class: 'title' }, ['Login']),
+        
         h('label', { htmlFor: 'email', class: 'label-email' }, ['email']),
         h('input', {
             type: 'text',
@@ -88,6 +99,7 @@ export function LoginPage(state, emit, helpers) {
                 input: ({ target }) => emit('update-name', target.value),
             },
         }),
+
         h('label', { htmlFor: 'password', class: 'label-password' }, ['password']),
         h('input', {
             type: 'password',
@@ -98,11 +110,25 @@ export function LoginPage(state, emit, helpers) {
                 input: ({ target }) => emit('update-password', target.value)
             }
         }),
-        h('button', {
-            type: 'submit',
-            disabled: state.loading,
-            class: 'login-button',
-        }, [state.loading ? 'Loggin in...' : 'Login']),
+
+        h('div', { class: 'button-group' }, [
+            h('button', {
+                type: 'submit',
+                disabled: state.loading,
+                class: 'login-button',
+            }, [state.loading ? 'Loggin in...' : 'Login']),
+
+           /*  h('button', {
+                type: 'submit',
+                class: 'back-button',
+                on: {
+                    click: () => {
+                        helpers.navigate('/'); // Navigate to home page
+                    },
+                },
+            }, ['Back']), */
+        ]),
+        
         state.error ? h('p', { class: 'error' }, [state.error]) : h('span', {}, []),
         state.isLoggedIn ? h('p', {}, ['Logged In']) : null,
     ].filter(Boolean))

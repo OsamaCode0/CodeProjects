@@ -99,7 +99,14 @@ function HomePage(state, emit, helpers) {
         }
       }, ["Login"]),
       h("span", {}, [" | "]),
-      h("a", { href: "/register" }, ["Register"]),
+      h("a", { href: "/register",
+        on: {
+          click: (e) => {
+            e.preventDefault();
+            helpers.navigate("/register")
+          }
+        }
+       }, ["Register"]),
     ])
   ]);
 }
