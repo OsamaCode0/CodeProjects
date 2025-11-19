@@ -1,36 +1,36 @@
 import { h } from "../dist/frontend-framework.js";
 
 export const registerState = {
-    name: '',
-    email: '',
-    password: '',
-    loading: false,
-    success: false,
-    error: null,
+    reg_name: '',
+    reg_email: '',
+    reg_password: '',
+    reg_loading: false,
+    reg_success: false,
+    reg_error: null,
 };
 
 export const registerReducers = {
-    'update-name': (state, name) => ({ ...state, name }),
-    'update-email': (state, email) => ({ ...state, email }),
-    'update-password': (state, password) => ({ ...state, password }),
+    'update-name': (state, reg_name) => ({ ...state, reg_name }),
+    'update-email': (state, reg_email) => ({ ...state, reg_email }),
+    'update-password': (state, reg_password) => ({ ...state, reg_password }),
 
     'start-register': (state) => ({
         ...state,
-        loading: true,
-        error: null,
+        reg_loading: true,
+        reg_error: null,
     }),
 
     'register-success': (state) => ({
         ...state,
-        loading: false,
-        success: true,
+        reg_loading: false,
+        reg_success: true,
     }),
 
     'register-failure': (state, error) => ({
         ...state,
-        loading: false,
-        success: false,
-        error,
+        reg_loading: false,
+        reg_success: false,
+        reg_error,
     }),
 };
 
@@ -39,9 +39,9 @@ export function RegisterPage(state, emit, helpers) {
     const submit = async (e) => {
         e.preventDefault();
 
-        const { name, email, password } = state;
+        const { reg_name, reg_email, reg_password } = state;
 
-        if (!name || !email || !password) {
+        if (!reg_name || !reg_email || !reg_password) {
             emit('register-failure', 'All fields required');
             return;
         }
@@ -50,9 +50,9 @@ export function RegisterPage(state, emit, helpers) {
 
         try {
             const data = await helpers.api.post('http://localhost:8081/register', {
-                name,
-                email,
-                password,
+                name: reg_name,
+                email: reg_email,
+                password: reg_password,
             });
 
             console.log('Register success', data);

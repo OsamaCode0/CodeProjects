@@ -1,7 +1,7 @@
 import { h } from "../dist/frontend-framework.js"
 
 export const loginState = {
-    currentName: '',
+    currentEmail: '',
     currentPassword: '',
     isLoggedIn: false,
     loading: false,
@@ -9,11 +9,11 @@ export const loginState = {
 }
 
 export const loginReducers = {
-    'update-name': (state, name) => ({
+    'update-log-name': (state, email) => ({
         ...state,
-        currentName: name,
+        currentEmail: email,
     }),
-    'update-password': (state, password) => ({
+    'update-log-password': (state, password) => ({
         ...state,
         currentPassword: password,
     }),
@@ -47,13 +47,13 @@ export function LoginPage(state, emit, helpers) {
         helpers.navigate('/todo');
         return h('div', {}, [])
     }
-    const { currentName, currentPassword } = state;
+    const { currentEmail, currentPassword } = state;
 
     const submit = async (e) => {
         e.preventDefault()
-        console.log('submit initiated', currentName, currentPassword)
-        if (!currentName || !currentPassword) {
-            console.log('not state currentName?')
+        console.log('submit initiated', currentEmail, currentPassword)
+        if (!currentEmail || !currentPassword) {
+            console.log('not state currentEmail?')
             emit('login-failure', 'provide email and password')
             return
         }
@@ -62,7 +62,7 @@ export function LoginPage(state, emit, helpers) {
         try {
             console.log('try fetch submit')
             const data = await helpers.api.post('http://localhost:8081/login', {
-                email: currentName,
+                email: currentEmail,
                 password: currentPassword,
             })
 
@@ -95,9 +95,9 @@ export function LoginPage(state, emit, helpers) {
             id: 'email',
             class: 'input-email',
             placeholder: 'Enter your email',
-            value: currentName,
+            value: currentEmail,
             on: {
-                input: ({ target }) => emit('update-name', target.value),
+                input: ({ target }) => emit('update-log-name', target.value),
             },
         }),
 
@@ -109,7 +109,7 @@ export function LoginPage(state, emit, helpers) {
             placeholder: 'Create a password',
             value: currentPassword,
             on: {
-                input: ({ target }) => emit('update-password', target.value)
+                input: ({ target }) => emit('update-log-password', target.value)
             }
         }),
 
