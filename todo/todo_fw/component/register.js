@@ -65,7 +65,7 @@ export function RegisterPage(state, emit, helpers) {
         }
     };
 
-    return h("form", { class: "register-form", on: { submit } }, [
+    return h("form", { class: "login-form", on: { submit } }, [
         h('h2', { class: 'title' }, ['Register']),
 
         // Name
@@ -112,7 +112,7 @@ export function RegisterPage(state, emit, helpers) {
             ]),
 
             h('button', {
-                type: 'button',
+                type: 'submit',
                 class: 'back-button',
                 on: {
                     click: () => helpers.navigate('/')

@@ -5,12 +5,14 @@ import { RegisterPage, registerReducers, registerState } from "./component/regis
 
 const state = {
   ...todoState,
-  ...loginState
+  ...loginState,
+  ...registerState,
 };
 
 const reducers = {
   ...todoReducers,
   ...loginReducers,
+  ...registerReducers,
   '__navigate__': (state) => state, // ADD: dummy reducer to trigger rerender
 };
 
