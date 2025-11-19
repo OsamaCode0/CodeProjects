@@ -10,6 +10,7 @@ export const todoState = {
     },
     todos: [],
     todosLoaded: false,
+    isHistory: false,
     loadAttempts: 0,
 }
 
@@ -43,6 +44,16 @@ export const todoReducers = {
         loadAttempts: 0,
     }),
     'load-todos-failure': (state, errorMessage) => ({
+        ...state,
+        error: errorMessage,
+    }),
+    'load-todos-history-success': (state, todos) => ({
+        ...state,
+        todos,
+        isHistory: true,
+        todosLoaded: true,
+    }),
+    'load-todos-history-failure': (state, errorMessage) => ({
         ...state,
         error: errorMessage,
     }),
@@ -209,7 +220,7 @@ function CreateTodo({ currentTodo, searchQuery }, emit, helpers) {
     ])
 }
 
-function TodoItem({ todo, i, edit }, emit, helpers) {
+function TodoItem({ todo, i, edit, isHistory }, emit, helpers) {
     const isEditing = edit.idx === i
 
     const saveEditedTodo = async () => {
@@ -283,19 +294,19 @@ function TodoItem({ todo, i, edit }, emit, helpers) {
                 }
             }, [todo.content]),
             h('span', {}, [`${displayDueTime}`]),
-            h('button', {
+            !isHistory ? h('button', {
                 on: {
                     click: deleteTodo
                 }
-            }, ['Done']),
+            }, ['Done']) : null,
         ])
 }
 
-function TodoList({ todos, edit }, emit, helpers) {
+function TodoList({ todos, edit, isHistory }, emit, helpers) {
     return h(
         'ul',
         {},
-        todos.map((todo, i) => TodoItem({ todo, i, edit }, emit, helpers))
+        todos.map((todo, i) => TodoItem({ todo, i, edit, isHistory }, emit, helpers))
     )
 }
 
@@ -337,34 +348,100 @@ export function TodoApp(state, emit, helpers) {
         emit('increment-load-attempt')
         loadTodos(emit, helpers)
     }
+
+    const loadPreviousTodos = async () => {
+        const id = localStorage.getItem('user_id') || ''
+
+        try {
+            console.log('load previous todos')
+            const data = await helpers.api.get(`http://localhost:8081/user/todo/history/${id}`)
+
+            if (Array.isArray(data.data)) {
+                console.log('array is array :', data.data)
+                emit('load-todos-history-success', data.data)
+            } else {
+                emit('load-todos-history-failure', data.data)
+            }
+        } catch (err) {
+            console.error('Error loading todos:', err)
+            emit('load-todos-history-failure', err.message)
+        }
+    }
+
+    const handleLogout = async () => {
+        const id = localStorage.getItem('user_id') || ''
+        const token = localStorage.getItem('token') || ''
+        try {
+            await helpers.api.get(`http://localhost:8081/user/logout`, {
+                user_id: id,
+                token: token,
+            })
+            state.isLoggedin = false
+            localStorage.clear()
+
+        } catch (err) {
+            console.log('error logout')
+        } finally {
+            state.isLoggedin = false
+            localStorage.clear()
+            helpers.navigate('/')
+        }
+    }
+
     return hFragment([
         h('header', {}, [
-            h('div', {}, [h('button', {}, ['Home'])]),
             h('div', {}, [
                 h('button', {
                     class: 'dropdown-btn',
                     on: {
-                        click: (e) => {
-                            e.preventDefault()
-                            helpers.navigate('/friends')
+                        click: () => {
+                            // Optional: clear list immediately for visual feedback
+                            emit('load-todos-success', [])
+                            // Reset attempts so the auto-loader works if needed
+                            emit('increment-load-attempt')
+                            // Fetch active todos
+                            loadTodos(emit, helpers)
                         }
                     }
-                }, ['friends']),
+                }, ['Home']),
+            ]),
+            h('div', {}, [
                 h('button', {
-                    class: 'dropdwon-btn',
+                    class: 'dropdown-btn',
                     on: {
-                        click: (e) => {
-                            e.preventDefault()
-                            helpers.navigate('/chat')
-                        }
+                        click: loadPreviousTodos
                     }
-                }, ['chat'])
+                }, ['history']),
+                // h('button', {
+                //     class: 'dropdown-btn',
+                //     on: {
+                //         click: (e) => {
+                //             e.preventDefault()
+                //             helpers.navigate('/friends')
+                //         }
+                //     }
+                // }, ['friends']),
+                // h('button', {
+                //     class: 'dropdown-btn',
+                //     on: {
+                //         click: (e) => {
+                //             e.preventDefault()
+                //             helpers.navigate('/chat')
+                //         }
+                //     }
+                // }, ['chat']),
+                h('button', {
+                    class: 'dropdown-btn',
+                    on: {
+                        click: handleLogout
+                    }
+                }, ['Logout']),
             ]),
         ]),
         h('div', { class: 'todo-app' }, [
             h('h1', {}, ['My TODOs']),
             CreateTodo(state, emit, helpers),
-            TodoList(state, emit, helpers),
+            TodoList({ ...state }, emit, helpers),
         ]),
         h('footer', {}, ['Powered by Kood/Sisu'])
     ])

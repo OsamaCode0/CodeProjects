@@ -101,3 +101,32 @@ func (tx *Tx) SearchTodoByContentKeyWord(ctx context.Context, keyWord string, us
 
 	return nil
 }
+
+func (tx *Tx) GetHistory(ctx context.Context, userId uuid.UUID, todos *[]*types.Archive) error {
+	ctxHistory, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	query := `
+		SELECT todo_id, user_id, content, created_at, due_time, is_plan, completed_at FROM archive
+		WHERE user_id = $1
+	`
+
+	rows, err := tx.Tx.Query(ctxHistory, query, userId)
+	if err != nil {
+		return fmt.Errorf("query get history: %v", err)
+	}
+
+	for rows.Next() {
+		var dueTime sql.NullTime
+		var todo = &types.Archive{}
+		err = rows.Scan(&todo.TodoId, &todo.UserId, &todo.Content, &todo.CreatedAt, &dueTime, &todo.IsPlan, &todo.CompletedAt)
+		if err != nil {
+			return fmt.Errorf("scan get history:  %v", err)
+		}
+		todo.DueTime = dueTime.Time
+
+		*todos = append(*todos, todo)
+	}
+
+	return nil
+}

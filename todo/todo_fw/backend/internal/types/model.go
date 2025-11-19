@@ -48,6 +48,16 @@ type (
 		IsPlan    bool      `json:"is_plan"`
 	}
 
+	Archive struct {
+		TodoId      int       `json:"todo_id"`
+		UserId      uuid.UUID `json:"user_id"`
+		Content     string    `json:"content"`
+		CreatedAt   time.Time `json:"created_at"`
+		DueTime     time.Time `json:"due_time"`
+		IsPlan      bool      `json:"is_plan"`
+		CompletedAt time.Time `json:"completed_at"`
+	}
+
 	Chat struct {
 		Id          int       `json:"id"`
 		SenderId    uuid.UUID `json:"sender_id"`

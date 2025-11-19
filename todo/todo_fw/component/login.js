@@ -45,7 +45,6 @@ export function LoginPage(state, emit, helpers) {
     if (state.isLoggedIn) {
         console.log("redirect to /todo")
         helpers.navigate('/todo');
-        return h('div', {}, [])
     }
     const { currentEmail, currentPassword } = state;
 

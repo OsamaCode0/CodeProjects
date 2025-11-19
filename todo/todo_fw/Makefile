@@ -32,7 +32,9 @@ reset-db:
 
 go-run:
 	@echo 'Running backend...'
-	@cd backend && go run .
+# 	@cd backend && go run .
+	@command -v entr >/dev/null 2>&1 || { echo "Installing entr..."; brew install entr; }
+	@find backend -name '*.go' | entr -r sh -c 'cd backend && go run .'
 
 install:
 	@echo 'install dependency frontend-framework...'

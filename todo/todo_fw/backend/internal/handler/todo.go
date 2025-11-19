@@ -260,3 +260,60 @@ func (db *DB) SearchTodoByContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (db *DB) GetHistory(w http.ResponseWriter, r *http.Request) {
+	// 1. handle request body
+	vars := mux.Vars(r)
+	userId := vars["user_id"]
+	userIdUUID, err := uuid.Parse(userId)
+	if err != nil {
+		exception.HandleBadRequestError(w, fmt.Errorf("user id not found: %v", err))
+		return
+	}
+
+	// 2. handle business logic
+	tx, err := db.DB.BeginTransaction()
+	if err != nil {
+		exception.HandleResponseError(w, fmt.Errorf("get history, begin transaction:\n%v", err))
+		return
+	}
+
+	todos := &[]*types.Archive{}
+	err = tx.GetHistory(r.Context(), userIdUUID, todos)
+	if err != nil {
+		exception.HandleResponseError(w, fmt.Errorf("get history:\n%v", err))
+		return
+	}
+
+	err = tx.CommitTransaction()
+	if err != nil {
+		exception.HandleResponseError(w, fmt.Errorf("get history, commit transaction:\n%v", err))
+		return
+	}
+
+	prevTodos := &[]*types.Todo{}
+	for _, t := range *todos {
+		prevTodo := &types.Todo{
+			Id:        t.TodoId,
+			UserId:    t.UserId,
+			Content:   t.Content,
+			CreatedAt: t.CreatedAt,
+			DueTime:   t.DueTime,
+			IsPlan:    t.IsPlan,
+		}
+		*prevTodos = append(*prevTodos, prevTodo)
+	}
+
+	// 3. handle response body
+	webResponse := &types.WebResponse{
+		Code:   http.StatusAccepted,
+		Status: "StatusAccepted",
+		Data:   prevTodos,
+	}
+
+	err = helper.WriteToResponseBody(w, webResponse)
+	if err != nil {
+		log.Printf("unable to write to response body: %v", err)
+		return
+	}
+}
