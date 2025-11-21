@@ -112,6 +112,22 @@ export const todoReducers = {
         ...state,
         todos: state.todos.filter((_, i) => i !== idx),
     }),
+    'logout-success': (state) => ({
+        ...state,
+        isLoggedIn: false,
+        currentEmail: '',
+        currentPassword: '',
+        todos: [],              // Clear old user's list
+        todosLoaded: false,     // crucial: this forces TodoApp to fetch new data
+        loadAttempts: 0,        // Reset attempts
+        searchQuery: '',        // Clear old search text
+        isHistory: false,       // Reset history mode
+        edit: {                 // Clear any active edits
+            idx: null,
+            original: null,
+            edited: null,
+        }
+    })
 }
 
 function CreateTodo({ currentTodo, searchQuery }, emit, helpers) {
@@ -374,12 +390,12 @@ export function TodoApp(state, emit, helpers) {
         const id = localStorage.getItem('user_id') || ''
         const token = localStorage.getItem('token') || ''
         try {
-            await helpers.api.get(`http://localhost:8081/user/logout`, {
+            await helpers.api.post(`http://localhost:8081/logout`, {
                 user_id: id,
                 token: token,
             })
-            state.isLoggedin = false
             localStorage.clear()
+            emit('logout-success')
 
         } catch (err) {
             console.log('error logout')
