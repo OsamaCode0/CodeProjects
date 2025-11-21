@@ -66,6 +66,8 @@ ls
 
 **Evidence:**
 
+click here [Readme.md](./framework/Readme.md) for the existing examples
+
 ### function h()
 
 ```js
@@ -102,6 +104,8 @@ Check README for sections on:
 **Status:** ✅ **PASS**
 
 **Evidence:**
+
+click here [Readme.md](./framework/Readme.md) for the existing design priciples
 
 ## Core Concepts
 

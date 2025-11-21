@@ -345,8 +345,10 @@ export function TodoApp(state, emit, helpers) {
 
     const MAX_LOAD_ATTEMPTS = 3
     if (!state.todosLoaded && (state.loadAttempts || 0) < MAX_LOAD_ATTEMPTS) {
-        emit('increment-load-attempt')
-        loadTodos(emit, helpers)
+        setTimeout(() => {
+            emit('increment-load-attempt')
+            loadTodos(emit, helpers)
+        }, 0)
     }
 
     const loadPreviousTodos = async () => {
@@ -382,7 +384,6 @@ export function TodoApp(state, emit, helpers) {
         } catch (err) {
             console.log('error logout')
         } finally {
-            state.isLoggedin = false
             localStorage.clear()
             helpers.navigate('/')
         }
