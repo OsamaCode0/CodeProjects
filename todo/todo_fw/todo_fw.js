@@ -130,9 +130,11 @@ export const todoReducers = {
     })
 }
 
+let searchTimer = null
+
 function CreateTodo({ currentTodo, searchQuery }, emit, helpers) {
     const DEBOUNCE_MS = 1000
-    let searchTimer = null
+    // let searchTimer = null
 
     const submitTodo = async () => {
         if (currentTodo.length < 3) return
@@ -161,7 +163,7 @@ function CreateTodo({ currentTodo, searchQuery }, emit, helpers) {
         try {
             const data = await helpers.api.get(`http://localhost:8081/user/todo/${user_id}/${query}`)
 
-            if (Array.isArray(data.data) && data.data.length > 0) {
+            if (Array.isArray(data.data)) {
                 emit('search-todos-success', data.data)
             } else {
                 emit('search-todos-failure', data.data)

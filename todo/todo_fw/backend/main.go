@@ -45,9 +45,9 @@ func main() {
 	app.Router.HandleFunc("/user/todo", hDb.AddTodo).Methods("POST")
 	app.Router.HandleFunc("/user/todo", hDb.UpdateTodo).Methods("PUT")
 	app.Router.HandleFunc("/user/todo", hDb.DeleteTodo).Methods("DELETE")
-	app.Router.HandleFunc("/user/todo/history/{user_id}", hDb.GetHistory).Methods("GET")
+	app.Router.HandleFunc("/user/todo/history/{user_id}", hDb.GetHistory).Methods("GET") // #1
 	app.Router.HandleFunc("/user/todo/{user_id}", hDb.GetAllTodo).Methods("GET")
-	app.Router.HandleFunc("/user/todo/{user_id}/{key_word}", hDb.SearchTodoByContent).Methods("GET")
+	app.Router.HandleFunc("/user/todo/{user_id}/{key_word}", hDb.SearchTodoByContent).Methods("GET") // #2
 
 	authMiddleware := https.NewAuthMiddleware()
 	handler := https.CORS(authMiddleware.Handler(app.Router))
