@@ -3,6 +3,9 @@ import { h, hFragment } from './dist/frontend-framework.js'
 export const todoState = {
     currentTodo: '',
     searchQuery: '',
+    timeValue: '',
+    timeUnit: 'minutes',
+    showTimePicker: false,
     edit: {
         idx: null,
         original: null,
@@ -23,6 +26,19 @@ export const todoReducers = {
         ...state,
         searchQuery,
     }),
+    'toggle-time-picker': (state) => ({
+        ...state,
+        showTimePicker: !state.showTimePicker,
+    }),
+    'set-duration': (state, durationMinutes) => ({
+        ...state,
+        selectedDuration: durationMinutes,
+        showTimePicker: false,
+    }),
+    'clear-duration': (state) => ({
+        ...state,
+        selectedDuration: null,
+    }),
     'add-todo': (state) => ({
         ...state,
         currentTodo: '',
@@ -31,6 +47,7 @@ export const todoReducers = {
     'add-todo-success': (state, todoObj) => ({
         ...state,
         currentTodo: '',
+        selectedDuration: null,
         todos: [...state.todos, todoObj],
     }),
     'add-todo-failure': (state, errorMessage) => ({
@@ -117,12 +134,14 @@ export const todoReducers = {
         isLoggedIn: false,
         currentEmail: '',
         currentPassword: '',
-        todos: [],              // Clear old user's list
-        todosLoaded: false,     // crucial: this forces TodoApp to fetch new data
-        loadAttempts: 0,        // Reset attempts
-        searchQuery: '',        // Clear old search text
-        isHistory: false,       // Reset history mode
-        edit: {                 // Clear any active edits
+        todos: [],
+        todosLoaded: false,
+        loadAttempts: 0,
+        searchQuery: '',
+        isHistory: false,
+        selectedDuration: null,
+        showTimePicker: false,
+        edit: {
             idx: null,
             original: null,
             edited: null,
@@ -132,18 +151,60 @@ export const todoReducers = {
 
 let searchTimer = null
 
-function CreateTodo({ currentTodo, searchQuery }, emit, helpers) {
+function TimePicker({ selectedDuration }, emit) {
+    const timeOptions = [
+        { label: '30 minutes', minutes: 30 },
+        { label: '1 hour', minutes: 60 },
+        { label: '2 hours', minutes: 120 },
+        { label: '6 hours', minutes: 360 },
+        { label: '12 hours', minutes: 720 },
+        { label: '1 day', minutes: 1440 },
+        { label: '2 days', minutes: 2880 },
+        { label: '3 days', minutes: 4320 },
+        { label: '1 week', minutes: 10080 },
+        { label: '2 weeks', minutes: 20160 },
+        { label: '1 month', minutes: 43200 },
+        { label: '2 months', minutes: 86400 },
+    ]
+
+    return h('div', { class: 'time-picker-dropdown' }, [
+        h('div', { class: 'time-picker-header' }, [
+            h('span', {}, ['Select Duration']),
+            h('button', {
+                class: 'close-picker',
+                on: { click: () => emit('toggle-time-picker') }
+            }, ['×'])
+        ]),
+        h('div', { class: 'time-options' },
+            timeOptions.map(option =>
+                h('button', {
+                    class: selectedDuration === option.minutes ? 'time-option selected' : 'time-option',
+                    on: {
+                        click: () => emit('set-duration', option.minutes)
+                    }
+                }, [option.label])
+            )
+        )
+    ])
+}
+
+function CreateTodo({ currentTodo, searchQuery, selectedDuration, showTimePicker }, emit, helpers) {
     const DEBOUNCE_MS = 1000
-    // let searchTimer = null
 
     const submitTodo = async () => {
         if (currentTodo.length < 3) return
         const id = localStorage.getItem('user_id') || ''
+        
+        let dueTime = null
+        if (selectedDuration) {
+            dueTime = new Date(Date.now() + selectedDuration * 60 * 1000)
+        }
+
         try {
             const data = await helpers.api.post('http://localhost:8081/user/todo', {
                 user_id: id,
                 content: currentTodo,
-                due_time: null, // later also get from user input, for improvement
+                due_time: dueTime,
             })
 
             if (typeof data.data === 'string') {
@@ -180,27 +241,48 @@ function CreateTodo({ currentTodo, searchQuery }, emit, helpers) {
         searchTimer = setTimeout(() => searchTodo(query), DEBOUNCE_MS)
     }
 
-    return h('div', {}, [
+    const formatDuration = (minutes) => {
+        if (!minutes) return ''
+        if (minutes < 60) return `${minutes}m`
+        if (minutes < 1440) return `${Math.floor(minutes / 60)}h`
+        if (minutes < 43200) return `${Math.floor(minutes / 1440)}d`
+        return `${Math.floor(minutes / 43200)}mo`
+    }
+
+    return h('div', { class: 'create-todo-container' }, [
         h('label', { htmlFor: 'todo-input' }, ['New TODO']),
-        h('input', {
-            key: "todo-input",
-            type: 'text',
-            id: 'todo-input',
-            value: currentTodo,
-            on: {
-                input: ({ target }) =>
-                    emit('update-current-todo', target.value),
-                keydown: ({ key }) => {
-                    if (key === 'Enter' && currentTodo.length >= 3) {
-                        submitTodo()
-                    }
+        h('div', { class: 'todo-input-row' }, [
+            h('input', {
+                key: "todo-input",
+                type: 'text',
+                id: 'todo-input',
+                value: currentTodo,
+                on: {
+                    input: ({ target }) =>
+                        emit('update-current-todo', target.value),
+                    keydown: ({ key }) => {
+                        if (key === 'Enter' && currentTodo.length >= 3) {
+                            submitTodo()
+                        }
+                    },
                 },
-            },
-        }),
-        h('button', {
-            disabled: currentTodo.length < 3,
-            on: { click: submitTodo },
-        }, ['Add']),
+            }),
+            h('button', {
+                class: 'time-button',
+                on: { click: () => emit('toggle-time-picker') },
+            }, [
+                selectedDuration ? `⏱️ ${formatDuration(selectedDuration)}` : '⏱️ Set Time'
+            ]),
+            selectedDuration ? h('button', {
+                class: 'clear-time-button',
+                on: { click: () => emit('clear-duration') },
+            }, ['×']) : null,
+            h('button', {
+                disabled: currentTodo.length < 3,
+                on: { click: submitTodo },
+            }, ['Add']),
+        ]),
+        showTimePicker ? TimePicker({ selectedDuration }, emit) : null,
         h('label', { htmlFor: 'todo-search' }, ['Search']),
         h('input', {
             key: "todo-search",
@@ -211,18 +293,13 @@ function CreateTodo({ currentTodo, searchQuery }, emit, helpers) {
                 input: ({ target }) => {
                     const query = target.value
                     emit('update-search-query', query)
-
-                    // auto-search as user typing
                     debouncedSearch(query)
-
-                    // clear search & reload when empty
                     if (query.length === 0) {
                         clearTimeout(searchTimer)
                         emit('clear-search')
                         loadTodos(emit, helpers)
                     }
                 },
-
                 keydown: ({ key }) => {
                     if (key === 'Enter' && searchQuery.length >= 2) {
                         clearTimeout(searchTimer)
@@ -236,6 +313,35 @@ function CreateTodo({ currentTodo, searchQuery }, emit, helpers) {
             on: { click: () => { clearTimeout(searchTimer); searchTodo(searchQuery) } },
         }, ['Search']),
     ])
+}
+
+function formatCountdown(ms) {
+    if (ms <= 0) return 'Expired'
+    
+    const minutes = Math.floor(ms / 60000)
+    const hours = Math.floor(minutes / 60)
+    const days = Math.floor(hours / 24)
+    const months = Math.floor(days / 30)
+    
+    if (months > 0) {
+        const remainingDays = days % 30
+        const remainingHours = hours % 24
+        const remainingMinutes = minutes % 60
+        return `${months}mo ${remainingDays}d ${remainingHours}h ${remainingMinutes}m`
+    }
+    
+    if (days > 0) {
+        const remainingHours = hours % 24
+        const remainingMinutes = minutes % 60
+        return `${days}d ${remainingHours}h ${remainingMinutes}m`
+    }
+    
+    if (hours > 0) {
+        const remainingMinutes = minutes % 60
+        return `${hours}h ${remainingMinutes}m`
+    }
+    
+    return `${minutes}m`
 }
 
 function TodoItem({ todo, i, edit, isHistory }, emit, helpers) {
@@ -264,7 +370,6 @@ function TodoItem({ todo, i, edit, isHistory }, emit, helpers) {
                 id: todo.id,
                 user_id: todo.user_id,
             })
-            // remove locally by index (uses your existing reducer)
             emit('remove-todo', i)
         } catch (err) {
             console.error('Error deleting todo:', err)
@@ -272,18 +377,10 @@ function TodoItem({ todo, i, edit, isHistory }, emit, helpers) {
     }
 
     const dueTime = todo.due_time instanceof Date ? todo.due_time : new Date(todo.due_time)
-    const isSentinel =
-        dueTime.getUTCFullYear() < 2000
-    const displayDueTime = isSentinel
-        ? ''
-        : dueTime.toLocaleString('en-GB', {
-            timeZone: 'UTC',
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        })
+    const isSentinel = dueTime.getUTCFullYear() < 2000
+    
+    const timeRemaining = isSentinel ? null : dueTime.getTime() - Date.now()
+    const countdown = timeRemaining !== null ? formatCountdown(timeRemaining) : ''
 
     return isEditing
         ? h('li', {}, [
@@ -303,15 +400,18 @@ function TodoItem({ todo, i, edit, isHistory }, emit, helpers) {
                 on: {
                     click: () => emit('cancel-editing-todo')
                 }
-            }, ['Cancle']),
+            }, ['Cancel']),
         ])
         : h('li', {}, [
             h('span', {
+                class: 'todo-content',
                 on: {
                     dblclick: () => emit('start-editing-todo', i)
                 }
             }, [todo.content]),
-            h('span', {}, [`${displayDueTime}`]),
+            countdown ? h('span', { 
+                class: timeRemaining <= 0 ? 'countdown expired' : 'countdown'
+            }, [countdown]) : null,
             !isHistory ? h('button', {
                 on: {
                     click: deleteTodo
@@ -369,6 +469,11 @@ export function TodoApp(state, emit, helpers) {
         }, 0)
     }
 
+    // Update countdown every minute
+    setTimeout(() => {
+        emit('increment-load-attempt')
+    }, 60000)
+
     const loadPreviousTodos = async () => {
         const id = localStorage.getItem('user_id') || ''
 
@@ -414,11 +519,8 @@ export function TodoApp(state, emit, helpers) {
                     class: 'dropdown-btn',
                     on: {
                         click: () => {
-                            // Optional: clear list immediately for visual feedback
                             emit('load-todos-success', [])
-                            // Reset attempts so the auto-loader works if needed
                             emit('increment-load-attempt')
-                            // Fetch active todos
                             loadTodos(emit, helpers)
                         }
                     }
@@ -431,24 +533,6 @@ export function TodoApp(state, emit, helpers) {
                         click: loadPreviousTodos
                     }
                 }, ['history']),
-                // h('button', {
-                //     class: 'dropdown-btn',
-                //     on: {
-                //         click: (e) => {
-                //             e.preventDefault()
-                //             helpers.navigate('/friends')
-                //         }
-                //     }
-                // }, ['friends']),
-                // h('button', {
-                //     class: 'dropdown-btn',
-                //     on: {
-                //         click: (e) => {
-                //             e.preventDefault()
-                //             helpers.navigate('/chat')
-                //         }
-                //     }
-                // }, ['chat']),
                 h('button', {
                     class: 'dropdown-btn',
                     on: {
