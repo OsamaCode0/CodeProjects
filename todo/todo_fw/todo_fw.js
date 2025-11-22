@@ -30,14 +30,19 @@ export const todoReducers = {
         ...state,
         showTimePicker: !state.showTimePicker,
     }),
-    'set-duration': (state, durationMinutes) => ({
+    'update-time-value': (state, value) => ({
         ...state,
-        selectedDuration: durationMinutes,
-        showTimePicker: false,
+        timeValue: value,
     }),
-    'clear-duration': (state) => ({
+    'update-time-unit': (state, unit) => ({
         ...state,
-        selectedDuration: null,
+        timeUnit: unit,
+    }),
+    'clear-time-input': (state) => ({
+        ...state,
+        timeValue: '',
+        timeUnit: 'minutes',
+        showTimePicker: false,
     }),
     'add-todo': (state) => ({
         ...state,
@@ -47,7 +52,9 @@ export const todoReducers = {
     'add-todo-success': (state, todoObj) => ({
         ...state,
         currentTodo: '',
-        selectedDuration: null,
+        timeValue: '',
+        timeUnit: 'minutes',
+        showTimePicker: false,
         todos: [...state.todos, todoObj],
     }),
     'add-todo-failure': (state, errorMessage) => ({
@@ -139,7 +146,8 @@ export const todoReducers = {
         loadAttempts: 0,
         searchQuery: '',
         isHistory: false,
-        selectedDuration: null,
+        timeValue: '',
+        timeUnit: 'minutes',
         showTimePicker: false,
         edit: {
             idx: null,
@@ -151,54 +159,76 @@ export const todoReducers = {
 
 let searchTimer = null
 
-function TimePicker({ selectedDuration }, emit) {
-    const timeOptions = [
-        { label: '30 minutes', minutes: 30 },
-        { label: '1 hour', minutes: 60 },
-        { label: '2 hours', minutes: 120 },
-        { label: '6 hours', minutes: 360 },
-        { label: '12 hours', minutes: 720 },
-        { label: '1 day', minutes: 1440 },
-        { label: '2 days', minutes: 2880 },
-        { label: '3 days', minutes: 4320 },
-        { label: '1 week', minutes: 10080 },
-        { label: '2 weeks', minutes: 20160 },
-        { label: '1 month', minutes: 43200 },
-        { label: '2 months', minutes: 86400 },
-    ]
+function TimePicker({ timeValue, timeUnit }, emit) {
+    const units = ['minutes', 'hours', 'days', 'months', 'years']
 
     return h('div', { class: 'time-picker-dropdown' }, [
         h('div', { class: 'time-picker-header' }, [
-            h('span', {}, ['Select Duration']),
+            h('span', {}, ['Set Timer']),
             h('button', {
                 class: 'close-picker',
                 on: { click: () => emit('toggle-time-picker') }
             }, ['×'])
         ]),
-        h('div', { class: 'time-options' },
-            timeOptions.map(option =>
-                h('button', {
-                    class: selectedDuration === option.minutes ? 'time-option selected' : 'time-option',
-                    on: {
-                        click: () => emit('set-duration', option.minutes)
-                    }
-                }, [option.label])
-            )
-        )
+        h('div', { class: 'time-input-container' }, [
+            h('input', {
+                type: 'number',
+                min: '1',
+                placeholder: 'Enter number',
+                value: timeValue,
+                class: 'time-value-input',
+                on: {
+                    input: ({ target }) => emit('update-time-value', target.value)
+                }
+            }),
+            h('select', {
+                class: 'time-unit-select',
+                value: timeUnit,
+                on: {
+                    change: ({ target }) => emit('update-time-unit', target.value)
+                }
+            }, units.map(unit => 
+                h('option', { value: unit }, [unit])
+            ))
+        ])
     ])
 }
 
-function CreateTodo({ currentTodo, searchQuery, selectedDuration, showTimePicker }, emit, helpers) {
+function CreateTodo({ currentTodo, searchQuery, timeValue, timeUnit, showTimePicker }, emit, helpers) {
     const DEBOUNCE_MS = 1000
+
+    const calculateDueTime = () => {
+        if (!timeValue || timeValue <= 0) return null
+        
+        const value = parseInt(timeValue)
+        let milliseconds = 0
+        
+        switch(timeUnit) {
+            case 'minutes':
+                milliseconds = value * 60 * 1000
+                break
+            case 'hours':
+                milliseconds = value * 60 * 60 * 1000
+                break
+            case 'days':
+                milliseconds = value * 24 * 60 * 60 * 1000
+                break
+            case 'months':
+                milliseconds = value * 30 * 24 * 60 * 60 * 1000
+                break
+            case 'years':
+                milliseconds = value * 365 * 24 * 60 * 60 * 1000
+                break
+        }
+        
+        return new Date(Date.now() + milliseconds)
+    }
 
     const submitTodo = async () => {
         if (currentTodo.length < 3) return
         const id = localStorage.getItem('user_id') || ''
         
-        let dueTime = null
-        if (selectedDuration) {
-            dueTime = new Date(Date.now() + selectedDuration * 60 * 1000)
-        }
+        const dueTime = calculateDueTime()
 
         try {
             const data = await helpers.api.post('http://localhost:8081/user/todo', {
@@ -241,12 +271,9 @@ function CreateTodo({ currentTodo, searchQuery, selectedDuration, showTimePicker
         searchTimer = setTimeout(() => searchTodo(query), DEBOUNCE_MS)
     }
 
-    const formatDuration = (minutes) => {
-        if (!minutes) return ''
-        if (minutes < 60) return `${minutes}m`
-        if (minutes < 1440) return `${Math.floor(minutes / 60)}h`
-        if (minutes < 43200) return `${Math.floor(minutes / 1440)}d`
-        return `${Math.floor(minutes / 43200)}mo`
+    const formatDuration = () => {
+        if (!timeValue || timeValue <= 0) return ''
+        return `${timeValue} ${timeUnit}`
     }
 
     return h('div', { class: 'create-todo-container' }, [
@@ -271,18 +298,18 @@ function CreateTodo({ currentTodo, searchQuery, selectedDuration, showTimePicker
                 class: 'time-button',
                 on: { click: () => emit('toggle-time-picker') },
             }, [
-                selectedDuration ? `⏱️ ${formatDuration(selectedDuration)}` : '⏱️ Set Time'
+                timeValue ? `⏱️ ${formatDuration()}` : '⏱️ Set Time'
             ]),
-            selectedDuration ? h('button', {
+            timeValue ? h('button', {
                 class: 'clear-time-button',
-                on: { click: () => emit('clear-duration') },
+                on: { click: () => emit('clear-time-input') },
             }, ['×']) : null,
             h('button', {
                 disabled: currentTodo.length < 3,
                 on: { click: submitTodo },
             }, ['Add']),
         ]),
-        showTimePicker ? TimePicker({ selectedDuration }, emit) : null,
+        showTimePicker ? TimePicker({ timeValue, timeUnit }, emit) : null,
         h('label', { htmlFor: 'todo-search' }, ['Search']),
         h('input', {
             key: "todo-search",
@@ -318,30 +345,46 @@ function CreateTodo({ currentTodo, searchQuery, selectedDuration, showTimePicker
 function formatCountdown(ms) {
     if (ms <= 0) return 'Expired'
     
-    const minutes = Math.floor(ms / 60000)
-    const hours = Math.floor(minutes / 60)
-    const days = Math.floor(hours / 24)
-    const months = Math.floor(days / 30)
+    const totalSeconds = Math.floor(ms / 1000)
+    const totalMinutes = Math.floor(totalSeconds / 60)
+    const totalHours = Math.floor(totalMinutes / 60)
+    const totalDays = Math.floor(totalHours / 24)
+    const totalMonths = Math.floor(totalDays / 30)
+    const totalYears = Math.floor(totalDays / 365)
     
-    if (months > 0) {
-        const remainingDays = days % 30
-        const remainingHours = hours % 24
-        const remainingMinutes = minutes % 60
-        return `${months}mo ${remainingDays}d ${remainingHours}h ${remainingMinutes}m`
+    // Show seconds only when less than 1 minute remains
+    if (totalMinutes < 1) {
+        const seconds = totalSeconds % 60
+        return `${seconds}s`
     }
     
-    if (days > 0) {
-        const remainingHours = hours % 24
-        const remainingMinutes = minutes % 60
-        return `${days}d ${remainingHours}h ${remainingMinutes}m`
+    if (totalYears > 0) {
+        const remainingMonths = Math.floor((totalDays % 365) / 30)
+        const remainingDays = (totalDays % 365) % 30
+        const remainingHours = totalHours % 24
+        const remainingMinutes = totalMinutes % 60
+        return `${totalYears}y ${remainingMonths}mo ${remainingDays}d ${remainingHours}h ${remainingMinutes}m`
     }
     
-    if (hours > 0) {
-        const remainingMinutes = minutes % 60
-        return `${hours}h ${remainingMinutes}m`
+    if (totalMonths > 0) {
+        const remainingDays = totalDays % 30
+        const remainingHours = totalHours % 24
+        const remainingMinutes = totalMinutes % 60
+        return `${totalMonths}mo ${remainingDays}d ${remainingHours}h ${remainingMinutes}m`
     }
     
-    return `${minutes}m`
+    if (totalDays > 0) {
+        const remainingHours = totalHours % 24
+        const remainingMinutes = totalMinutes % 60
+        return `${totalDays}d ${remainingHours}h ${remainingMinutes}m`
+    }
+    
+    if (totalHours > 0) {
+        const remainingMinutes = totalMinutes % 60
+        return `${totalHours}h ${remainingMinutes}m`
+    }
+    
+    return `${totalMinutes}m`
 }
 
 function TodoItem({ todo, i, edit, isHistory }, emit, helpers) {
@@ -469,10 +512,16 @@ export function TodoApp(state, emit, helpers) {
         }, 0)
     }
 
-    // Update countdown every minute
+    // Update countdown every minute (or every second if any todo is under 1 minute)
+    const hasUrgentTodo = state.todos.some(todo => {
+        const dueTime = new Date(todo.due_time)
+        const timeRemaining = dueTime.getTime() - Date.now()
+        return timeRemaining > 0 && timeRemaining < 60000 // less than 1 minute
+    })
+    
     setTimeout(() => {
         emit('increment-load-attempt')
-    }, 60000)
+    }, hasUrgentTodo ? 1000 : 60000)
 
     const loadPreviousTodos = async () => {
         const id = localStorage.getItem('user_id') || ''
