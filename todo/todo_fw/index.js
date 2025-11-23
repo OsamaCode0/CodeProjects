@@ -80,6 +80,7 @@ function Router(state, emit, helpers) {
     case "/register":
       return RegisterPage(state, emit, helpers);
     case "/todo":
+    case "/todo/history":
       return TodoApp(state, emit, helpers);
     default:
       return h("div", {}, [h("h1", {}, ["404 Not Found"])]);
@@ -101,14 +102,15 @@ function HomePage(state, emit, helpers) {
         }
       }, ["Login"]),
       h("span", {}, [" | "]),
-      h("a", { href: "/register",
+      h("a", {
+        href: "/register",
         on: {
           click: (e) => {
             e.preventDefault();
             helpers.navigate("/register")
           }
         }
-       }, ["Register"]),
+      }, ["Register"]),
     ])
   ]);
 }

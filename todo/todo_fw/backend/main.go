@@ -29,7 +29,9 @@ func main() {
 	db, err := database.OpenDB(app.DSN)
 	if err != nil {
 		log.Printf("Error opening database:\n%v", err)
-		log.Println("You probably need to run docker for out database first")
+		log.Println("You probably need to run docker for our database first")
+		log.Println("to run docker: make start-db")
+		log.Println("savely shutdown by pressing 'control + c'")
 		return
 	}
 	defer db.Db.Close()

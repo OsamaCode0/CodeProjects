@@ -66,6 +66,8 @@ export const todoReducers = {
         todos,
         todosLoaded: true,
         loadAttempts: 0,
+        isHistory: false,
+        edit: { idx: null, original: null, edited: null },
     }),
     'load-todos-failure': (state, errorMessage) => ({
         ...state,
@@ -76,10 +78,15 @@ export const todoReducers = {
         todos,
         isHistory: true,
         todosLoaded: true,
+        edit: { idx: null, original: null, edited: null },
     }),
     'load-todos-history-failure': (state, errorMessage) => ({
         ...state,
         error: errorMessage,
+    }),
+    'tick': (state) => ({
+        ...state,
+        lastTick: Date.now()
     }),
     'increment-load-attempt': (state) => ({
         ...state,
@@ -154,7 +161,7 @@ export const todoReducers = {
             original: null,
             edited: null,
         }
-    })
+    }),
 }
 
 let searchTimer = null
@@ -187,7 +194,7 @@ function TimePicker({ timeValue, timeUnit }, emit) {
                 on: {
                     change: ({ target }) => emit('update-time-unit', target.value)
                 }
-            }, units.map(unit => 
+            }, units.map(unit =>
                 h('option', { value: unit }, [unit])
             ))
         ])
@@ -199,11 +206,11 @@ function CreateTodo({ currentTodo, searchQuery, timeValue, timeUnit, showTimePic
 
     const calculateDueTime = () => {
         if (!timeValue || timeValue <= 0) return null
-        
+
         const value = parseInt(timeValue)
         let milliseconds = 0
-        
-        switch(timeUnit) {
+
+        switch (timeUnit) {
             case 'minutes':
                 milliseconds = value * 60 * 1000
                 break
@@ -220,15 +227,17 @@ function CreateTodo({ currentTodo, searchQuery, timeValue, timeUnit, showTimePic
                 milliseconds = value * 365 * 24 * 60 * 60 * 1000
                 break
         }
-        
+
         return new Date(Date.now() + milliseconds)
     }
 
     const submitTodo = async () => {
         if (currentTodo.length < 3) return
         const id = localStorage.getItem('user_id') || ''
-        
+
         const dueTime = calculateDueTime()
+
+        clearTimeout(searchTimer)
 
         try {
             const data = await helpers.api.post('http://localhost:8081/user/todo', {
@@ -344,20 +353,20 @@ function CreateTodo({ currentTodo, searchQuery, timeValue, timeUnit, showTimePic
 
 function formatCountdown(ms) {
     if (ms <= 0) return 'Expired'
-    
+
     const totalSeconds = Math.floor(ms / 1000)
     const totalMinutes = Math.floor(totalSeconds / 60)
     const totalHours = Math.floor(totalMinutes / 60)
     const totalDays = Math.floor(totalHours / 24)
     const totalMonths = Math.floor(totalDays / 30)
     const totalYears = Math.floor(totalDays / 365)
-    
+
     // Show seconds only when less than 1 minute remains
     if (totalMinutes < 1) {
         const seconds = totalSeconds % 60
         return `${seconds}s`
     }
-    
+
     if (totalYears > 0) {
         const remainingMonths = Math.floor((totalDays % 365) / 30)
         const remainingDays = (totalDays % 365) % 30
@@ -365,30 +374,30 @@ function formatCountdown(ms) {
         const remainingMinutes = totalMinutes % 60
         return `${totalYears}y ${remainingMonths}mo ${remainingDays}d ${remainingHours}h ${remainingMinutes}m`
     }
-    
+
     if (totalMonths > 0) {
         const remainingDays = totalDays % 30
         const remainingHours = totalHours % 24
         const remainingMinutes = totalMinutes % 60
         return `${totalMonths}mo ${remainingDays}d ${remainingHours}h ${remainingMinutes}m`
     }
-    
+
     if (totalDays > 0) {
         const remainingHours = totalHours % 24
         const remainingMinutes = totalMinutes % 60
         return `${totalDays}d ${remainingHours}h ${remainingMinutes}m`
     }
-    
+
     if (totalHours > 0) {
         const remainingMinutes = totalMinutes % 60
         return `${totalHours}h ${remainingMinutes}m`
     }
-    
+
     return `${totalMinutes}m`
 }
 
 function TodoItem({ todo, i, edit, isHistory }, emit, helpers) {
-    const isEditing = edit.idx === i
+    const isEditing = !isHistory && edit.idx === i
 
     const saveEditedTodo = async () => {
         const id = localStorage.getItem('user_id') || ''
@@ -421,7 +430,7 @@ function TodoItem({ todo, i, edit, isHistory }, emit, helpers) {
 
     const dueTime = todo.due_time instanceof Date ? todo.due_time : new Date(todo.due_time)
     const isSentinel = dueTime.getUTCFullYear() < 2000
-    
+
     const timeRemaining = isSentinel ? null : dueTime.getTime() - Date.now()
     const countdown = timeRemaining !== null ? formatCountdown(timeRemaining) : ''
 
@@ -452,7 +461,7 @@ function TodoItem({ todo, i, edit, isHistory }, emit, helpers) {
                     dblclick: () => emit('start-editing-todo', i)
                 }
             }, [todo.content]),
-            countdown ? h('span', { 
+            countdown ? h('span', {
                 class: timeRemaining <= 0 ? 'countdown expired' : 'countdown'
             }, [countdown]) : null,
             !isHistory ? h('button', {
@@ -504,23 +513,35 @@ export function TodoApp(state, emit, helpers) {
         )
     }
 
+    const path = window.location.pathname
+    const isHistoryPath = path === '/todo/history'
     const MAX_LOAD_ATTEMPTS = 3
-    if (!state.todosLoaded && (state.loadAttempts || 0) < MAX_LOAD_ATTEMPTS) {
-        setTimeout(() => {
-            emit('increment-load-attempt')
-            loadTodos(emit, helpers)
-        }, 0)
+
+    if (isHistoryPath && !state.isHistory) {
+        setTimeout(() => loadPreviousTodos(), 0)
+    } else if (!isHistoryPath && (state.isHistory || !state.todosLoaded)) {
+
+        if ((state.loadAttempts || 0) < MAX_LOAD_ATTEMPTS) {
+            setTimeout(() => {
+                // If coming back from history, clear the list first so we don't see old data
+                if (state.isHistory) emit('load-todos-success', []);
+
+                emit('increment-load-attempt');
+                loadTodos(emit, helpers);
+            }, 0);
+        }
     }
 
     // Update countdown every minute (or every second if any todo is under 1 minute)
     const hasUrgentTodo = state.todos.some(todo => {
+        if (!todo.due_time) return false
         const dueTime = new Date(todo.due_time)
         const timeRemaining = dueTime.getTime() - Date.now()
-        return timeRemaining > 0 && timeRemaining < 60000 // less than 1 minute
+        return timeRemaining > -6000 && timeRemaining < 3600000 // less than 1 minute
     })
-    
+
     setTimeout(() => {
-        emit('increment-load-attempt')
+        emit('tick')
     }, hasUrgentTodo ? 1000 : 60000)
 
     const loadPreviousTodos = async () => {
@@ -567,10 +588,9 @@ export function TodoApp(state, emit, helpers) {
                 h('button', {
                     class: 'dropdown-btn',
                     on: {
-                        click: () => {
-                            emit('load-todos-success', [])
-                            emit('increment-load-attempt')
-                            loadTodos(emit, helpers)
+                        click: (e) => {
+                            e.preventDefault()
+                            helpers.navigate('/todo')
                         }
                     }
                 }, ['Home']),
@@ -579,7 +599,10 @@ export function TodoApp(state, emit, helpers) {
                 h('button', {
                     class: 'dropdown-btn',
                     on: {
-                        click: loadPreviousTodos
+                        click: (e) => {
+                            e.preventDefault()
+                            helpers.navigate('/todo/history')
+                        }
                     }
                 }, ['history']),
                 h('button', {
