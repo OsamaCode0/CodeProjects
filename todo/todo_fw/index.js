@@ -63,7 +63,7 @@ const helpers = {
 
 function Router(state, emit, helpers) {
   const token = localStorage.getItem('token')
-  const path = window.location.pathname
+  const path = window.location.pathname.replace(/\/+$/, '') || '/'
 
   if (token && (path === '/' || path === '/login' || path === '/register')) {
     // ✅ Defer navigation to next tick to avoid infinite loop
@@ -80,7 +80,7 @@ function Router(state, emit, helpers) {
     case "/register":
       return RegisterPage(state, emit, helpers);
     case "/todo":
-    case "/todo/history":
+    case "/history":
       return TodoApp(state, emit, helpers);
     default:
       return h("div", {}, [h("h1", {}, ["404 Not Found"])]);

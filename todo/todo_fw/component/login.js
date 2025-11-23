@@ -6,6 +6,7 @@ export const loginState = {
     isLoggedIn: false,
     loading: false,
     error: null,
+    user_name: localStorage.getItem('user_name') || 'Guess'
 }
 
 export const loginReducers = {
@@ -25,12 +26,14 @@ export const loginReducers = {
     'login-success': (state, payload) => {
         localStorage.setItem('user_id', payload.user_id)
         localStorage.setItem('token', payload.token)
+        localStorage.setItem('user_name', payload.user_name)
         return {
             ...state,
             loading: false,
             isLoggedIn: true,
             user_id: payload.user_id,
             token: payload.token,
+            user_name: payload.user_name
         }
     },
     'login-failure': (state, errorMessage) => ({
@@ -69,6 +72,7 @@ export function LoginPage(state, emit, helpers) {
             emit('login-success', {
                 user_id: data.data.user_id,
                 token: data.data.token,
+                user_name: data.data.name ?? data.data.email,
             })
         } catch (err) {
             console.error('Login error:', err)

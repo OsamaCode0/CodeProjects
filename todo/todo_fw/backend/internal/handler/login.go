@@ -7,6 +7,8 @@ import (
 	"todo/internal/exception"
 	"todo/internal/helper"
 	"todo/internal/types"
+
+	"github.com/google/uuid"
 )
 
 func (db *DB) LoginUser(w http.ResponseWriter, r *http.Request) {
@@ -36,6 +38,16 @@ func (db *DB) LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user := &types.AppUser{
+		Id: pers.UserId,
+	}
+	err = tx.FindUserById(r.Context(), user)
+	if err != nil {
+		tx.Tx.Rollback(r.Context())
+		exception.HandleResponseError(w, err)
+		return
+	}
+
 	err = tx.CommitTransaction()
 	if err != nil {
 		exception.HandleResponseError(w, err)
@@ -46,7 +58,21 @@ func (db *DB) LoginUser(w http.ResponseWriter, r *http.Request) {
 	webRespond := types.WebResponse{
 		Code:   http.StatusAccepted,
 		Status: "StatusAccepted",
-		Data:   pers,
+		Data: struct {
+			UserId   uuid.UUID `json:"user_id"`
+			Token    uuid.UUID `json:"token"`
+			LoginAt  time.Time `json:"login_at"`
+			LogoutAt time.Time `json:"logout_at"`
+			Email    string    `json:"email"`
+			Name     string    `json:"name"`
+		}{
+			UserId:   pers.UserId,
+			Token:    pers.Token,
+			LoginAt:  pers.LoginAt,
+			LogoutAt: pers.LogoutAt,
+			Email:    user.Email,
+			Name:     user.Name,
+		},
 	}
 
 	err = helper.WriteToResponseBody(w, webRespond)

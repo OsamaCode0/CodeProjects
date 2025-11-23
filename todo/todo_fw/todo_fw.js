@@ -473,6 +473,11 @@ function TodoItem({ todo, i, edit, isHistory }, emit, helpers) {
 }
 
 function TodoList({ todos, edit, isHistory }, emit, helpers) {
+    if (!todos || todos.length === 0) {
+        return h('div', { class: 'empty-state' }, [
+            isHistory ? 'No archived items found.' : 'No tasks yet. Add one above!'
+        ])
+    }
     return h(
         'ul',
         {},
@@ -513,43 +518,17 @@ export function TodoApp(state, emit, helpers) {
         )
     }
 
-    const path = window.location.pathname
-    const isHistoryPath = path === '/todo/history'
+    const path = window.location.pathname.replace(/\/+$/, '')
+    const isHistoryPath = path === '/history'
     const MAX_LOAD_ATTEMPTS = 3
-
-    if (isHistoryPath && !state.isHistory) {
-        setTimeout(() => loadPreviousTodos(), 0)
-    } else if (!isHistoryPath && (state.isHistory || !state.todosLoaded)) {
-
-        if ((state.loadAttempts || 0) < MAX_LOAD_ATTEMPTS) {
-            setTimeout(() => {
-                // If coming back from history, clear the list first so we don't see old data
-                if (state.isHistory) emit('load-todos-success', []);
-
-                emit('increment-load-attempt');
-                loadTodos(emit, helpers);
-            }, 0);
-        }
-    }
-
-    // Update countdown every minute (or every second if any todo is under 1 minute)
-    const hasUrgentTodo = state.todos.some(todo => {
-        if (!todo.due_time) return false
-        const dueTime = new Date(todo.due_time)
-        const timeRemaining = dueTime.getTime() - Date.now()
-        return timeRemaining > -6000 && timeRemaining < 3600000 // less than 1 minute
-    })
-
-    setTimeout(() => {
-        emit('tick')
-    }, hasUrgentTodo ? 1000 : 60000)
+    const userName = state.user_name
 
     const loadPreviousTodos = async () => {
         const id = localStorage.getItem('user_id') || ''
 
         try {
             console.log('load previous todos')
-            const data = await helpers.api.get(`http://localhost:8081/user/todo/history/${id}`)
+            const data = await helpers.api.get(`http://localhost:8081/user/history/${id}`)
 
             if (Array.isArray(data.data)) {
                 console.log('array is array :', data.data)
@@ -582,6 +561,31 @@ export function TodoApp(state, emit, helpers) {
         }
     }
 
+    if (isHistoryPath && !state.isHistory) {
+        setTimeout(() => loadPreviousTodos(), 0)
+    } else if (!isHistoryPath && (state.isHistory || !state.todosLoaded)) {
+        if ((state.loadAttempts || 0) < MAX_LOAD_ATTEMPTS) {
+            setTimeout(() => {
+                // If coming back from history, clear the list first so we don't see old data
+                if (state.isHistory) emit('load-todos-success', []);
+                emit('increment-load-attempt');
+                loadTodos(emit, helpers);
+            }, 0);
+        }
+    }
+
+    // Update countdown every minute (or every second if any todo is under 1 minute)
+    const hasUrgentTodo = state.todos.some(todo => {
+        if (!todo.due_time) return false
+        const dueTime = new Date(todo.due_time)
+        const timeRemaining = dueTime.getTime() - Date.now()
+        return timeRemaining > -6000 && timeRemaining < 3600000 // less than 1 minute
+    })
+
+    setTimeout(() => {
+        emit('tick')
+    }, hasUrgentTodo ? 1000 : 60000)
+
     return hFragment([
         h('header', {}, [
             h('div', {}, [
@@ -594,6 +598,7 @@ export function TodoApp(state, emit, helpers) {
                         }
                     }
                 }, ['Home']),
+                h('h3', {}, [`Hello ${userName}`])
             ]),
             h('div', {}, [
                 h('button', {
@@ -601,7 +606,7 @@ export function TodoApp(state, emit, helpers) {
                     on: {
                         click: (e) => {
                             e.preventDefault()
-                            helpers.navigate('/todo/history')
+                            helpers.navigate('/history')
                         }
                     }
                 }, ['history']),
@@ -614,9 +619,11 @@ export function TodoApp(state, emit, helpers) {
             ]),
         ]),
         h('div', { class: 'todo-app' }, [
-            h('h1', {}, ['My TODOs']),
-            CreateTodo(state, emit, helpers),
-            TodoList({ ...state }, emit, helpers),
+            h('h1', {}, [isHistoryPath ? 'History Archive' : 'My TODOs']),
+            !isHistoryPath ? CreateTodo(state, emit, helpers) : null,
+            (!state.todosLoaded && !state.isHistory && !isHistoryPath) 
+                ? h('p', {}, ['Loading...']) 
+                : TodoList({ ...state }, emit, helpers),
         ]),
         h('footer', {}, ['Powered by Kood/Sisu'])
     ])
