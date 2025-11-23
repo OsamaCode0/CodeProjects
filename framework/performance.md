@@ -138,7 +138,7 @@ Median: 10ms ✅
 
 Paste this in console for more detailed metrics:
 
-```javascript
+```js
 // Detailed Performance Benchmark
 (function perfBench() {
   console.log('📊 Running detailed performance benchmark...\n')
@@ -351,3 +351,6 @@ For lists with 100+ items, only render visible items.
 ✅ **Benchmarks recorded**  
 
 🎉 **Performance requirement: COMPLETE**
+
+
+back to [Readme.md](./Readme.md)

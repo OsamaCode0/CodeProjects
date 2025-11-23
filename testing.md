@@ -8,7 +8,7 @@ Our frontend framework meets **most mandatory requirements** with strong documen
 
 ## MANDATORY REQUIREMENTS TESTING
 
-### ✅ Repository Structure
+### ✅ 1. Repository Structure
 
 **Requirement:** The root of the repo contains "example" and "framework" directories.
 
@@ -31,7 +31,7 @@ ls
 
 ---
 
-### ✅ README.md Documentation
+### ✅ 2. README.md Documentation
 
 **Requirement:** The framework directory contains a README.md file.
 
@@ -53,7 +53,7 @@ ls
 
 ---
 
-### ✅ Documentation Clarity & Format
+### ✅ 3. Documentation Clarity & Format
 
 **Requirement:** The documentation is clear, understandable, and written in markdown.
 
@@ -91,7 +91,7 @@ h('h1', { id: 'title'}, ['This is a title'])
 
 ---
 
-### ✅ Architecture & Design Principles
+### ✅ 4. Architecture & Design Principles
 
 **Requirement:** The documentation describes the architecture and design principles.
 
@@ -105,9 +105,7 @@ Check README for sections on:
 
 **Evidence:**
 
-click here [Readme.md](./framework/Readme.md) for the existing design priciples
-
-## Core Concepts
+click here [**## Core Concepts**](./framework/Readme.md#core-concepts) for the existing design priciples
 
 ### 1. Virtual DOM (vdom)
 The framework uses a virtual DOM to efficiently update the real DOM...
@@ -126,7 +124,7 @@ Reducers are pure functions that take current state and an action payload...
 
 ---
 
-### ✅ Installation Instructions
+### ✅ 5. Installation Instructions
 
 **Requirement:** The documentation has installation instructions.
 
@@ -137,7 +135,7 @@ Follow README installation steps and verify they work.
 
 **Evidence:**
 
-## [Installation](./framework/Readme.md)
+click here [## Installation & Building](./framework/Readme.md#installation--building)
 
 ```bash
 # from your project folder
@@ -149,12 +147,11 @@ Import in your project:
 import { createApp, h } from './dist/frontend-framework.js'
 ```
 
-
 **Explanation:** Clear, simple installation process that works.
 
 ---
 
-### ✅ Getting Started Guide
+### ✅ 6. Getting Started Guide
 
 **Requirement:** The documentation has something equivalent to a "Getting Started" guide.
 
@@ -165,20 +162,20 @@ Follow "Get Started" section from documentation.
 
 **Evidence:**
 
-# Get Started
+click on our [Getting Started](./framework/Readme.md#getting-started) instruction.
 
-## Initialize the types
-## Get To Know Each Functions:
-### function h()
-### function hFragment()
-### State Management with createApp()
-
+```md
+## Get Started
+### 1. Inizialize Project
+### 2. Install & Scafold
+### 3. Run It
+```
 
 **Explanation:** Progressive introduction from basic functions to state management.
 
 ---
 
-### ✅ Features with Code Examples
+### ✅ 7. Features with Code Examples
 
 **Requirement:** The documentation describes each feature along with code examples.
 
@@ -188,18 +185,23 @@ Verify each major feature has example code.
 **Status:** ✅ **PASS**
 
 **Evidence:**
+
+click our [Api Reference](./framework/Readme.md#api-reference) for feature along with the example
+
+```md
 - `h()` - ✅ Examples provided
 - `hFragment()` - ✅ Examples provided
 - `createApp()` - ✅ Examples provided
 - Conditional rendering - ✅ Examples in extended docs
 - List rendering - ✅ Examples in extended docs
 - Form handling - ✅ Examples in extended docs
+```
 
 **Explanation:** Every feature documented with runnable examples.
 
 ---
 
-### ✅ Best Practices
+### ✅ 8. Best Practices
 
 **Requirement:** The documentation contains best practices for building applications.
 
@@ -214,14 +216,16 @@ Check for sections on:
 
 **Evidence:**
 
-## Best Practices
+click here for our [Best Practices](./framework/Readme.md#best-practices) documentation
 
 1. **Keep State Immutable**
+   ```js
    // ✅ Good
    const newState = { ...state, count: state.count + 1 }
    
    // ❌ Bad
    state.count += 1
+   ```
 
 2. **Use Pure Functions**
 3. **Keep Components Small**
@@ -233,7 +237,7 @@ Check for sections on:
 
 ---
 
-### ✅ Example Project Utilizes All Functionality
+### ✅ 9. Example Project Utilizes All Functionality
 
 **Requirement:** The example project utilizes all of the developed functionality.
 
@@ -243,43 +247,44 @@ Audit todo app (todo) against framework features.
 **Status:** ✅ **PASS**
 
 **Features Used:**
-| Feature | Evidence |
-|---------|----------|
-| Virtual DOM | ✅ `h()` and components throughout |
-| State Management | ✅ `createApp()`, reducers for todos/auth |
-| Components | ✅ `LoginPage`, `TodoApp`, `TodoList`, `TodoItem` |
-| Event Handling | ✅ Form inputs, button clicks, navigation |
-| Conditional Rendering | ✅ Login check, edit mode, loading states |
-| List Rendering | ✅ Todo list map |
-| Helpers | ✅ API wrapper, navigation |
-| Styling | ✅ CSS classes and inline styles |
+| Feature                   | Evidence                                                              |
+|---------------------------|-----------------------------------------------------------------------|
+| Virtual DOM               | ✅ `h()`, `hFragment()` and components throughout                     |
+| State Management          | ✅ `createApp()`, reducers for todos/auth                             |
+| Components                | ✅ `RegisterPage`, `LoginPage`, `TodoApp`, `TodoList`, `TodoItem`     |
+| Event Handling            | ✅ Form inputs, button clicks, navigation                             |
+| Conditional Rendering     | ✅ Login check, edit mode, loading states                             |
+| List Rendering            | ✅ Todo list map                                                      |
+| Helpers                   | ✅ API wrapper, navigation                                            |
+| Styling                   | ✅ CSS classes and inline styles                                      |
 
 ---
 
-### ✅ Example Project Works as Expected
+### ✅ 10. Example Project Works as Expected
 
 **Testing Method:**
 ```bash
-cd /Users/frenkikatiandagho/Learn/frontend-framework/todo/todo_fw
+cd /example/todo_fw
 # Open in browser, test functionality
 ```
 
 **Status:** ✅ **PASS**
 
 **Test Results:**
-1. ✅ Login page renders
-2. ✅ Form submission works
-3. ✅ Token stored in localStorage
-4. ✅ Redirect to todo page works
-5. ✅ Todos load from API
-6. ✅ Add todo works
-7. ✅ Edit todo works
-8. ✅ Delete todo works
-9. ✅ No duplicate forms on keystroke
+1. ✅ Register page renders
+2. ✅ Login page renders
+3. ✅ Form submission works
+4. ✅ Token stored in localStorage
+5. ✅ Redirect to todo page works
+6. ✅ Todos load from API
+7. ✅ Add todo works
+8. ✅ Edit todo works
+9. ✅ Delete todo works
+10. ✅ No duplicate forms on keystroke
 
 ---
 
-### ✅ Example Project Can Be Expanded
+### ✅ 11. Example Project Can Be Expanded
 
 **Requirement:** The example project code can be expanded, and works as expected.
 
@@ -320,7 +325,7 @@ function TodoList({ todos, filter }, emit) {
 
 ---
 
-### ✅ State Persistence Between Sessions
+### ✅ 12. State Persistence Between Sessions
 
 **Requirement:** It stores and updates application state between sessions.
 
@@ -354,7 +359,7 @@ async function loadTodos(emit, helpers) {
 
 ---
 
-### ✅ Application State Shared Between Elements
+### ✅ 13. Application State Shared Between Elements
 
 **Requirement:** Application state can be shared between elements.
 
@@ -388,7 +393,7 @@ function TodoItem({ todo, edit }, emit, helpers) {
 
 ---
 
-### ✅ Application State Shared Between Pages
+### ✅ 14. Application State Shared Between Pages
 
 **Requirement:** Application state can be shared between pages.
 
@@ -428,7 +433,7 @@ function Router(state, emit, helpers) {
 
 ---
 
-### ✅ URL Control
+### ✅ 15. URL Control
 
 **Requirement:** It can control the URL.
 
@@ -463,7 +468,7 @@ h('a', {
 
 ---
 
-### ✅ Application State Changes Based on URL
+### ✅ 16. Application State Changes Based on URL
 
 **Requirement:** The application state changes based on the URL.
 
@@ -503,7 +508,7 @@ function Router(state, emit, helpers) {
 
 ---
 
-### ✅ Elements Can Be Created
+### ✅ 17. Elements Can Be Created
 
 **Requirement:** Elements can be created.
 
@@ -537,7 +542,7 @@ const vnode = h('h1', { id: 'title' }, ['Hello'])
 
 ---
 
-### ✅ Elements Can Be Nested
+### ✅ 18. Elements Can Be Nested
 
 **Requirement:** Elements can be nested in other elements.
 
@@ -575,7 +580,7 @@ h('div', { class: 'container' }, [
 
 ---
 
-### ✅ Styles and Attributes System
+### ✅ 19. Styles and Attributes System
 
 **Requirement:** It has a system for adding and manipulating styles and attributes.
 
@@ -645,7 +650,7 @@ if (prop === 'style') {
 
 ---
 
-### ✅ User Input & Form Submission Handling
+### ✅ 20. User Input & Form Submission Handling
 
 **Requirement:** It handles user input, and form submissions.
 
@@ -706,7 +711,7 @@ function addEventListeners(vnode, el) {
 
 ---
 
-### ✅ Reusable Component Architecture
+### ✅ 21. Reusable Component Architecture
 
 **Requirement:** It has reusable component architecture.
 
@@ -750,7 +755,7 @@ function TodoApp(state, emit, helpers) {
 
 ---
 
-### ✅ Event Listener Registration
+### ✅ 22. Event Listener Registration
 
 **Requirement:** Event listeners can be registered when elements are rendered.
 
@@ -802,7 +807,7 @@ function addEventListeners(vnode, el) {
 
 ---
 
-### ✅ Event Delegation
+### ✅ 23. Event Delegation
 
 **Requirement:** Event handling can be delegated to parent elements.
 
@@ -841,7 +846,7 @@ el.addEventListener(eventName, handler)  // Parent listener catches bubbled even
 
 ---
 
-### ✅ Prevents Default Behavior & Event Bubbling
+### ✅ 24. Prevents Default Behavior & Event Bubbling
 
 **Requirement:** It prevents default browser behavior and event bubbling.
 
@@ -897,7 +902,7 @@ h('div', {
 
 ---
 
-### ✅ Not Just Re-implementing addEventListener
+### ✅ 25. Not Just Re-implementing addEventListener
 
 **Requirement:** It does not just reimplement "addEventListener".
 
@@ -960,9 +965,24 @@ function addEventListeners(vnode, el) {
 
 **Explanation:** Framework wraps addEventListener in a higher-level abstraction connected to state management, virtual DOM, and reactive rendering.
 
+**Wondering how reimplement will looks like?:**
+
+```js
+// ❌ This is an example reimplementing
+class MyElement {
+    listeners = {}; // Storing them yourself
+    addEventListener(event, fn) {
+        this.listeners[event].push(fn);
+    }
+    click() {
+        this.listeners['click'].forEach(fn => fn()); // Firing them yourself
+    }
+}
+```
+
 ---
 
-### ✅ No External Framework Dependencies
+### ✅ 26. No External Framework Dependencies
 
 **Requirement:** The framework is implemented without other frontend frameworks or libraries.
 
@@ -992,7 +1012,7 @@ export function createApp({ state, reducers, view, helpers }) { ... }
 
 ---
 
-### ✅ Framework Convention vs Library
+### ✅ 27. Framework Convention vs Library
 
 **Requirement:** It is implemented with a framework convention as opposed to a library.
 
@@ -1041,7 +1061,7 @@ element.addEventListener(...)
 
 ## EXTRA REQUIREMENTS TESTING
 
-### ✅ Performance
+### ✅ 28. Performance
 
 **Requirement:** It is performant. The programmer must describe specific performance decision making, and their effects must be validated.
 
@@ -1049,7 +1069,7 @@ element.addEventListener(...)
 
 ---
 
-## Performance Decisions & Validation
+[## Performance Decisions & Validation](./framework/performance.md)
 
 ### 1. Virtual DOM Diffing
 
@@ -1080,8 +1100,6 @@ Median: 33ms ✅
 
 **Proof:** Only changed items update in browser DevTools - unchanged elements are reused.
 
----
-
 ### 2. Shallow State Cloning
 
 **Decision:** Use spread operator for immutable state updates.
@@ -1110,8 +1128,6 @@ Median: 33ms ✅
 
 **Trade-off:** Creates new objects but keeps shallow references. Acceptable for app size.
 
----
-
 ### 3. Direct Event Listeners (Not Global Delegation)
 
 **Decision:** Attach event listeners directly to elements when they mount.
@@ -1132,8 +1148,6 @@ function addEventListeners(vnode, el) {
 
 **Trade-off:** More listeners (~200 for 50 todos) but clearer debugging vs. complex global delegation.
 
----
-
 ### 4. Prevent Unnecessary Re-renders
 
 **Decision:** Only re-render when state actually changes via reducers.
@@ -1147,25 +1161,21 @@ if (oldState !== newState) {
 
 **Result:** State changes are the only trigger for re-renders.
 
----
+### 5. Recorded Performance Metrics
 
-## Recorded Performance Metrics
-
-| Operation | Approach | Median Time | Status |
-|-----------|----------|-------------|--------|
-| Initial mount | Virtual DOM | ~10ms | ✅ Excellent |
-| Add todo | Synchronous emit | ~0ms | ✅ Excellent |
-| Update todo | Patch single node | ~33ms | ✅ Good |
-| Delete todo | Array filter + re-render | ~8ms | ✅ Excellent |
-| Form input keystroke | Each keystroke emit | ~2ms | ✅ Excellent |
+| Operation             | Approach                  | Median Time   | Status        |
+|-----------------------|---------------------------|---------------|--------------|
+| Initial mount         | Virtual DOM               | ~10ms         | ✅ Excellent  |
+| Add todo              | Synchronous emit          | ~0ms          | ✅ Excellent  |
+| Update todo           | Patch single node         | ~33ms         | ✅ Good       |
+| Delete todo           | Array filter + re-render  | ~8ms          | ✅ Excellent  |
+| Form input keystroke  | Each keystroke emit       | ~2ms          | ✅ Excellent  |
 
 **Test Environment:** MacBook Pro M1, Chrome DevTools  
 **Test Date:** [Add date]  
 **Iterations:** 10 per test
 
----
-
-## How to Measure Performance
+### 6. How to Measure Performance
 
 ### Quick Test (Browser Console)
 
@@ -1199,160 +1209,6 @@ Median: 0 ms
 Average: 0 ms
 ```
 
----
-
-## Issues Found & Resolution
-
-### Issue 1: `loadTodos()` Called on Every Render
-
-**Problem:** API called 100+ times instead of once.
-
-**Status:** ✅ **FIXED**
-
-```js
-// Before: Called every render
-function TodoApp(state, emit, helpers) {
-    loadTodos(emit, helpers)  // ❌ Runs every render
-    return h('div', {}, [...])
-}
-
-// After: Called once only
-function TodoApp(state, emit, helpers) {
-    if (!state.todosLoaded) {  // ✅ Check flag
-        loadTodos(emit, helpers)
-    }
-    return h('div', {}, [...])
-}
-```
-
-**Add to state:**
-```js
-const state = {
-    todos: [],
-    todosLoaded: false  // ← Flag
-}
-```
-
-**Add to reducers:**
-```js
-'load-todos-success': (state, todos) => ({
-    ...state,
-    todos,
-    todosLoaded: true  // ← Set after loading
-})
-```
-
-**Result:** API call happens only once ✅
-
----
-
-### Issue 2: No Memoization for Expensive Computations
-
-**Status:** ⚠️ **NOT NEEDED YET**
-
-**Why:** App size is small (<100 todos), filtering runs in <1ms.
-
-**When to Add:** If app grows to 1000+ items, implement:
-
-```js
-const memoize = (fn) => {
-    let lastArgs = null
-    let lastResult = null
-    
-    return (...args) => {
-        if (JSON.stringify(lastArgs) === JSON.stringify(args)) {
-            return lastResult
-        }
-        lastArgs = args
-        lastResult = fn(...args)
-        return lastResult
-    }
-}
-
-const getCompletedTodos = memoize((todos) => {
-    return todos.filter(t => t.completed)
-})
-```
-
----
-
-### Issue 3: All Component State Merges
-
-**Status:** ⚠️ **ACCEPTABLE**
-
-**Why:** State object is reasonable size (~15 properties), spread operator is fast.
-
-**Current Pattern:**
-```js
-'add-todo': (state, todo) => ({
-    ...state,
-    todos: [...state.todos, todo]
-})
-```
-
-**Optimization Only If:** State grows to 50+ properties. Then use nested structure:
-
-```js
-const state = {
-    todos: { list: [], filter: 'all' },
-    user: { id: 1, name: 'John' }
-}
-```
-
----
-
-## Performance Baselines vs Actual
-
-| Metric | Baseline | Actual | Status |
-|--------|----------|--------|--------|
-| Mount app | < 50ms | ~10ms | ✅ **Exceeds** |
-| Add todo | < 20ms | ~0ms | ✅ **Exceeds** |
-| Update todo | < 50ms | ~33ms | ✅ **Passes** |
-| Delete todo | < 50ms | ~8ms | ✅ **Exceeds** |
-
-**Conclusion:** All performance baselines exceeded ✅
-
----
-
-## Future Optimizations (If Needed)
-
-### 1. Render Batching
-```js
-let pendingRender = false
-
-function emit(action, payload) {
-    updateState(action, payload)
-    if (!pendingRender) {
-        pendingRender = true
-        requestAnimationFrame(() => {
-            render()
-            pendingRender = false
-        })
-    }
-}
-```
-
-### 2. List Virtualization
-For 1000+ items, only render visible:
-- Measure viewport height
-- Only render items in view
-- Can achieve 10x performance boost
-
-### 3. Selective Updates
-Use nested state for large apps:
-```js
-// Split state by concern
-const state = {
-    todos: { ... },
-    user: { ... },
-    ui: { ... }
-}
-```
-
----
-
-## Conclusion
-
 ✅ **Performance requirement: COMPLETE**
 
 - Virtual DOM diffing validated ✅
@@ -1362,9 +1218,7 @@ const state = {
 - Metrics recorded and compared ✅
 - Framework suitable for production ✅
 
----
-
-### ✅ HTTP Requests & Data Sharing
+## ✅ 29. HTTP Requests & Data Sharing
 
 **Requirement:** It implements HTTP requests and data sharing with the application.
 
@@ -1474,110 +1328,6 @@ async function updateTodo(id, content) {
 
 ---
 
-## RECOMMENDATIONS FOR IMPROVEMENT
-
-### 1. **Document Performance Decisions** (Important)
-
-Add section to README:
-
-
-## Performance & Optimization
-
-### Virtual DOM Diffing
-- **Decision:** Only update DOM elements that changed
-- **Validation:** Todo list of 100 items renders in ~50ms, updating single item in ~5ms
-- **Proof:** Inspect browser DevTools to see only changed elements updated
-
-### State Update Strategy
-- **Decision:** Use immutable updates with spread operator
-- **Validation:** O(n) where n = state properties (typically 5-20)
-- **Benefit:** Prevents mutation bugs, enables time-travel debugging
-
-### Event System
-- **Decision:** Direct event listeners vs global delegation
-- **Trade-off:** More listeners but simpler debugging
-- **Validation:** Todo app with 50 todos has <200 event listeners total
-
-
-### 2. **Add Unit Test Examples**
-
-Create `framework/testing.md`:
-
-
-## Testing Frontend Framework Applications
-
-### Example: Counter Component Test
-
-```js
-import { createApp, h } from './dist/frontend-framework.js'
-
-// Test: Button increments count
-const state = { count: 0 }
-const reducers = {
-    'increment': (state) => ({ ...state, count: state.count + 1 })
-}
-
-// Simulate user click
-const app = createApp({ state, reducers, view })
-app.emit('increment')
-
-assert(state.count === 1, 'Count incremented')
-```
-
-
-### 3. **Add TypeScript Definitions** (Optional but helpful)
-
-Create `frontend-framework.d.ts`:
-
-```typescript
-export type VNode = {
-    type: 'element' | 'text' | 'fragment'
-    tag?: string
-    props?: Record<string, any>
-    children?: VNode[]
-    value?: string
-}
-
-export function h(tag: string, props?: Record<string, any>, children?: (VNode | string)[]): VNode
-export function hFragment(vNodes: VNode[]): VNode
-export function createApp(config: AppConfig): App
-```
-
-### 4. **Add Error Handling Guide**
-
-Document common patterns:
-
-
-## Error Handling Patterns
-
-### API Errors
-```js
-'fetch-start': (state) => ({ ...state, loading: true, error: null }),
-'fetch-error': (state, error) => ({ ...state, loading: false, error: error.message })
-```
-
-### Form Validation
-```js
-'submit-form': (state) => {
-    if (state.form.email.length < 5) {
-        return { ...state, error: 'Invalid email' }
-    }
-    // ...
-}
-```
-
-
-### 5. **Expand Example with Advanced Features**
-
-Add to todo app:
-- ✅ Todo categories/tags
-- ✅ Due dates
-- ✅ Priority sorting
-- ✅ Offline support
-- ✅ Real-time collaboration indicator
-
----
-
 ## TESTING CHECKLIST
 
 Use this for code review:
@@ -1622,20 +1372,3 @@ Use this for code review:
 
 
 ---
-
-## CONCLUSION
-
-**Your frontend framework is well-implemented and well-documented.** It successfully demonstrates:
-
-✅ Core framework concepts (virtual DOM, state management, components)  
-✅ Production patterns (routing, API integration, form handling)  
-✅ Clean, extensible architecture  
-✅ Comprehensive documentation with examples  
-
-**To reach excellence:**
-- Document performance decision-making
-- Add testing examples
-- Expand documentation with advanced patterns
-- Consider TypeScript support
-
-**Overall Grade: A-** (Very good, minor improvements suggested)

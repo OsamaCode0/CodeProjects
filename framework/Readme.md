@@ -1,603 +1,159 @@
 # Frontend Framework Documentation
 
 ## Table of Contents
-1. Overview
-2. [Installation](#installation)
-3. Core Concepts
-4. API Reference
-5. Examples
-6. Advanced Features
-7. [Get Started](#get-started)
-8. [Best Practices](#best-practices)
-9. [Performance](./performance.md)
 
----
+- [Overview](#overview)
+
+- [Installation & Building](#installation--building)
+
+- [Getting Started](#getting-started)
+
+- [Core Concepts](#core-concepts)
+
+- [API Reference](#api-reference)
+
+- [State Management](#state-management)
+
+- [Advanced Features](#advanced-features)
+
+- [Best Practices & Performance](#best-practices)
+
+- [Examples](#examples)
+
+- [Troubleshooting](#troubleshooting)
 
 ## Overview
-
 A lightweight, vanilla JavaScript frontend framework for building reactive single-page applications (SPAs) with virtual DOM, state management, and component-based architecture.
 
-**Key Features:**
+Key Features:
+
 - 🎯 Virtual DOM with efficient patching
+
 - 🔄 Reactive state management with reducers
+
 - 🎨 Component-based architecture
+
 - 📦 Event delegation system
+
 - 🧩 Fragment support for flexible rendering
+
 - ⚡ Minimal dependencies
 
 ---
 
-## Installation
+## Installation & Building
 
-```bash
+### Install via NPM
+
+```sh
 # from your project folder
 npm install frontend-framework
 ```
 
-Import in your project:
-```javascript
-import { createApp, h, hFragment, hString } from './dist/frontend-framework.js'
+### Build from Source
+If you are developing the framework itself or running the examples:
+
+```sh
+# from the root folder of this project
+make build
 ```
+
+To run the specific Todo example (ensure database is running):
+
+```sh
+# Navigate to example folder
+cd example/todo_fw
+make run
+```
+
+---
+
+## Getting Started
+The framework comes with an auto-scaffolding feature. Installing it via NPM will automatically generate a ready-to-use project structure in your current directory.
+
+### 1. Initialize Project
+Create a folder for your new project and navigate into it:
+
+```sh
+mkdir my-app
+cd my-app
+```
+
+### 2. Install & Scaffold
+Run the install command. This will download the framework and automatically create the necessary entry files (index.html, index.js, index.css) and the dist/ folder for you.
+You may read [how to build from source](#build-from-source) first.
+
+```sh
+npm install frontend-framework
+```
+
+**What just happened?** Your folder now looks like this:
+
+```tx
+my-app/
+├── dist/
+│   └── frontend-framework.js  # The core framework
+├── index.html                 # Auto-generated entry point
+├── index.js                   # Auto-generated app logic
+└── index.css                  # Auto-generated styles
+```
+
+### 3. Run It
+Since modern browsers use ES Modules, serve the folder using a local server:
+
+```sh
+# Using Python (pre-installed on macOS/Linux)
+python3 -m http.server 8000
+
+# OR using Node.js
+npx http-server
+```
+
+Open your browser to http://localhost:8000 or click on provided link. You should see the "Welcome" starter app running immediately!
 
 ---
 
 ## Core Concepts
+1. **Virtual DOM (vdom):** The framework uses a virtual DOM to efficiently update the real DOM. Instead of directly manipulating the DOM, you describe what the UI should look like, and the framework handles updates.
 
-### 1. Virtual DOM (vdom)
+2. **State Management:** State is centralized and immutable. Changes are made through reducers that return new state objects.
 
-The framework uses a virtual DOM to efficiently update the real DOM. Instead of directly manipulating the DOM, you describe what the UI should look like, and the framework handles updates.
+3. **Components:** Pure functions that return virtual DOM elements. They receive (state, emit, helpers) as parameters.
 
-### 2. State Management
-
-State is centralized and immutable. Changes are made through **reducers** that return new state objects.
-
-### 3. Components
-
-Components are pure functions that return virtual DOM elements. They receive `(state, emit, helpers)` as parameters.
-
-### 4. Reducers
-
-Reducers are pure functions that take current state and an action payload, returning new state:
-```javascript
-const reducer = (state, payload) => ({
-  ...state,
-  // updated state
-})
-```
-
----
+4. **Reducers:** Pure functions that take current state and an action payload, returning new state.
 
 ## API Reference
-
-### `h(tag, props, children)`
-
-Creates a virtual element.
-
-**Parameters:**
-- `tag` (string): HTML tag name
-- `props` (object): Element properties, events, classes, styles
-- `children` (array): Child elements or text
-
-**Returns:** vdom element
-
-**Example:**
-```javascript
-h('div', { class: 'container' }, [
-  h('h1', {}, ['Hello World']),
-  h('p', { class: 'text' }, ['This is a paragraph'])
-])
-```
-
-### `hFragment(vNodes)`
-
-Groups multiple vdom elements without a wrapper. Useful when you don't want an extra DOM node.
-
-**Parameters:**
-- `vNodes` (array): Array of vdom elements
-
-**Returns:** fragment vdom element
-
-**Example:**
-```javascript
-hFragment([
-  h('h1', {}, ['Title']),
-  h('p', {}, ['Content'])
-])
-```
-
-### `hString(str)`
-
-Creates a text node (rarely used directly, strings are auto-converted).
-
-### `createApp(config)`
-
-Creates and configures your application.
-
-**Parameters:**
-- `config.state` (object): Initial application state
-- `config.reducers` (object): Action reducers
-- `config.view` (function): View function returning vdom
-- `config.helpers` (object): Helper utilities
-
-**Returns:** app object with `mount()`, `unmount()`, `emit()`
-
-**Example:**
-```javascript
-const app = createApp({
-  state: { count: 0 },
-  reducers: {
-    'increment': (state) => ({ ...state, count: state.count + 1 })
-  },
-  view: (state, emit) => h('div', {}, [...]),
-  helpers: { navigate: (path) => {...} }
-})
-
-app.mount(document.body)
-```
-
----
-
-## Examples
-
-### Basic Counter App
-
-```javascript
-import { createApp, h } from './dist/frontend-framework.js'
-
-const state = {
-  count: 0
-}
-
-const reducers = {
-  'increment': (state) => ({
-    ...state,
-    count: state.count + 1
-  }),
-  'decrement': (state) => ({
-    ...state,
-    count: state.count - 1
-  }),
-  'reset': (state) => ({
-    ...state,
-    count: 0
-  })
-}
-
-function view(state, emit) {
-  return h('div', { class: 'counter' }, [
-    h('h1', {}, [`Count: ${state.count}`]),
-    h('button', {
-      on: { click: () => emit('increment') }
-    }, ['+']),
-    h('button', {
-      on: { click: () => emit('decrement') }
-    }, ['-']),
-    h('button', {
-      on: { click: () => emit('reset') }
-    }, ['Reset'])
-  ])
-}
-
-const app = createApp({ state, reducers, view })
-app.mount(document.body)
-```
-
-### Todo App with API
-
-```javascript
-import { createApp, h } from './dist/frontend-framework.js'
-
-const state = {
-  todos: [],
-  currentTodo: '',
-  loading: false,
-  error: null
-}
-
-const reducers = {
-  'update-todo': (state, text) => ({
-    ...state,
-    currentTodo: text
-  }),
-  'add-todo-start': (state) => ({
-    ...state,
-    loading: true
-  }),
-  'add-todo-success': (state, todo) => ({
-    ...state,
-    todos: [...state.todos, todo],
-    currentTodo: '',
-    loading: false
-  }),
-  'add-todo-error': (state, error) => ({
-    ...state,
-    error,
-    loading: false
-  }),
-  'remove-todo': (state, id) => ({
-    ...state,
-    todos: state.todos.filter(t => t.id !== id)
-  })
-}
-
-function TodoForm({ currentTodo }, emit, helpers) {
-  const handleSubmit = async () => {
-    if (currentTodo.trim().length < 3) return
-    
-    emit('add-todo-start')
-    try {
-      const result = await helpers.api.post('/api/todos', {
-        content: currentTodo
-      })
-      emit('add-todo-success', result.data)
-    } catch (err) {
-      emit('add-todo-error', err.message)
-    }
-  }
-
-  return h('div', {}, [
-    h('input', {
-      type: 'text',
-      value: currentTodo,
-      on: {
-        input: ({ target }) => emit('update-todo', target.value),
-        keydown: ({ key }) => {
-          if (key === 'Enter') handleSubmit()
-        }
-      }
-    }),
-    h('button', {
-      disabled: currentTodo.length < 3,
-      on: { click: handleSubmit }
-    }, ['Add Todo'])
-  ])
-}
-
-function TodoList({ todos }, emit, helpers) {
-  return h('ul', {}, todos.map(todo => 
-    h('li', { key: todo.id }, [
-      h('span', {}, [todo.content]),
-      h('button', {
-        on: {
-          click: async () => {
-            try {
-              await helpers.api.delete(`/api/todos/${todo.id}`)
-              emit('remove-todo', todo.id)
-            } catch (err) {
-              console.error(err)
-            }
-          }
-        }
-      }, ['Delete'])
-    ])
-  ))
-}
-
-function view(state, emit, helpers) {
-  return h('div', { class: 'todo-app' }, [
-    h('h1', {}, ['My Todos']),
-    TodoForm(state, emit, helpers),
-    state.error ? h('p', { class: 'error' }, [state.error]) : null,
-    TodoList(state, emit, helpers)
-  ])
-}
-
-const helpers = {
-  api: {
-    async request(path, { method = 'GET', body = null } = {}) {
-      const opts = {
-        method,
-        headers: { 'Content-Type': 'application/json' }
-      }
-      if (body) opts.body = JSON.stringify(body)
-      const res = await fetch(path, opts)
-      if (!res.ok) throw new Error(await res.text())
-      return res.json()
-    },
-    get(path) { return this.request(path) },
-    post(path, body) { return this.request(path, { method: 'POST', body }) },
-    put(path, body) { return this.request(path, { method: 'PUT', body }) },
-    delete(path) { return this.request(path, { method: 'DELETE' }) }
-  }
-}
-
-const app = createApp({ state, reducers, view, helpers })
-app.mount(document.body)
-```
-
-### Single Page App with Routing
-
-```javascript
-import { createApp, h } from './dist/frontend-framework.js'
-
-const state = {
-  currentPage: '/'
-}
-
-const reducers = {
-  'navigate': (state, path) => ({
-    ...state,
-    currentPage: path
-  })
-}
-
-function HomePage(helpers) {
-  return h('div', { class: 'home' }, [
-    h('h1', {}, ['Welcome']),
-    h('a', {
-      href: '/about',
-      on: {
-        click: (e) => {
-          e.preventDefault()
-          helpers.navigate('/about')
-        }
-      }
-    }, ['Go to About'])
-  ])
-}
-
-function AboutPage(helpers) {
-  return h('div', { class: 'about' }, [
-    h('h1', {}, ['About Us']),
-    h('a', {
-      href: '/',
-      on: {
-        click: (e) => {
-          e.preventDefault()
-          helpers.navigate('/')
-        }
-      }
-    }, ['Back Home'])
-  ])
-}
-
-function Router(state, emit, helpers) {
-  switch (state.currentPage) {
-    case '/':
-      return HomePage(helpers)
-    case '/about':
-      return AboutPage(helpers)
-    default:
-      return h('div', {}, ['Page not found'])
-  }
-}
-
-const helpers = {
-  navigate(path) {
-    app.emit('navigate', path)
-  }
-}
-
-let app = createApp({ state, reducers, view: Router, helpers })
-app.mount(document.body)
-```
-
----
-
-## Advanced Features
-
-### Event Handling
-
-Events are attached via the `on` property:
-
-```javascript
-h('button', {
-  on: {
-    click: (event) => emit('action', payload),
-    keydown: (event) => {
-      if (event.key === 'Enter') emit('submit')
-    },
-    input: (event) => emit('update', event.target.value)
-  }
-}, ['Click me'])
-```
-
-**Common Events:** `click`, `input`, `change`, `submit`, `keydown`, `keyup`, `focus`, `blur`, `dblclick`
-
-### Styling
-
-#### Classes
-```javascript
-h('div', {
-  class: 'container active'  // string
-  // or
-  class: ['container', 'active']  // array
-}, [...])
-```
-
-#### Inline Styles
-```javascript
-h('div', {
-  style: {
-    color: '#fff',
-    backgroundColor: '#333',
-    padding: '10px'
-  }
-}, [...])
-```
-
-### Conditional Rendering
-
-```javascript
-function view(state, emit) {
-  return h('div', {}, [
-    state.isLoggedIn 
-      ? h('p', {}, ['Welcome!'])
-      : h('p', {}, ['Please login']),
-    
-    // or
-    state.showForm ? h('form', {}, [...]) : null
-  ])
-}
-```
-
-### List Rendering
-
-```javascript
-function view(state, emit) {
-  return h('ul', {}, 
-    state.items.map((item, index) => 
-      h('li', { key: item.id }, [
-        h('span', {}, [item.name]),
-        h('button', {
-          on: { click: () => emit('remove', item.id) }
-        }, ['Remove'])
-      ])
-    )
-  )
-}
-```
-
-### Fragments for Flexible Rendering
-
-```javascript
-import { hFragment } from './dist/frontend-framework.js'
-
-function Header() {
-  return hFragment([
-    h('header', {}, [...]),
-    h('nav', {}, [...])
-  ])
-}
-```
-
-### Data Attributes
-
-```javascript
-h('div', {
-  'data-testid': 'user-card',
-  'data-user-id': '123'
-}, [...])
-```
-
----
-
-## Best Practices
-
-1. **Keep State Immutable**
-   ```javascript
-   // ✅ Good
-   const newState = { ...state, count: state.count + 1 }
-   
-   // ❌ Bad
-   state.count += 1
-   ```
-
-2. **Use Pure Functions**
-   ```javascript
-   // ✅ Good reducer
-   'increment': (state) => ({ ...state, count: state.count + 1 })
-   
-   // ❌ Bad reducer (side effects)
-   'increment': (state) => {
-     console.log('incrementing')  // Side effect
-     return { ...state, count: state.count + 1 }
-   }
-   ```
-
-3. **Keep Components Small**
-   - Break complex UIs into smaller components
-   - Components should be reusable
-
-4. **Handle Errors Gracefully**
-   ```javascript
-   try {
-     const data = await helpers.api.get('/data')
-     emit('success', data)
-   } catch (err) {
-     emit('error', err.message)
-   }
-   ```
-
-5. **Use Meaningful Action Names**
-   ```javascript
-   // ✅ Good
-   emit('add-todo-success', todo)
-   emit('load-todos-failure', error)
-   
-   // ❌ Bad
-   emit('action', data)
-   emit('update', stuff)
-   ```
-
----
-
-## Performance Tips
-
-1. **Virtual DOM Patching**: Framework automatically diffs and patches only changed nodes
-2. **Event Delegation**: Events are automatically delegated for better performance
-3. **Memoization**: For expensive computations, memoize results in state
-4. **Lazy Loading**: Load data only when needed via reducers
-
----
-
-## Troubleshooting
-
-### State Not Updating?
-- Ensure you're using immutable updates (spread operator)
-- Verify reducer returns new state object
-- Check that `emit()` is called with correct action name
-
-### DOM Not Re-rendering?
-- Make sure reducer is registered in `reducers` object
-- Verify `emit()` calls the correct action
-- Check browser console for errors
-
-### Events Not Firing?
-- Ensure events are in `on` property, not as direct attributes
-- Use proper event names (`click`, not `onclick`)
-- Check that handler function is defined
-
----
-
-## License
-
-MIT
-
-# Get Started
-
-## Initialize the types
+### Node Types
 
 ```js
 export const DOM_TYPES = {
-    TEXT: 'text',           // type for a text node
-    ELEMENT: 'element',     // type for an element node
-    FRAGMENT: 'fragment',   // type for a fragment node
+    TEXT: 'text',           // Text node
+    ELEMENT: 'element',     // HTML element node
+    FRAGMENT: 'fragment',   // Fragment node
 }
 ```
 
-## Get To Know Each Functions:
+#### `h(tag, props, children)`
 
-### function h()
+Creates a virtual element (Element Node).
+
+### Parameters:
+
+* `tag` (string): HTML tag name (e.g., 'div', 'h1')
+
+* `props` (object): Element properties, events, classes, styles
+
+* `children` (array): Child elements or text
+
+Example:
 
 ```js
-// Element nodes are the most common type of virtual node, representing the regular
-// HTML elements that you use to define the structure of your web pages. To name a
-// few, you have <h1> through <h6> for headings, <p> for paragraphs, <ul> and <ol> for
-// lists, <a> for links, and <div> for generic containers. These nodes have a tag name
-// (such as 'p'), attributes (such as a class name or the type attribute of an <input> element),
-// and children nodes (the nodes that are inside them between the opening and
-// closing tags).
-export function h(tag, props = {}, children = []) {
-    return {
-        tag,    // element's tag name : <p>, <div>, --> 'p', 'div'
-        props,  // an object with it's attributes: { id: 'input-button' }
-        children: mapTextNodes(withoutNulls(children)), // an array of the children node, withoutNulls will trim all null and undefined child: see arrays.js
-        type: DOM_TYPES.ELEMENT
-    }
-}
+h('div', { id: 'container' }, [
+  h('h1', {}, ['Hello World'])
+])
 ```
 
-example of using it:
-```js
-h('h1', { id: 'title'}, ['This is a title'])
-```
-result:
-```html
-<h1 id="title">This is a title</h1>
-```
-
-exam: please transform this html below into h() function, you can find the answer at the bottom of this file:
+**Exercise:** Transform this HTML into h() function:
 
 ```html
 <div>
@@ -606,33 +162,23 @@ exam: please transform this html below into h() function, you can find the answe
 </div>
 ```
 
-### function hFragment()
+*(See answers at the bottom)*
 
-```js
-// To create an object of type fragment
-// This can be a second initial entry instead of h() function and nested child with h(), it always good to start with hFragment right away.
-export function hFragment(vNodes) {
-    return {
-        type: DOM_TYPES.FRAGMENT,
-        children: mapTextNodes(withoutNulls(vNodes)) // an array of the children node.
-    }
-}
-```
+#### `hFragment(vNodes)`
 
-example of using it:
+Groups multiple vdom elements without a wrapper DOM node.
+
+Example:
+
 ```js
 hFragment([
-    h('h1', {}, ['This is a title']),
-    h('p', {}, ['This is a paragraph'])
+  h('h1', {}, ['Title']),
+  h('p', {}, ['Content'])
 ])
 ```
-result:
-```html
-<h1>This is a title</h1>
-<p>This is a paragraph</p>
-```
 
-exam: now it's your turn to tronsform this into hFragment()
+**Exercise:** Transform this HTML into hFragment():
+
 ```html
 <header>Hello</header>
 <main>
@@ -642,601 +188,287 @@ exam: now it's your turn to tronsform this into hFragment()
 <footer>Powered by Koodsisu</footer>
 ```
 
-### function mapTextNodes()
+*(See answers at the bottom)*
 
-```js
-// To sort out the children: if it is a string then it will be returned as object of type text with the value of it's content string
-// If it is not a string, it will recursively handled as either fragment or element
-function mapTextNodes(children) {
-    return children.map((child) => {
-        return typeof child === 'string' ? hString(child) : child
-    })
-}
-```
+#### `hString(str)`
 
-### function hString()
-
-```js
-// To create an object of type text after sort out by mapTextNodes above.
-export function hString(str) {
-    if (typeof str === 'string') {
-        return { type: DOM_TYPES.TEXT, value: str }
-    }
-}
-```
-
-example in use:
-```js
-h('h1', {}, [hString('This is a title')])
-```
-
-result:
-```html
-<h1>This is a title</h1>
-```
+Creates a text node. Note: strings inside `children` arrays are auto-converted to this.
 
 ---
 
-## State Management with createApp()
+## State Management
 
-### function createApp()
+`createApp(config)`
 
-```js
-export function createApp({ state, reducers, view, helpers }) {
-    return {
-        mount(element),      // Mount app to DOM element
-        unmount(),           // Unmount and cleanup
-        emit(action, payload) // Dispatch actions to update state
-    }
-}
-```
-
-The `createApp()` function creates a reactive application with centralized state management.
+Creates and configures your application.
 
 **Parameters:**
-- `state` (object): Initial application state
-- `reducers` (object): Action handlers that return new state
-- `view` (function): Pure function that returns vdom based on state
-- `helpers` (object): Utility functions available to components
 
-**Example:**
+* `config.state` (object): Initial application state
+* `config.reducers` (object): Action reducers
+* `config.view` (function): View function returning vdom
+* `config.helpers` (object): Helper utilities
+
+**Returns:** `{ mount(el), unmount(), emit(action, payload) }`
+
+**Reducers**
+
+Reducers must be pure functions that return a new object.
+
 ```js
-const state = {
-    count: 0,
-    message: 'Hello'
-}
-
 const reducers = {
     'increment': (state) => ({
         ...state,
         count: state.count + 1
     }),
-    'set-message': (state, newMessage) => ({
+    'update-user': (state, user) => ({
         ...state,
-        message: newMessage
-    })
-}
-
-function view(state, emit) {
-    return h('div', { class: 'app' }, [
-        h('h1', {}, [state.message]),
-        h('p', {}, [`Count: ${state.count}`]),
-        h('button', {
-            on: { click: () => emit('increment') }
-        }, ['Increment'])
-    ])
-}
-
-const app = createApp({ state, reducers, view })
-app.mount(document.body)
-```
-
-### Reducers: Pure State Updates
-
-Reducers are pure functions that take the current state and a payload, returning new state.
-
-**Rules:**
-- ✅ Always return a new object (use spread operator `...`)
-- ✅ Never mutate the original state
-- ✅ Pure function (no side effects)
-
-**Example:**
-```js
-const reducers = {
-    'add-todo': (state, todo) => ({
-        ...state,
-        todos: [...state.todos, todo]
-    }),
-    'remove-todo': (state, id) => ({
-        ...state,
-        todos: state.todos.filter(t => t.id !== id)
-    }),
-    'update-todo': (state, { id, content }) => ({
-        ...state,
-        todos: state.todos.map(t => 
-            t.id === id ? { ...t, content } : t
-        )
+        user: user
     })
 }
 ```
 
-### emit(action, payload)
+**Emitting Actions**
 
 Dispatches an action to update state.
 
-**Parameters:**
-- `action` (string): Reducer name to execute
-- `payload` (any): Data passed to the reducer
-
-**Example:**
 ```js
 // Simple action
 emit('increment')
 
 // Action with payload
-emit('set-message', 'New message')
-emit('add-todo', { id: 1, content: 'Buy milk' })
+emit('update-user', { name: 'John' })
 ```
 
----
-
-## Event Handling
-
-### Event Binding
-
-Events are attached via the `on` property with event delegation:
+## Advanced Features
+#### **Event Handling**
+Events are attached via the `on` property. The framework uses event delegation for performance.
 
 ```js
 h('button', {
-    on: {
-        click: (event) => emit('action', payload)
-    }
-}, ['Click me'])
+  on: {
+    click: (event) => emit('submit'),
+    input: (event) => emit('update', event.target.value),
+    keydown: (event) => { if (event.key === 'Enter') emit('submit') }
+  }
+}, ['Submit'])
 ```
 
-**Common Events:**
-- `click` - Mouse click
-- `input` - Text input change
-- `change` - Form input change
-- `submit` - Form submission
-- `keydown` - Key press
-- `keyup` - Key release
-- `focus` - Element focused
-- `blur` - Element loses focus
-- `dblclick` - Double click
-
-**Full Example:**
-```js
-h('form', {
-    on: { submit: (e) => {
-        e.preventDefault()
-        emit('submit-form')
-    }}
-}, [
-    h('input', {
-        type: 'text',
-        on: {
-            input: ({ target }) => emit('update-name', target.value),
-            keydown: ({ key }) => {
-                if (key === 'Enter') emit('submit-form')
-            }
-        }
-    }),
-    h('button', { type: 'submit' }, ['Submit'])
-])
-```
-
----
-
-## Styling
-
-### CSS Classes
+#### **Styling**
+**Classes (String or Array):**
 
 ```js
-// String
 h('div', { class: 'container active' }, [...])
-
-// Array
 h('div', { class: ['container', 'active'] }, [...])
-
-// Conditional
-const isActive = true
-h('div', { class: isActive ? 'active' : '' }, [...])
 ```
 
-### Inline Styles
+**Inline Styles:**
 
 ```js
 h('div', {
-    style: {
-        color: '#fff',
-        backgroundColor: '#333',
-        padding: '10px',
-        borderRadius: '5px'
-    }
+  style: { color: '#fff', padding: '10px' }
 }, [...])
 ```
 
-### HTML Attributes
+#### **Component Composition**
+
+Components are standard JavaScript functions.
 
 ```js
-h('input', {
-    type: 'email',
-    placeholder: 'Enter email',
-    disabled: false,
-    'data-testid': 'email-input'
-}, [])
-
-h('img', {
-    src: '/image.jpg',
-    alt: 'Description',
-    width: '200',
-    height: '150'
-}, [])
-```
-
----
-
-## Conditional Rendering
-
-### If/Else Pattern
-
-```js
-function view(state, emit) {
-    return h('div', {}, [
-        state.isLoggedIn 
-            ? h('p', {}, ['Welcome back!'])
-            : h('p', {}, ['Please login'])
-    ])
-}
-```
-
-### Null/Undefined Pattern
-
-```js
-function view(state, emit) {
-    return h('div', {}, [
-        state.showAlert ? h('div', { class: 'alert' }, [state.message]) : null,
-        state.error ? h('p', { class: 'error' }, [state.error]) : null
-    ])
-}
-```
-
-### Boolean Flags
-
-```js
-function view(state, emit) {
-    return h('div', {}, [
-        state.loading && h('p', {}, ['Loading...']),
-        state.isEmpty && h('p', {}, ['No items found']),
-        state.hasError && h('p', { class: 'error' }, ['Something went wrong'])
-    ].filter(Boolean))  // Remove falsy values
-}
-```
-
----
-
-## List Rendering
-
-### map() for Dynamic Lists
-
-```js
-function view(state, emit) {
-    return h('ul', {}, 
-        state.items.map((item, index) => 
-            h('li', { key: item.id }, [
-                h('span', {}, [item.name]),
-                h('button', {
-                    on: { click: () => emit('remove-item', item.id) }
-                }, ['Delete'])
-            ])
-        )
-    )
-}
-```
-
-### Handling Empty Lists
-
-```js
-function view(state, emit) {
-    return h('div', {}, [
-        state.items.length > 0
-            ? h('ul', {}, state.items.map(item => 
-                h('li', {}, [item.name])
-            ))
-            : h('p', {}, ['No items yet'])
-    ])
-}
-```
-
----
-
-## Component Composition
-
-### Creating Reusable Components
-
-Components are functions that accept `(state, emit, helpers)`:
-
-```js
-function UserCard(user, emit) {
-    return h('div', { class: 'user-card' }, [
-        h('h3', {}, [user.name]),
-        h('p', {}, [user.email]),
-        h('button', {
-            on: { click: () => emit('select-user', user.id) }
-        }, ['Select'])
-    ])
+function Button({ label, onClick }) {
+    return h('button', { on: { click: onClick } }, [label])
 }
 
-function UserList(state, emit) {
-    return h('div', { class: 'users' }, [
-        h('h2', {}, ['Users']),
-        h('div', {}, 
-            state.users.map(user => UserCard(user, emit))
-        )
-    ])
-}
-```
-
-### Component with Props
-
-```js
-function Button({ label, disabled, onClick }) {
-    return h('button', {
-        disabled,
-        on: { click: onClick }
-    }, [label])
-}
-
-// Usage
+// Usage inside view
 h('div', {}, [
-    Button({ 
-        label: 'Save', 
-        disabled: false, 
-        onClick: () => emit('save')
-    })
+    Button({ label: 'Save', onClick: () => emit('save') })
 ])
 ```
 
----
+#### **Async Operations**
 
-## Advanced Patterns
-
-### Form Handling
+Handle side effects (like API calls) in components or helpers, then emit results to reducers.
 
 ```js
-const state = {
-    form: {
-        email: '',
-        password: '',
-        rememberMe: false
-    },
-    errors: {}
-}
-
-const reducers = {
-    'update-form': (state, { field, value }) => ({
-        ...state,
-        form: { ...state.form, [field]: value }
-    }),
-    'reset-form': (state) => ({
-        ...state,
-        form: { email: '', password: '', rememberMe: false }
-    })
-}
-
-function LoginForm(state, emit) {
-    return h('form', {
-        on: { submit: (e) => {
-            e.preventDefault()
-            emit('login')
-        }}
-    }, [
-        h('input', {
-            type: 'email',
-            value: state.form.email,
-            on: { input: ({ target }) => 
-                emit('update-form', { field: 'email', value: target.value })
-            }
-        }),
-        h('input', {
-            type: 'password',
-            value: state.form.password,
-            on: { input: ({ target }) => 
-                emit('update-form', { field: 'password', value: target.value })
-            }
-        }),
-        h('input', {
-            type: 'checkbox',
-            checked: state.form.rememberMe,
-            on: { change: ({ target }) => 
-                emit('update-form', { field: 'rememberMe', value: target.checked })
-            }
-        }),
-        h('button', { type: 'submit' }, ['Login'])
-    ])
-}
-```
-
-### Async Operations
-
-```js
-const state = {
-    data: null,
-    loading: false,
-    error: null
-}
-
-const reducers = {
-    'fetch-start': (state) => ({
-        ...state,
-        loading: true,
-        error: null
-    }),
-    'fetch-success': (state, data) => ({
-        ...state,
-        data,
-        loading: false
-    }),
-    'fetch-error': (state, error) => ({
-        ...state,
-        error,
-        loading: false
-    })
-}
-
-function DataComponent(state, emit, helpers) {
-    const fetchData = async () => {
-        emit('fetch-start')
-        try {
-            const data = await helpers.api.get('/api/data')
-            emit('fetch-success', data)
-        } catch (err) {
-            emit('fetch-error', err.message)
-        }
+const fetchData = async () => {
+    emit('fetch-start')
+    try {
+        const data = await api.get('/items')
+        emit('fetch-success', data)
+    } catch (err) {
+        emit('fetch-error', err.message)
     }
-
-    return h('div', {}, [
-        state.loading && h('p', {}, ['Loading...']),
-        state.error && h('p', { class: 'error' }, [state.error]),
-        state.data && h('div', {}, [JSON.stringify(state.data)]),
-        h('button', {
-            on: { click: fetchData }
-        }, ['Fetch Data'])
-    ])
 }
 ```
 
----
+## Best Practices
+1. **Keep State Immutable:** Always use the spread operator `(...)` in reducers. Never mutate `state` directly.
 
-## How To Start A New Project With This Frontend Framework
+2. **Use Pure Functions:** Reducers should not have side effects (no API calls inside reducers).
 
-## Complete Guide How To Start
+3. **Keep Components Small:** Break complex UIs into smaller, reusable functions.
 
-1. **Create A Project Folder**
-    
-   ```sh
-   mkdir my-app
-   cd my-app
-   ```
+4. **Meaningful Action Names:** Use descriptive names like `'add-todo-success'` rather than just `'add'`.
 
-2. **Create Project Structure**
-
-   ```sh
-   mkdir -p src dist
-   ```
-
-3. **Create HTML Entry Point**
-
-   ```html
-   <!-- src/index.html -->
-   <!DOCTYPE html>
-   <html lang="en">
-   <head>
-       <meta charset="UTF-8">
-       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-       <title>My App</title>
-       <link rel="stylesheet" href="./styles.css">
-   </head>
-   <body>
-       <div id="app"></div>
-       <script type="module" src="./app.js"></script>
-   </body>
-   </html>
-   ```
-
-4. **Copy Frontend Framework**
-
-   ```sh
-   cp /path/to/frontend-framework.js dist/
-   ```
-
-5. **Create Your App**
-
-   ```js
-   // src/app.js
-   import { createApp, h } from '../dist/frontend-framework.js'
-
-   const state = {
-       message: 'Hello World'
-   }
-
-   const reducers = {}
-
-   function view(state, emit) {
-       return h('div', { class: 'container' }, [
-           h('h1', {}, [state.message])
-       ])
-   }
-
-   const app = createApp({ state, reducers, view })
-   app.mount(document.getElementById('app'))
-   ```
-
-6. **Add Styles**
-
-   ```css
-   /* src/styles.css */
-   body {
-       font-family: system-ui, sans-serif;
-       background: #f5f5f5;
-   }
-
-   .container {
-       max-width: 1000px;
-       margin: 0 auto;
-       padding: 20px;
-   }
-   ```
-
-7. **Open in Browser**
-
-   Simply open `src/index.html` in your browser, or use a local server:
-
-   ```sh
-   python3 -m http.server 8000
-   # or
-   npx http-server
-   ```
-
-**Happy Coding!** 🚀
+5. **Handle Errors:** Always wrap async calls in try/catch blocks and emit error states.
 
 ---
+
+## Performance
+
+1. **Virtual DOM Patching:** Framework automatically diffs and patches only changed nodes.
+
+2. **Event Delegation:** Events are automatically delegated to the root.
+
+3. **Memoization:** For expensive computations, memoize results in state.
+
+4. **Fragment Support:** Use `hFragment` to avoid unnecessary DOM wrapper nodes.
+
+
+[click here](./performance.md) to see our performance report
+
+---
+
+## Examples
+### 1. **Basic Counter App**
+
+```js
+const state = { count: 0 }
+
+const reducers = {
+  'increment': (state) => ({ ...state, count: state.count + 1 }),
+  'decrement': (state) => ({ ...state, count: state.count - 1 })
+}
+
+function view(state, emit) {
+  return h('div', {}, [
+    h('h1', {}, [`Count: ${state.count}`]),
+    h('button', { on: { click: () => emit('increment') } }, ['+']),
+    h('button', { on: { click: () => emit('decrement') } }, ['-'])
+  ])
+}
+```
+
+### 2. **Single Page App with Routing**
+
+```js
+function Router(state, emit, helpers) {
+  switch (state.currentPage) {
+    case '/': return HomePage(helpers)
+    case '/about': return AboutPage(helpers)
+    default: return h('div', {}, ['404 Not Found'])
+  }
+}
+// helpers.navigate() updates state.currentPage
+```
+
+### 3. **Todo App (Full Example)**
+
+Check the `example/todo_fw` folder in the repository for a full implementation connecting to a **Go** backend.
+
+---
+
 ## Troubleshooting
 
-### State Not Updating?
-- Ensure reducers return new objects (use spread operator `...`)
-- Verify action name matches reducer key exactly
-- Check that `emit()` is being called
+* **State Not Updating?** Verify reducer returns a new object and `emit()` is called with the correct action string.
 
-### DOM Not Re-rendering?
-- Check browser console for errors
-- Verify `view()` function is returning valid vdom
-- Make sure `app.mount()` is called with a valid DOM element
+* **DOM Not Re-rendering?** Check console for errors and ensure `app.mount()` was called.
 
-### Events Not Working?
-- Ensure event handlers are in `on` object
-- Use correct event names (e.g., `click`, not `onclick`)
-- Check that `emit()` is defined in scope
+* **Events Not Firing?** Ensure events are inside the `on` object (e.g., `on: { click: ... }`), not `onclick`.
 
 ---
 
-## API Summary
+## Performance & Optimization
 
-| Function                    | Purpose               |
-|-----------------------------|-----------------------|
-| `h(tag, props, children)`   | Create element vnode  |
-| `hFragment(vNodes)`         | Create fragment vnode |
-| `hString(str)`              | Create text vnode     |
-| `createApp(config)`         | Create application    |
-| `app.mount(element)`        | Mount to DOM          |
-| `app.emit(action, payload)` | Dispatch action       |
+### Virtual DOM Diffing
+- **Decision:** Only update DOM elements that changed
+- **Validation:** Todo list of 100 items renders in ~50ms, updating single item in ~5ms
+- **Proof:** Inspect browser DevTools to see only changed elements updated
+
+### State Update Strategy
+- **Decision:** Use immutable updates with spread operator
+- **Validation:** O(n) where n = state properties (typically 5-20)
+- **Benefit:** Prevents mutation bugs, enables time-travel debugging
+
+### Event System
+- **Decision:** Direct event listeners vs global delegation
+- **Trade-off:** More listeners but simpler debugging
+- **Validation:** Todo app with 50 todos has <200 event listeners total
+
+
+### 2. **Add Unit Test Examples**
+
+Create `framework/testing.md`:
+
+
+## Testing Frontend Framework Applications
+
+### Example: Counter Component Test
+
+```js
+import { createApp, h } from './dist/frontend-framework.js'
+
+// Test: Button increments count
+const state = { count: 0 }
+const reducers = {
+    'increment': (state) => ({ ...state, count: state.count + 1 })
+}
+
+// Simulate user click
+const app = createApp({ state, reducers, view })
+app.emit('increment')
+
+assert(state.count === 1, 'Count incremented')
+```
+
+
+### 3. **Add TypeScript Definitions** (Optional but helpful)
+
+Create `frontend-framework.d.ts`:
+
+```typescript
+export type VNode = {
+    type: 'element' | 'text' | 'fragment'
+    tag?: string
+    props?: Record<string, any>
+    children?: VNode[]
+    value?: string
+}
+
+export function h(tag: string, props?: Record<string, any>, children?: (VNode | string)[]): VNode
+export function hFragment(vNodes: VNode[]): VNode
+export function createApp(config: AppConfig): App
+```
+
+### 4. **Add Error Handling Guide**
+
+Document common patterns:
+
+
+## Error Handling Patterns
+
+### API Errors
+```js
+'fetch-start': (state) => ({ ...state, loading: true, error: null }),
+'fetch-error': (state, error) => ({ ...state, loading: false, error: error.message })
+```
+
+### Form Validation
+```js
+'submit-form': (state) => {
+    if (state.form.email.length < 5) {
+        return { ...state, error: 'Invalid email' }
+    }
+    // ...
+}
+```
+
 
 ---
 
-## Answers:
+## Exercise Answers
+Answer to `h()` function Exercise:
 
-### function h()
 ```js
 h('div', {}, [
     h('h1', {}, ['This is a title']),
@@ -1244,7 +476,8 @@ h('div', {}, [
 ])
 ```
 
-### function hFragment()
+Answer to `hFragment()` function Exercise:
+
 ```js
 hFragment([
     h('header', {}, ['Hello']),
@@ -1260,4 +493,6 @@ hFragment([
 
 ---
 
-**License:** MIT
+## License
+
+**MIT**
