@@ -17,7 +17,7 @@ run:
 	@echo 'Starting docker...'
 	@cd database && docker compose up -d --no-build --no-recreate
 	@echo 'Running backend...'
-	@cd backend && go run .
+	@cd backend && go run . &
 	@echo 'Starting frontend...'
 	@npm run todo_fw
 
@@ -32,7 +32,6 @@ reset-db:
 
 go-run:
 	@echo 'Running backend...'
-# 	@cd backend && go run .
 	@command -v entr >/dev/null 2>&1 || { echo "Installing entr..."; brew install entr; }
 	@find backend -name '*.go' | entr -r sh -c 'cd backend && go run .'
 
