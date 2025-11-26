@@ -89,6 +89,91 @@ body {
   color: #aaa;
 }
 
+/* TIME BUTTONS */
+.time-button {
+  background: #1e40af;
+}
+
+.clear-time-button {
+  background: #ef4444;
+  padding: 0 10px;
+  font-weight: bold;
+}
+
+/* TIME PICKER DROPDOWN */
+.time-picker-dropdown {
+  margin-top: 10px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 4px 16px rgba(3, 10, 25, 0.25);
+}
+
+.time-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.close-picker {
+  background: #ef4444;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.time-input-container {
+  display: flex;
+  gap: 8px;
+}
+
+.time-value-input {
+  width: 70%;
+  padding: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.time-unit-select {
+  width: 30%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  font-size: 1rem;
+}
+
+.time-value-input:focus,
+.time-unit-select:focus {
+  border-color: #2563eb;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+}
+
+/* COUNTDOWN BADGE */
+.countdown {
+  display: inline-block;
+  max-width: 150px; /* limit width */
+  padding: 6px 10px; /* smaller padding */
+  background: #2563eb;
+  color: white;
+  border-radius: 6px;
+  font-size: 0.7rem; /* smaller font */
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.countdown.expired {
+  background: #ef4444;
+}
+
+
 /* ===== LOGIN FORM STYLES ===== */
 body {
   display: grid;
@@ -238,6 +323,7 @@ footer {
   margin: 0 auto;
 }
 
+
 .todo-app h1 {
   margin-top: 0;
   margin-bottom: 16px;
@@ -307,6 +393,7 @@ footer {
   justify-content: space-between;
   padding: 8px 0;
   border-bottom: 1px solid #e2e8f0;
+  gap: 8px;
 }
 
 .todo-app li:last-child {
@@ -318,6 +405,7 @@ footer {
   cursor: pointer;
   padding-right: 10px;
   word-break: break-word;
+  flex: 1;
 }
 
 .todo-app li input[type="text"] {

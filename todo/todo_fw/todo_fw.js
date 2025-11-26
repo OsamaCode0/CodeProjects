@@ -456,18 +456,16 @@ function TodoItem({ todo, i, edit, isHistory }, emit, helpers) {
         ])
         : h('li', {}, [
             h('span', {
-                class: 'todo-content',
-                on: {
-                    dblclick: () => emit('start-editing-todo', i)
-                }
+                class: 'todo-text',
+                on: { dblclick: () => emit('start-editing-todo', i) }
             }, [todo.content]),
+
             countdown ? h('span', {
                 class: timeRemaining <= 0 ? 'countdown expired' : 'countdown'
             }, [countdown]) : null,
+
             !isHistory ? h('button', {
-                on: {
-                    click: deleteTodo
-                }
+                on: { click: deleteTodo }
             }, ['Done']) : null,
         ])
 }
