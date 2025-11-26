@@ -4,7 +4,7 @@ from root folder
 
 ```sh
 # direct to the example folder
-cd todo/todo_fw
+cd example/todo_fw
 
 # start docker
 # ensure your docker application is running
