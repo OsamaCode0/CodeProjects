@@ -48,7 +48,7 @@ func (tx *Tx) FindTodos(ctx context.Context, user_id uuid.UUID, todos *[]*types.
 	defer cancel()
 
 	query := `
-		SELECT id, user_id, content, created_at, due_time, is_plan FROM todo
+		SELECT id, user_id, content, created_at, due_time, reminder_time, is_plan FROM todo
 		WHERE user_id = $1;
 	`
 
@@ -56,15 +56,22 @@ func (tx *Tx) FindTodos(ctx context.Context, user_id uuid.UUID, todos *[]*types.
 	if err != nil {
 		return fmt.Errorf("query todo: %v", err)
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var dueTime sql.NullTime
+		var reminderTime sql.NullTime
 		t := &types.Todo{}
-		err := rows.Scan(&t.Id, &t.UserId, &t.Content, &t.CreatedAt, &dueTime, &t.IsPlan)
+		err := rows.Scan(&t.Id, &t.UserId, &t.Content, &t.CreatedAt, &dueTime, &reminderTime, &t.IsPlan)
 		if err != nil {
 			return fmt.Errorf("scan todo: %v", err)
 		}
-		t.DueTime, _ = time.Parse("2006-01-02 15:04", dueTime.Time.Format("2006-01-02 15:04"))
+		if dueTime.Valid {
+			t.DueTime = dueTime.Time
+		}
+		if reminderTime.Valid {
+			t.ReminderTime = reminderTime.Time
+		}
 
 		*todos = append(*todos, t)
 	}
@@ -77,7 +84,7 @@ func (tx *Tx) SearchTodoByContentKeyWord(ctx context.Context, keyWord string, us
 	defer cancel()
 
 	query := `
-		SELECT id, user_id, content, created_at, due_time, is_plan FROM todo
+		SELECT id, user_id, content, created_at, due_time, reminder_time, is_plan FROM todo
 		WHERE content ILIKE $1 AND user_id = $2
 	`
 
@@ -85,16 +92,23 @@ func (tx *Tx) SearchTodoByContentKeyWord(ctx context.Context, keyWord string, us
 	if err != nil {
 		return fmt.Errorf("query search todo by content's keyword: %v", err)
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		todo := &types.Todo{}
 		dueTime := sql.NullTime{}
-		err = rows.Scan(&todo.Id, &todo.UserId, &todo.Content, &todo.CreatedAt, &dueTime, &todo.IsPlan)
+		reminderTime := sql.NullTime{}
+		err = rows.Scan(&todo.Id, &todo.UserId, &todo.Content, &todo.CreatedAt, &dueTime, &reminderTime, &todo.IsPlan)
 		if err != nil {
 			return fmt.Errorf("scan search todo by content's keyword: %v", err)
 		}
 
-		todo.DueTime = dueTime.Time
+		if dueTime.Valid {
+			todo.DueTime = dueTime.Time
+		}
+		if reminderTime.Valid {
+			todo.ReminderTime = reminderTime.Time
+		}
 
 		*todosOut = append(*todosOut, todo)
 	}
@@ -107,7 +121,7 @@ func (tx *Tx) GetHistory(ctx context.Context, userId uuid.UUID, todos *[]*types.
 	defer cancel()
 
 	query := `
-		SELECT todo_id, user_id, content, created_at, due_time, is_plan, completed_at FROM archive
+		SELECT todo_id, user_id, content, created_at, due_time, reminder_time, is_plan, completed_at FROM archive
 		WHERE user_id = $1
 	`
 
@@ -115,15 +129,22 @@ func (tx *Tx) GetHistory(ctx context.Context, userId uuid.UUID, todos *[]*types.
 	if err != nil {
 		return fmt.Errorf("query get history: %v", err)
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var dueTime sql.NullTime
+		var reminderTime sql.NullTime
 		var todo = &types.Archive{}
-		err = rows.Scan(&todo.TodoId, &todo.UserId, &todo.Content, &todo.CreatedAt, &dueTime, &todo.IsPlan, &todo.CompletedAt)
+		err = rows.Scan(&todo.TodoId, &todo.UserId, &todo.Content, &todo.CreatedAt, &dueTime, &reminderTime, &todo.IsPlan, &todo.CompletedAt)
 		if err != nil {
 			return fmt.Errorf("scan get history:  %v", err)
 		}
-		todo.DueTime = dueTime.Time
+		if dueTime.Valid {
+			todo.DueTime = dueTime.Time
+		}
+		if reminderTime.Valid {
+			todo.ReminderTime = reminderTime.Time
+		}
 
 		*todos = append(*todos, todo)
 	}

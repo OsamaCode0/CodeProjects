@@ -45,6 +45,7 @@ func (db *DB) AddTodo(w http.ResponseWriter, r *http.Request) {
 		Content:   inputTodo.Content,
 		CreatedAt: timeNow,
 		DueTime:   inputTodo.DueTime,
+		ReminderTime: inputTodo.ReminderTime,
 		// IsPlan:    inputTodo.IsPlan, // skip this due to auto generated based on due time input
 	}
 
@@ -95,6 +96,7 @@ func (db *DB) UpdateTodo(w http.ResponseWriter, r *http.Request) {
 		Id:      updateTodo.Id,
 		Content: updateTodo.Content,
 		DueTime: updateTodo.DueTime,
+		ReminderTime: updateTodo.ReminderTime,
 	}
 	err = tx.UpdateTodo(r.Context(), todo)
 	if err != nil {
@@ -299,6 +301,7 @@ func (db *DB) GetHistory(w http.ResponseWriter, r *http.Request) {
 			Content:   t.Content,
 			CreatedAt: t.CreatedAt,
 			DueTime:   t.DueTime,
+			ReminderTime: t.ReminderTime,
 			IsPlan:    t.IsPlan,
 		}
 		*prevTodos = append(*prevTodos, prevTodo)

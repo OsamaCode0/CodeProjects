@@ -20,7 +20,8 @@ func (tx *Tx) Logout(ctx context.Context, log *types.Logout, pers *types.Persist
 		RETURNING user_id, token, login_at;
 	`
 
-	err := tx.Tx.QueryRow(ctxUpdate, query, pers.LoginAt, log.UserId, log.Token).Scan(&pers.UserId, &pers.Token, &pers.LoginAt)
+	// Use pers.LogoutAt as the logout time parameter
+	err := tx.Tx.QueryRow(ctxUpdate, query, pers.LogoutAt, log.UserId, log.Token).Scan(&pers.UserId, &pers.Token, &pers.LoginAt)
 	if err != nil {
 		return fmt.Errorf("logout: %v", err)
 	}
@@ -33,24 +34,41 @@ func (tx *Tx) UpdateTodo(ctx context.Context, t *types.Todo) error {
 	defer cancel()
 
 	var dueTime sql.NullTime
-	if !t.DueTime.IsZero() || t.DueTime.Compare(time.Now()) >= 1 {
+	if !t.DueTime.IsZero() {
 		dueTime = sql.NullTime{Time: t.DueTime, Valid: true}
 	} else {
 		dueTime = sql.NullTime{Valid: false}
 	}
 
+	var reminderTime sql.NullTime
+	if !t.ReminderTime.IsZero() {
+		reminderTime = sql.NullTime{Time: t.ReminderTime, Valid: true}
+	} else {
+		reminderTime = sql.NullTime{Valid: false}
+	}
+
 	query := `
 		UPDATE todo
-		SET content = $1, due_time = $2
-		WHERE id = $3
-		RETURNING user_id, created_at, due_time, is_plan;
+		SET content = $1, due_time = $2, reminder_time = $3
+		WHERE id = $4
+		RETURNING user_id, created_at, due_time, reminder_time, is_plan;
 		`
-	err := tx.Tx.QueryRow(ctxUpdate, query, t.Content, dueTime, t.Id).Scan(&t.UserId, &t.CreatedAt, &dueTime, &t.IsPlan)
+	err := tx.Tx.QueryRow(ctxUpdate, query, t.Content, dueTime, reminderTime, t.Id).Scan(&t.UserId, &t.CreatedAt, &dueTime, &reminderTime, &t.IsPlan)
 	if err != nil {
 		return fmt.Errorf("update todo: %v", err)
 	}
 
-	t.DueTime, _ = time.Parse("2006-01-02 15:04", dueTime.Time.Format("2006-01-02 15:04"))
+	// Assign parsed times back to struct (zero time if invalid)
+	if dueTime.Valid {
+		t.DueTime = dueTime.Time
+	} else {
+		t.DueTime = time.Time{}
+	}
+	if reminderTime.Valid {
+		t.ReminderTime = reminderTime.Time
+	} else {
+		t.ReminderTime = time.Time{}
+	}
 
 	return nil
 }

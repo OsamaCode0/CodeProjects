@@ -45,6 +45,7 @@ type (
 		Content   string    `json:"content"`
 		CreatedAt time.Time `json:"created_at"`
 		DueTime   time.Time `json:"due_time"`
+		ReminderTime time.Time `json:"reminder_time"`
 		IsPlan    bool      `json:"is_plan"`
 	}
 
@@ -54,6 +55,7 @@ type (
 		Content     string    `json:"content"`
 		CreatedAt   time.Time `json:"created_at"`
 		DueTime     time.Time `json:"due_time"`
+		ReminderTime time.Time `json:"reminder_time"`
 		IsPlan      bool      `json:"is_plan"`
 		CompletedAt time.Time `json:"completed_at"`
 	}

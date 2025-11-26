@@ -93,6 +93,7 @@ function HomePage(state, emit, helpers) {
     h("p", {}, ["Choose where to go:"]),
     h("nav", {}, [
       h("a", {
+        class: "nav-link",
         href: "/login",
         on: {
           click: (e) => {
@@ -103,6 +104,7 @@ function HomePage(state, emit, helpers) {
       }, ["Login"]),
       h("span", {}, [" | "]),
       h("a", {
+        class: "nav-link",
         href: "/register",
         on: {
           click: (e) => {
