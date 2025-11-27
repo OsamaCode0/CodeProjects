@@ -108,8 +108,8 @@ $$ LANGUAGE plpgsql STABLE;
 CREATE OR REPLACE FUNCTION archive_todo_on_delete()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO archive (todo_id, user_id, content, created_at, due_time, is_plan, completed_at)
-    VALUES (OLD.id, OLD.user_id, OLD.content, OLD.created_at, OLD.due_time, OLD.is_plan, now());
+    INSERT INTO archive (todo_id, user_id, content, created_at, due_time, reminder_time, is_plan, completed_at)
+    VALUES (OLD.id, OLD.user_id, OLD.content, OLD.created_at, OLD.due_time, OLD.reminder_time, OLD.is_plan, now());
     RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
