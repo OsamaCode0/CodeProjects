@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS todo (
   content TEXT NOT NULL DEFAULT ' ',
   created_at TIMESTAMP NOT NULL DEFAULT now(),
   due_time TIMESTAMP DEFAULT NULL,
+  reminder_time TIMESTAMP DEFAULT NULL,
   is_plan BOOLEAN GENERATED ALWAYS AS (due_time IS NOT NULL) STORED
 );
 
@@ -41,6 +42,7 @@ CREATE TABLE IF NOT EXISTS archive (
   content TEXT NOT NULL,
   created_at TIMESTAMP NOT NULL,
   due_time TIMESTAMP DEFAULT NULL,
+  reminder_time TIMESTAMP DEFAULT NULL,
   is_plan BOOLEAN NOT NULL,
   completed_at TIMESTAMP NOT NULL DEFAULT now()
 );

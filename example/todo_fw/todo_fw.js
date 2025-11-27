@@ -1,7 +1,5 @@
 import { h, hFragment } from './dist/frontend-framework.js'
 
-/* FIXED VERSION - Backend uses /user/todo (verified from main.go) */
-
 let searchTimer = null
 let reminderCheckInterval = null
 let latestStateRef = null
@@ -240,20 +238,20 @@ export const todoReducers = {
 }
 
 function ReminderNotification({ reminder }, emit) {
-    return h('div', { 
+    return h('div', {
         class: 'reminder-notification',
         style: { position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 9999, background: 'white', padding: '30px', borderRadius: '10px', boxShadow: '0 10px 40px rgba(0,0,0,0.3)', minWidth: '320px', maxWidth: '600px' }
     }, [
-        h('div', { 
+        h('div', {
             class: 'reminder-header',
             style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }
         }, [
             h('div', { style: { display: 'flex', alignItems: 'center', gap: '10px' } }, [
-                h('span', { 
+                h('span', {
                     class: 'reminder-icon',
                     style: { fontSize: '28px' }
                 }, ['🔔']),
-                h('span', { 
+                h('span', {
                     class: 'reminder-title',
                     style: { fontSize: '18px', fontWeight: 'bold', color: '#333' }
                 }, ['Reminder'])
@@ -264,7 +262,7 @@ function ReminderNotification({ reminder }, emit) {
                 on: { click: () => emit('dismiss-reminder', reminder.id) }
             }, ['×'])
         ]),
-        h('div', { 
+        h('div', {
             class: 'reminder-content',
             style: { marginBottom: '20px', padding: '15px', background: '#f5f5f5', borderRadius: '5px' }
         }, [
@@ -281,11 +279,11 @@ function ReminderNotification({ reminder }, emit) {
 function ReminderNotifications({ activeReminders }, emit) {
     if (!Array.isArray(activeReminders) || activeReminders.length === 0) return null
 
-    return h('div', { 
+    return h('div', {
         class: 'reminder-notifications-container',
         style: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9998, display: 'flex', alignItems: 'center', justifyContent: 'center' }
     },
-        activeReminders.map(reminder => 
+        activeReminders.map(reminder =>
             ReminderNotification({ reminder }, emit)
         )
     )
@@ -319,7 +317,7 @@ function ReminderPicker({ reminderValue, reminderUnit }, emit) {
                 on: {
                     change: ({ target }) => emit('update-reminder-unit', target.value)
                 }
-            }, units.map(unit => 
+            }, units.map(unit =>
                 h('option', { value: unit }, [unit])
             ))
         ])
@@ -420,7 +418,7 @@ function CreateTodo({ currentTodo, searchQuery, timeValue, timeUnit, showTimePic
             console.log('Todo must be at least 3 characters')
             return
         }
-        
+
         const id = localStorage.getItem('user_id') || ''
         if (!id) {
             console.error('No user_id found in localStorage')
@@ -442,7 +440,7 @@ function CreateTodo({ currentTodo, searchQuery, timeValue, timeUnit, showTimePic
             }
 
             console.log('Submitting todo with payload:', payload)
-            
+
             const data = await helpers.api.post('http://localhost:8081/user/todo', payload)
             console.log('Response received:', data)
 
@@ -544,35 +542,37 @@ function CreateTodo({ currentTodo, searchQuery, timeValue, timeUnit, showTimePic
         ]),
         showTimePicker ? TimePicker({ timeValue, timeUnit }, emit) : null,
         showReminderPicker ? ReminderPicker({ reminderValue, reminderUnit }, emit) : null,
-        h('label', { htmlFor: 'todo-search' }, ['Search']),
-        h('input', {
-            key: "todo-search",
-            type: 'text',
-            id: 'todo-search',
-            value: searchQuery,
-            on: {
-                input: ({ target }) => {
-                    const query = target.value
-                    emit('update-search-query', query)
-                    debouncedSearch(query)
-                    if (query.length === 0) {
-                        clearTimeout(searchTimer)
-                        emit('clear-search')
-                        loadTodos(emit, helpers)
-                    }
+        h('div', { class: 'search-box' }, [
+            h('label', { htmlFor: 'todo-search' }, ['Search']),
+            h('input', {
+                key: "todo-search",
+                type: 'text',
+                id: 'todo-search',
+                value: searchQuery,
+                on: {
+                    input: ({ target }) => {
+                        const query = target.value
+                        emit('update-search-query', query)
+                        debouncedSearch(query)
+                        if (query.length === 0) {
+                            clearTimeout(searchTimer)
+                            emit('clear-search')
+                            loadTodos(emit, helpers)
+                        }
+                    },
+                    keydown: ({ key }) => {
+                        if (key === 'Enter' && searchQuery.length >= 2) {
+                            clearTimeout(searchTimer)
+                            searchTodo(searchQuery)
+                        }
+                    },
                 },
-                keydown: ({ key }) => {
-                    if (key === 'Enter' && searchQuery.length >= 2) {
-                        clearTimeout(searchTimer)
-                        searchTodo(searchQuery)
-                    }
-                },
-            },
-        }),
-        h('button', {
-            disabled: searchQuery.length < 2,
-            on: { click: () => { clearTimeout(searchTimer); searchTodo(searchQuery) } },
-        }, ['Search']),
+            }),
+            h('button', {
+                disabled: searchQuery.length < 2,
+                on: { click: () => { clearTimeout(searchTimer); searchTodo(searchQuery) } },
+            }, ['Search']),
+        ]),
     ])
 }
 
@@ -754,7 +754,7 @@ export function TodoApp(state, emit, helpers) {
                         helpers.navigate("/login")
                     }
                 }
-            }, ["Login"])] )
+            }, ["Login"])])
         )
     }
 

@@ -6,7 +6,7 @@ ROOT_DIR := ${CURDIR}
 info: 
 	@echo "Makefile for frontend-framework"
 	@echo "Available commands"
-	@echo "make build 				- Biuld the frontend-framework package"
+	@echo "make build 				- Build the frontend-framework package"
 
 
 
@@ -23,3 +23,13 @@ build:
 	@rm -rf ./index.css
 	@rm -rf ./index.js
 	@echo 'direct to todo example: cd example/todo_fw'
+
+# build our todo example
+build-todo:
+	@echo "install dependencies todo"
+	@cd example/todo_fw && make install
+
+# to run todo example - makesure you have followed the instructions
+todo:
+	@echo "running todo app"
+	@cd example/todo_fw && make run
