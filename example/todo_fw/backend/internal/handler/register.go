@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"todo/internal/database"
@@ -18,7 +19,7 @@ func (db *DB) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	reg := &types.Register{}
 	err := helper.ReadFromRequestBody(r, reg)
 	if err != nil {
-		exception.HandleBadRequestError(w, err)
+		exception.HandleBadRequestError(w, fmt.Errorf("read from request body: %v", err))
 		return
 	}
 
@@ -33,7 +34,7 @@ func (db *DB) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	err = tx.RegisteringNewUser(r.Context(), reg, regUser)
 	if err != nil {
 		tx.Tx.Rollback(r.Context())
-		exception.HandleResponseError(w, err)
+		exception.HandleResponseError(w, fmt.Errorf("registering new user: %v", err))
 		return
 	}
 

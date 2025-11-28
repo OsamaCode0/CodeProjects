@@ -30,7 +30,7 @@ export const registerReducers = {
         ...state,
         reg_loading: false,
         reg_success: false,
-        reg_error,
+        reg_error: error,
     }),
 };
 
@@ -57,11 +57,15 @@ export function RegisterPage(state, emit, helpers) {
 
             console.log('Register success', data);
             emit('register-success');
-
+            emit('prefill-login-form', {
+                email: state.reg_email,
+                password: state.reg_password
+            });
             helpers.navigate('/login');
         } catch (err) {
-            console.error(err);
-            emit('register-failure', err.message || "Network error");
+            console.error(err.message);
+            let msg = err.message || 'Network error';
+            emit('register-failure', msg || "Network error");
         }
     };
 
@@ -120,8 +124,8 @@ export function RegisterPage(state, emit, helpers) {
             }, ['Back']),
         ]),
 
-        state.error
-            ? h('p', { class: 'error' }, [state.error])
+        state.reg_error
+            ? h('p', { class: 'error' }, [state.reg_error])
             : null,
 
     ].filter(Boolean));

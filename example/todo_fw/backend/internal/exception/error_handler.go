@@ -17,7 +17,7 @@ func HandleResponseError(writer http.ResponseWriter, err error) {
 		helper.WriteToResponseBody(writer, types.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "StatusNotFound",
-			Data:   fmt.Sprintf("error:\n%v", err),
+			Data:   fmt.Sprintf("status not found:\n%v", err),
 		})
 		return
 	case strings.Contains(err.Error(), "forbidden"):
@@ -26,7 +26,7 @@ func HandleResponseError(writer http.ResponseWriter, err error) {
 		helper.WriteToResponseBody(writer, types.WebResponse{
 			Code:   http.StatusForbidden,
 			Status: "FORBIDDEN",
-			Data:   fmt.Sprintf("error:\n%v", err),
+			Data:   fmt.Sprintf("unauthorized:\n%v", err),
 		})
 		return
 	case strings.Contains(err.Error(), "NULL"):
@@ -34,7 +34,7 @@ func HandleResponseError(writer http.ResponseWriter, err error) {
 		helper.WriteToResponseBody(writer, types.WebResponse{
 			Code:   http.StatusNotFound,
 			Status: "NotFound",
-			Data:   fmt.Sprintf("error:\n%v", err),
+			Data:   fmt.Sprintf("status not found:\n%v", err),
 		})
 		return
 	default:
@@ -43,7 +43,7 @@ func HandleResponseError(writer http.ResponseWriter, err error) {
 		helper.WriteToResponseBody(writer, types.WebResponse{
 			Code:   http.StatusInternalServerError,
 			Status: "Internal Server Error",
-			Data:   fmt.Sprintf("error:\n%v", err),
+			Data:   fmt.Sprintf("internal server error:\n%v", err),
 		})
 		return
 	}

@@ -42,6 +42,12 @@ export const loginReducers = {
         isLoggedIn: false,
         error: errorMessage,
     }),
+    'prefill-login-form': (state, payload) => ({
+        ...state,
+        currentEmail: payload.email,
+        currentPassword: payload.password,
+        error: null,
+    }),
 }
 
 export function LoginPage(state, emit, helpers) {
@@ -51,12 +57,20 @@ export function LoginPage(state, emit, helpers) {
     }
     const { currentEmail, currentPassword } = state;
 
+    const isValidEmail = (email) => {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    }
+
     const submit = async (e) => {
         e.preventDefault()
         console.log('submit initiated', currentEmail, currentPassword)
         if (!currentEmail || !currentPassword) {
             console.log('not state currentEmail?')
             emit('login-failure', 'provide email and password')
+            return
+        }
+        if (!isValidEmail(currentEmail)) {
+            emit('login-failure', 'Please enter a valid email address')
             return
         }
         emit('start-login')
@@ -75,32 +89,38 @@ export function LoginPage(state, emit, helpers) {
                 user_name: data.data.name ?? data.data.email,
             })
         } catch (err) {
+            let msg = err.message || 'Network error';
             console.error('Login error:', err)
             emit('login-failure', err.message || 'Network error')
         }
     }
     return h('form', { class: 'login-form', on: { submit: submit } }, [
-       /* h('button', {
-                type: 'submit',
-                class: 'back-button',
-                on: {
-                    click: () => {
-                        helpers.navigate('/'); // Navigate to home page
-                    },
-                },
-            }, ['Back']), */
-        
+        /* h('button', {
+                 type: 'submit',
+                 class: 'back-button',
+                 on: {
+                     click: () => {
+                         helpers.navigate('/'); // Navigate to home page
+                     },
+                 },
+             }, ['Back']), */
+
         h('h2', { class: 'title' }, ['Login']),
-        
+
         h('label', { htmlFor: 'email', class: 'label-email' }, ['Email: ']),
         h('input', {
             type: 'text',
             id: 'email',
+            name: 'unique_login_email',
             class: 'input-email',
             placeholder: 'Enter your email',
             value: currentEmail,
+            autocomplete: 'off',
             on: {
-                input: ({ target }) => emit('update-log-name', target.value),
+                input: ({ target }) => {
+                    if (state.error) emit('login-failure', null)
+                    emit('update-log-name', target.value)
+                },
             },
         }),
 
@@ -108,11 +128,16 @@ export function LoginPage(state, emit, helpers) {
         h('input', {
             type: 'password',
             id: 'password',
+            name: 'unique_login_password',
             class: 'input-password',
             placeholder: 'Create a password',
             value: currentPassword,
+            autocomplete: 'off',
             on: {
-                input: ({ target }) => emit('update-log-password', target.value)
+                input: ({ target }) => {
+                    if (state.error) emit('login-failure', null)
+                    emit('update-log-password', target.value)
+                }
             }
         }),
 
@@ -133,7 +158,7 @@ export function LoginPage(state, emit, helpers) {
                 },
             }, ['Back']),
         ]),
-        
+
         state.error ? h('p', { class: 'error' }, [state.error]) : h('span', {}, []),
         state.isLoggedIn ? h('p', {}, ['Logged In']) : null,
     ].filter(Boolean))

@@ -43,7 +43,8 @@ const helpers = {
         console.log(`Response status: ${res.status}`)
         const json = await res.json().catch(() => null);
         if (!res.ok) {
-          const err = (json && json.message) || res.statusText || 'Request failed';
+          const err = json?.data ?? 'unknow error'
+          console.log("json.data", json.data)
           const e = new Error(err);
           e.response = json;
           throw e;
