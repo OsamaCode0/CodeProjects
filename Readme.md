@@ -45,7 +45,7 @@ for detail [click here](./example/todo_fw/Readme.md)
 make build-todo
 
 # run todo example
-make run
+make todo
 ```
 
 <style>
