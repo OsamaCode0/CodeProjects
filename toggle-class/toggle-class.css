@@ -1,0 +1,38 @@
+#content {
+  padding: 20px;
+  margin: 10px;
+  background-color: white;
+  display: inline-block;
+}
+
+#content.highlight {
+  background-color: yellow;
+}
+
+#content p {
+  margin: 0;
+  font-size: 24px;
+  display: inline;
+}
+
+.controls {
+  margin-top: 10px;
+}
+
+.controls button {
+  padding: 5px 10px;
+  margin-right: 5px;
+  cursor: pointer;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.italic {
+  font-style: italic;
+}
+
+.underline {
+  text-decoration: underline;
+}

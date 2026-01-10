@@ -1,0 +1,25 @@
+.letter-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.letter {
+  font-size: 14px; /* Explicit default size */
+  cursor: pointer;
+}
+
+.selected {
+  font-weight: 700; /* Bold, not just 'bold' */
+}
+
+.button-container {
+  display: flex;
+  gap: 10px;
+}
+
+button {
+  padding: 5px 10px;
+  cursor: pointer;
+}
