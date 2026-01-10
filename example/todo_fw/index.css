@@ -1,0 +1,727 @@
+/* =========================================
+   1. VARIABLES (FROM NEW DESIGN)
+   ========================================= */
+:root {
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --primary-light: #8b5cf6;
+  --secondary: #f59e0b;
+  --accent: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+
+  /* Dark Mode Backgrounds */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-card: #1e293b;
+  --bg-input: #334155;
+
+  /* Text Colors */
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+
+  --border-radius: 12px;
+  --border-radius-sm: 8px;
+  --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  --header-height: 70px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== GLOBAL STYLES ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* New Gradient Background */
+  background: linear-gradient(135deg, var(--bg-primary) 0%, #1e1b4b 100%);
+  color: var(--text-primary);
+  /* Light text */
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* ===== SHARED CONTAINER STYLES ===== */
+/* Replaced white bg with dark card bg */
+.home,
+.login-form,
+.todo-app {
+  background: var(--bg-card);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  /* Subtle border for dark mode */
+}
+
+.todo-app {
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+/* ===== HOMEPAGE STYLES ===== */
+.home {
+  margin: 80px auto;
+  padding: 40px;
+  text-align: center;
+  max-width: 600px;
+  width: 90vw;
+}
+
+.home h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  /* Gradient Text Effect */
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.home p {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  color: var(--text-secondary);
+}
+
+.home nav {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.home nav a,
+.nav-link {
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--primary-light);
+  padding: 10px 18px;
+  border-radius: var(--border-radius-sm);
+  transition: var(--transition);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.home nav a:hover,
+.nav-link:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.home nav span {
+  color: var(--text-muted);
+}
+
+/* ===== TIME & REMINDER BUTTONS ===== */
+.time-button {
+  background: rgba(245, 158, 11, 0.15);
+  /* Translucent Orange */
+  color: var(--secondary);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 10px 14px;
+  border-radius: var(--border-radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--transition);
+}
+
+.reminder-button {
+  background: rgba(99, 102, 241, 0.15);
+  /* Translucent Indigo */
+  color: var(--primary-light);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  padding: 10px 14px;
+  border-radius: var(--border-radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--transition);
+}
+
+.time-button:hover,
+.reminder-button:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.clear-time-button {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--danger);
+  padding: 0 12px;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.clear-time-button:hover {
+  background: rgba(239, 68, 68, 0.4);
+}
+
+/* ===== DROPDOWNS (Time/Reminder) ===== */
+.time-picker-dropdown {
+  margin-top: 10px;
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  animation: slideDown 0.2s ease;
+}
+
+.time-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.close-picker {
+  background: transparent;
+  color: var(--text-muted);
+  padding: 4px;
+  font-size: 1.2rem;
+  border: none;
+  cursor: pointer;
+}
+
+.time-input-container {
+  display: flex;
+  gap: 8px;
+}
+
+.time-value-input {
+  width: 70%;
+  padding: 10px;
+  background: var(--bg-input);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border-radius: var(--border-radius-sm);
+  font-size: 1rem;
+}
+
+.time-unit-select {
+  width: 30%;
+  padding: 10px;
+  background: var(--bg-input);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border-radius: var(--border-radius-sm);
+  font-size: 1rem;
+}
+
+.time-value-input:focus,
+.time-unit-select:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+/* ===== BADGES ===== */
+.countdown {
+  display: inline-block;
+  padding: 4px 10px;
+  background: rgba(16, 185, 129, 0.15);
+  /* Green tint */
+  color: var(--accent);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.countdown.expired {
+  background: rgba(239, 68, 68, 0.15);
+  /* Red tint */
+  color: var(--danger);
+}
+
+.reminder-display {
+  display: inline-block;
+  padding: 4px 10px;
+  background: rgba(99, 102, 241, 0.15);
+  /* Indigo tint */
+  color: var(--primary-light);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ===== REMINDER POPUP OVERLAY (Required for your JS) ===== */
+.reminder-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.reminder-notification {
+  background: var(--bg-card);
+  padding: 24px;
+  border-radius: var(--border-radius);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--primary);
+  max-width: 400px;
+  width: 100%;
+  animation: popIn 0.3s ease;
+}
+
+.reminder-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.reminder-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reminder-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.reminder-content {
+  background: var(--bg-primary);
+  padding: 16px;
+  border-radius: var(--border-radius-sm);
+  margin-bottom: 20px;
+  color: var(--text-secondary);
+}
+
+.reminder-dismiss-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.reminder-dismiss-btn:hover {
+  background: var(--primary-dark);
+}
+
+/* ===== LOGIN FORM STYLES ===== */
+body {
+  display: grid;
+  place-items: center;
+  margin: 0;
+}
+
+.login-form {
+  max-width: 600px;
+  width: 90vw;
+  height: auto;
+}
+
+.label-name,
+.label-email,
+.label-password {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.input-name,
+.input-email,
+.input-password {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 16px;
+  background: var(--bg-input);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius-sm);
+  font-size: 1rem;
+  color: white;
+}
+
+.input-email:focus,
+.input-password:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.login-form button[type="submit"] {
+  display: inline-block;
+  padding: 12px 20px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.login-form button[type="submit"]:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+}
+
+.login-form button[type="submit"]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-form p {
+  margin-top: 12px;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.login-form p.error {
+  color: var(--danger);
+}
+
+.back-button {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-primary);
+  padding: 12px 20px;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ===== HEADER STYLES ===== */
+header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100vw;
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 2rem;
+  background: rgba(15, 23, 42, 0.9);
+  /* Transparent dark */
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  z-index: 1000;
+}
+
+header h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+header>div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+header button,
+.dropdown-btn {
+  padding: 8px 16px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+header button:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+/* ===== TODO APP STYLES ===== */
+.todo-app {
+  max-width: 800px;
+  width: 90vw;
+  height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  margin: 0 auto;
+}
+
+.todo-app h1 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 2rem;
+  text-align: center;
+  background: linear-gradient(to right, var(--primary-light), var(--accent));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  flex-shrink: 0;
+}
+
+/* Input/label in todo */
+.todo-app label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+/* Input Row Wrapper */
+.todo-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.todo-app input[type="text"] {
+  flex: 1;
+  min-width: 200px;
+  padding: 10px 12px;
+  background: var(--bg-input);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius-sm);
+  font-size: 1rem;
+  color: white;
+}
+
+.todo-app input[type="text"]:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.search-box {
+  display: grid;
+  padding-top: 10px;
+  row-gap: 5px;
+}
+
+/* Button styles */
+.todo-app button {
+  padding: 10px 14px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: var(--transition);
+}
+
+.todo-app button:hover {
+  background: var(--primary-dark);
+}
+
+.todo-app button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Todo list */
+.todo-app ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.todo-app li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  gap: 8px;
+  background: var(--bg-secondary);
+  /* List item bg */
+  border-radius: var(--border-radius-sm);
+  margin-bottom: 8px;
+  transition: var(--transition);
+}
+
+.todo-app li:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.todo-content {
+  flex-grow: 1;
+  cursor: pointer;
+  padding-right: 10px;
+  word-break: break-word;
+  flex: 1;
+  color: var(--text-primary);
+}
+
+.edit-input {
+  width: 100%;
+  padding: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--primary);
+  border-radius: var(--border-radius-sm);
+  color: white;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  margin-top: 2rem;
+  font-style: italic;
+}
+
+.button-group {
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ===== UTILS & ANIMATIONS ===== */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ===== RESPONSIVE DESIGN (MOBILE FIXES) ===== */
+@media (max-width: 768px) {
+  header {
+    height: auto;
+    flex-direction: column;
+    padding: 16px;
+    gap: 12px;
+  }
+
+  header>div {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .todo-app,
+  .login-form,
+  .home {
+    width: 95vw;
+    padding: 16px;
+  }
+
+  /* Stack Input Row Elements */
+  .todo-input-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* Full width inputs & buttons on mobile */
+  .todo-input-row input[type="text"],
+  .todo-input-row button,
+  .time-button,
+  .reminder-button {
+    width: 100%;
+    margin-bottom: 6px;
+    margin-right: 0;
+  }
+
+  /* Clear buttons */
+  .clear-time-button {
+    width: 100%;
+    margin-bottom: 8px;
+    background: rgba(239, 68, 68, 0.1);
+  }
+
+  /* Stack List Items */
+  .todo-app li {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .todo-content {
+    width: 100%;
+    margin-bottom: 5px;
+  }
+
+  /* Fix Badges */
+  .todo-app li>span:not(.todo-content) {
+    display: inline-block;
+    margin-bottom: 6px;
+  }
+
+  /* Full width list buttons */
+  .todo-app li button {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0 0 0;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Pickers */
+  .time-input-container {
+    flex-direction: column;
+  }
+
+  .time-value-input,
+  .time-unit-select {
+    width: 100%;
+  }
+}

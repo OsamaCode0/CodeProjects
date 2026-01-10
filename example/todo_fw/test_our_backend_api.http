@@ -1,0 +1,88 @@
+
+
+### variables
+@port = 8081
+@token = 93f4d188-d424-4ab2-a9fd-7b91f7695680
+@user_id = 9d887bbc-c8d1-4d15-8d79-2510f58ab517
+
+### Register a User
+### /register
+
+POST http://localhost:{{port}}/register
+Accept: application/json
+Content-Type: application/json
+
+{
+    "email": "user2@koodsisu.fi",
+    "name": "user two",
+    "password": "User@2"
+}
+
+
+### GET User
+### /user/{id}
+GET http://localhost:{{port}}/user/{{user_id}}
+Accept: application/json
+
+
+### Login a User
+### /login
+
+POST http://localhost:{{port}}/login
+Accept: application/json
+Content-Type: application/json
+
+{
+    "email": "admin@example.com",
+    "password": "admin123"
+}
+
+### Logout a User
+### /logout
+
+POST http://localhost:{{port}}/logout
+Accept: application/json
+Content-Type: application/json
+
+{
+    "user_id": "{{user_id}}",
+    "token": "{{token}}"
+}
+
+### Insert Todo User
+### /todo
+POST http://localhost:{{port}}/user/todo
+Accept: application/json
+Content-Type: application/json
+
+{
+    "user_id": "{{user_id}}",
+    "content": "Do the task for today and tomorrow edit again",
+    "due_time": null
+}
+
+### Update Todo User
+### /todo
+PUT http://localhost:{{port}}/user/todo
+Accept: application/json
+Content-Type: application/json
+
+{
+    "id": 1,
+    "content": "try to change this todo?",
+    "due_time": "2025-11-15T19:23:00Z"
+}
+
+### Get todo user
+### /todo/{id}
+GET http://localhost:{{port}}/user/todo/{{user_id}}
+Accept: application/json
+
+
+### keyword
+@keyword = up
+
+### Search todo by keywords
+### /todo/{user_id}/{keyword}
+GET http://localhost:{{port}}/user/todo/{{user_id}}/{{keyword}}
+Accept: application/json

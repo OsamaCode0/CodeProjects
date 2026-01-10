@@ -1,18 +1,44 @@
-server/.env
-frontend/node_modules
-# production build
-frontend/build
-frontend/dist
+# any hidden files
+.*
+!.gitignore
+!.eslintrc.js
 
-# misc
-frontend/.DS_Store
-frontend/.env.local
-frontend/.env.development.local
-frontend/.env.test.local
-frontend/.env.production.local
+# any postential bigger file
+*.jpg
+*.png
+*.svg
+*.jpeg
+*.mp3
+*.mp4
 
-# debug logs
-frontend/npm-debug.log*
-frontend/yarn-debug.log*
-frontend/yarn-error.log*
-frontend/pnpm-debug.log*
+# unneccessary files
+*.txt
+*.drawio
+*.php
+*.*.md
+!Readme.md
+*.doc
+*.pdf
+
+# local bins and backup folder
+bin
+trash*
+backup
+
+# environtment
+.env
+.env.local
+
+
+# logs
+logs
+*.log*
+
+# private key
+*.pem
+
+# modules
+node_modules
+
+# this will be the folder where the build file existed.
+dist

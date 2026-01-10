@@ -1,59 +1,35 @@
-# Match-Me Project Makefile
+.PHONY: info build
 
-# Variables
-CLIENT_DIR = frontend
-SERVER_DIR = server
-DIST_DIR = $(CLIENT_DIR)/dist
+SHELL := /bin/bash
+ROOT_DIR := ${CURDIR}
 
-# Default target
-.DEFAULT_GOAL := help
-
-# Build client for production
-build-client:
-	@echo "Building client for production..."
-	cd $(CLIENT_DIR) && npm ci && npm run build
-	@echo "Client built successfully! Output in $(DIST_DIR)/"
-
-# Install client dependencies
-install-client:
-	@echo "Installing client dependencies..."
-	cd $(CLIENT_DIR) && npm install
-
-# Development server for client
-dev-client:
-	@echo "Starting client development server..."
-	cd $(CLIENT_DIR) && npm i && npm run dev
-
-# Build and run server
-build-server:
-	@echo "Building server..."
-	cd $(SERVER_DIR) && go build -o bin/server .
-
-# Run server
-run-server:
-	@echo "Running server..."
-	cd $(SERVER_DIR) && go run .
+info: 
+	@echo "Makefile for frontend-framework"
+	@echo "Available commands"
+	@echo "make build 				- Build the frontend-framework package"
 
 
 
-# Full production build
-build-all: build-client build-server
-	@echo "Full build completed!"
+# Build frontend-framework package and install dependencies
+build:
+	@echo "Install Dependencies"
+	@SKIP_FRONTEND_FRAMEWORK_POSTINSTALL=1 npm install
+	@cd framework/runtime && SKIP_FRONTEND_FRAMEWORK_POSTINSTALL=1 npm install
+	@echo "Build the frontend-framework"
+	@cd framework/runtime && SKIP_FRONTEND_FRAMEWORK_POSTINSTALL=1 npm run build
+	@echo 'Remove unwanted files on root'
+	@rm -rf ./dist
+	@rm -rf ./index.html
+	@rm -rf ./index.css
+	@rm -rf ./index.js
+	@echo 'direct to todo example: cd example/todo_fw'
 
-# Development setup
-dev-setup: install-client
-	@echo "Development environment setup complete!"
+# build our todo example
+build-todo:
+	@echo "install dependencies todo"
+	@cd example/todo_fw && make install
 
-# Help target
-help:
-	@echo "Available targets:"
-	@echo "  build-client    - Build client for production (output: client/dist/)"
-	@echo "  install-client  - Install client dependencies"  
-	@echo "  dev-client      - Start client development server"
-	@echo "  build-server    - Build server binary"
-	@echo "  run-server      - Run server"
-	@echo "  build-all       - Build both client and server"
-	@echo "  dev-setup       - Setup development environment"
-	@echo "  help            - Show this help message"
-
-.PHONY: build-client install-client dev-client build-server run-server build-all dev-setup help
+# to run todo example - makesure you have followed the instructions
+todo:
+	@echo "running todo app"
+	@cd example/todo_fw && make run
