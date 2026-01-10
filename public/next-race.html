@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Next Race - Beachside Racetrack</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
+      min-height: 100vh;
+      color: white;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 2rem;
+      border-radius: 15px;
+      margin-bottom: 2rem;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .header h1 {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .header .subtitle {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+
+    .race-announcement {
+      background: rgba(46, 204, 113, 0.2);
+      border: 2px solid #2ecc71;
+      padding: 2rem;
+      border-radius: 15px;
+      margin-bottom: 2rem;
+      text-align: center;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.02);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    .announcement-title {
+      font-size: 2rem;
+      color: #2ecc71;
+      margin-bottom: 1rem;
+      font-weight: bold;
+    }
+
+    .announcement-message {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+    }
+
+    .race-info {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 2rem;
+      border-radius: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .race-title {
+      font-size: 2.5rem;
+      text-align: center;
+      margin-bottom: 2rem;
+      color: #ffd700;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .drivers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .driver-card {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 15px;
+      padding: 2rem;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .driver-card:hover {
+      transform: translateY(-5px);
+      background: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .car-number {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-size: 3rem;
+      font-weight: bold;
+      width: 5rem;
+      height: 5rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .driver-name {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: white;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .empty-state {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 1.5rem;
+      padding: 3rem;
+      font-style: italic;
+    }
+
+    .waiting-message {
+      background: rgba(149, 165, 166, 0.2);
+      border: 2px solid #95a5a6;
+      padding: 2rem;
+      border-radius: 15px;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .waiting-title {
+      font-size: 1.8rem;
+      color: #bdc3c7;
+      margin-bottom: 1rem;
+    }
+
+    .fullscreen-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 10px 15px;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 1rem;
+    }
+
+    .fullscreen-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2rem;
+      }
+
+      .drivers-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .driver-card {
+        padding: 1.5rem;
+      }
+
+      .car-number {
+        width: 4rem;
+        height: 4rem;
+        font-size: 2.5rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .drivers-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+
+  <div class="container">
+    <div class="header">
+      <h1>🏁 Next Race</h1>
+      <p class="subtitle">Driver Information Board</p>
+    </div>
+
+    <div id="raceAnnouncement" class="race-announcement" style="display: none;">
+      <div class="announcement-title">🚗 PROCEED TO PADDOCK 🚗</div>
+      <div class="announcement-message">Your race session is ready!</div>
+    </div>
+
+    <div id="waitingMessage" class="waiting-message">
+      <div class="waiting-title">⏳ No Active Race Session</div>
+      <p>Please wait for race configuration</p>
+    </div>
+
+    <div id="raceInfo" class="race-info" style="display: none;">
+      <h2 id="raceTitle" class="race-title">Race Session</h2>
+
+      <div id="driversGrid" class="drivers-grid">
+        <!-- Driver cards will be populated here -->
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    let sessionJustEnded = false;
+
+    function initializeSocket() {
+      socket = io();
+
+      socket.on('gameState', (state) => {
+        gameState = state;
+        updateUI();
+      });
+
+      // Listen for the specific session ended event
+      socket.on('raceSessionEnded', () => {
+        sessionJustEnded = true;
+        updateUI();
+
+        // Reset the flag after a delay (so announcement shows for a reasonable time)
+        setTimeout(() => {
+          sessionJustEnded = false;
+          updateUI();
+        }, 2000); // Show for 5s
+      });
+    }
+
+    function updateUI() {
+      const waitingMessage = document.getElementById('waitingMessage');
+      const raceInfo = document.getElementById('raceInfo');
+      const raceAnnouncement = document.getElementById('raceAnnouncement');
+      const raceTitle = document.getElementById('raceTitle');
+      const driversGrid = document.getElementById('driversGrid');
+
+      // Reset announcement unless session just ended
+      if (!sessionJustEnded) {
+        raceAnnouncement.style.display = 'none';
+      }
+
+      // Determine what to show based on race state
+      let nextRaceIndex = -1;
+
+      if (gameState.raceStatus === 'waiting') {
+        // Find first uncompleted session
+        nextRaceIndex = gameState.raceSessions.findIndex(session => !session.completed);
+      } else if (gameState.raceStatus === 'active' || gameState.raceStatus === 'finished') {
+        // Find next uncompleted session after current
+        for (let i = gameState.currentRaceIndex + 1; i < gameState.raceSessions.length; i++) {
+          if (!gameState.raceSessions[i].completed) {
+            nextRaceIndex = i;
+            break;
+          }
+        }
+      }
+
+      // Show announcement only when sessionJustEnded flag is true
+      if (sessionJustEnded && nextRaceIndex !== -1) {
+        raceAnnouncement.style.display = 'block';
+      }
+
+      if (nextRaceIndex !== -1) {
+        const nextSession = gameState.raceSessions[nextRaceIndex];
+
+        waitingMessage.style.display = 'none';
+        raceInfo.style.display = 'block';
+
+        raceTitle.textContent = `Race Session ${nextRaceIndex + 1}`;
+
+        if (nextSession.drivers.length > 0) {
+          driversGrid.innerHTML = nextSession.drivers.map(driver => `
+        <div class="driver-card">
+          <div class="car-number">${driver.carNumber}</div>
+          <div class="driver-name">${driver.name}</div>
+        </div>
+      `).join('');
+        } else {
+          driversGrid.innerHTML = '<div class="empty-state">No drivers assigned yet</div>';
+        }
+      } else {
+        // No upcoming races
+        waitingMessage.style.display = 'block';
+        raceInfo.style.display = 'none';
+        raceAnnouncement.style.display = 'none';
+
+        if (gameState.raceSessions.length === 0) {
+          document.querySelector('.waiting-title').textContent = '⏳ No Race Sessions Configured';
+          document.querySelector('.waiting-message p').textContent = 'Please wait for race configuration';
+        } else {
+          const completedSessions = gameState.raceSessions.filter(session => session.completed);
+          if (completedSessions.length === gameState.raceSessions.length) {
+            document.querySelector('.waiting-title').textContent = '🏁 All Races Completed';
+            document.querySelector('.waiting-message p').textContent = 'Thank you for participating!';
+          } else if (gameState.raceStatus === 'active') {
+            document.querySelector('.waiting-title').textContent = '🏁 Race In Progress';
+            document.querySelector('.waiting-message p').textContent = 'Current race is active';
+          }
+        }
+      }
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.log('Fullscreen not supported');
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    // Initialize when page loads
+    initializeSocket();
+  </script>
+</body>
+
+</html>

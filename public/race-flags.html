@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Race Flags - Beachside Racetrack</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transition: all 0.5s ease;
+    }
+
+    .flag-container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.5s ease;
+    }
+
+    .flag-display {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10rem;
+      font-weight: bold;
+      text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Safe Mode - Solid Green */
+    .flag-safe {
+      background: #27ae60;
+      color: white;
+    }
+
+    .flag-safe::before {
+      content: "SAFE";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 8rem;
+      opacity: 0.3;
+    }
+
+    /* Hazard Mode - Solid Yellow */
+    .flag-hazard {
+      background: #f39c12;
+      color: white;
+      animation: hazardPulse 2s infinite;
+    }
+
+    .flag-hazard::before {
+      content: "HAZARD";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 6rem;
+      opacity: 0.4;
+    }
+
+    @keyframes hazardPulse {
+      0% {
+        opacity: 0.8;
+      }
+
+      50% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0.8;
+      }
+    }
+
+    /* Danger Mode - Solid Red */
+    .flag-danger {
+      background: #e74c3c;
+      color: white;
+      animation: dangerFlash 1s infinite;
+    }
+
+    .flag-danger::before {
+      content: "DANGER";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 7rem;
+      opacity: 0.4;
+    }
+
+    @keyframes dangerFlash {
+      0% {
+        opacity: 0.7;
+      }
+
+      50% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0.7;
+      }
+    }
+
+    /* Finish Mode - Chequered Pattern */
+    .flag-finish {
+      background: #2c3e50;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .flag-finish::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image:
+        repeating-linear-gradient(45deg,
+          #000 0px,
+          #000 50px,
+          #fff 50px,
+          #fff 100px),
+        repeating-linear-gradient(-45deg,
+          #000 0px,
+          #000 50px,
+          #fff 50px,
+          #fff 100px);
+      background-size: 100px 100px, 100px 100px;
+      animation: checkeredMove 2s linear infinite;
+      z-index: 1;
+    }
+
+    .flag-finish::after {
+      content: "FINISH";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 8rem;
+      color: white;
+      text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
+      z-index: 2;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 2rem 4rem;
+      border-radius: 20px;
+    }
+
+    @keyframes checkeredMove {
+      0% {
+        transform: translateX(0) translateY(0);
+      }
+
+      100% {
+        transform: translateX(-100px) translateY(-100px);
+      }
+    }
+
+    .fullscreen-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 10px 15px;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 1rem;
+      z-index: 1000;
+    }
+
+    .fullscreen-btn:hover {
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    @media (max-width: 768px) {
+      .flag-display {
+        font-size: 6rem;
+      }
+
+      .flag-safe::before,
+      .flag-finish::after {
+        font-size: 4rem;
+      }
+
+      .flag-hazard::before {
+        font-size: 3rem;
+      }
+
+      .flag-danger::before {
+        font-size: 4rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .flag-display {
+        font-size: 4rem;
+      }
+
+      .flag-safe::before,
+      .flag-finish::after {
+        font-size: 2.5rem;
+        padding: 1rem 2rem;
+      }
+
+      .flag-hazard::before,
+      .flag-danger::before {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+
+  <div class="flag-container">
+    <div id="flagDisplay" class="flag-display flag-safe">
+      <!-- Flag content will be controlled by CSS classes -->
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    let socket;
+    let gameState = {};
+
+    function initializeSocket() {
+      socket = io();
+
+      socket.on('gameState', (state) => {
+        gameState = state;
+        updateFlag();
+      });
+    }
+
+    function updateFlag() {
+      const flagDisplay = document.getElementById('flagDisplay');
+      const body = document.body;
+
+      // Remove all flag classes
+      flagDisplay.classList.remove('flag-safe', 'flag-hazard', 'flag-danger', 'flag-finish');
+
+      // Add appropriate flag class based on race mode
+      switch (gameState.raceMode) {
+        case 'safe':
+          flagDisplay.classList.add('flag-safe');
+          body.style.background = '#27ae60';
+          break;
+        case 'hazard':
+          flagDisplay.classList.add('flag-hazard');
+          body.style.background = '#f39c12';
+          break;
+        case 'danger':
+          flagDisplay.classList.add('flag-danger');
+          body.style.background = '#e74c3c';
+          break;
+        case 'finish':
+          flagDisplay.classList.add('flag-finish');
+          body.style.background = '#2c3e50';
+          break;
+        default:
+          flagDisplay.classList.add('flag-safe');
+          body.style.background = '#27ae60';
+      }
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.log('Fullscreen not supported');
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    // Initialize when page loads
+    initializeSocket();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Race Countdown - Beachside Racetrack</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .countdown-container {
+      text-align: center;
+      width: 100%;
+      padding: 0 2rem;
+    }
+
+    .header {
+      margin-bottom: 3rem;
+    }
+
+    .header h1 {
+      font-size: 4rem;
+      text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+      margin-bottom: 1rem;
+    }
+
+    .header .subtitle {
+      font-size: 1.5rem;
+      opacity: 0.9;
+    }
+
+    .countdown-display {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(15px);
+      border-radius: 25px;
+      padding: 4rem 2rem;
+      margin-bottom: 3rem;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .timer {
+      font-size: 8rem;
+      font-weight: bold;
+      color: #ffd700;
+      text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+      margin-bottom: 1rem;
+      letter-spacing: 0.1em;
+    }
+
+    .timer.warning {
+      color: #e74c3c;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    .timer-label {
+      font-size: 2rem;
+      color: rgba(255, 255, 255, 0.8);
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+    }
+
+    .status-display {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 2rem;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .status-title {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      opacity: 0.9;
+    }
+
+    .status-indicator {
+      font-size: 3rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .status-waiting {
+      color: #95a5a6;
+    }
+
+    .status-active {
+      color: #2ecc71;
+      animation: glow 2s infinite alternate;
+    }
+
+    .status-finished {
+      color: #e74c3c;
+    }
+
+    @keyframes glow {
+      from {
+        text-shadow: 0 0 20px #2ecc71, 0 0 30px #2ecc71, 0 0 40px #2ecc71;
+      }
+
+      to {
+        text-shadow: 0 0 30px #2ecc71, 0 0 40px #2ecc71, 0 0 50px #2ecc71;
+      }
+    }
+
+    .race-info {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 2rem;
+      margin-top: 2rem;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .race-info h3 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+      color: #ffd700;
+    }
+
+    .driver-count {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+
+    .no-race {
+      color: rgba(255, 255, 255, 0.6);
+      font-style: italic;
+    }
+
+    .fullscreen-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 10px 15px;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 1rem;
+    }
+
+    .fullscreen-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2.5rem;
+      }
+
+      .timer {
+        font-size: 4rem;
+      }
+
+      .countdown-display {
+        padding: 2rem 1rem;
+      }
+
+      .timer-label {
+        font-size: 1.2rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .header h1 {
+        font-size: 2rem;
+      }
+
+      .timer {
+        font-size: 3rem;
+      }
+
+      .status-indicator {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+
+  <div class="countdown-container">
+    <div class="header">
+      <h1>🏁 Race Countdown</h1>
+      <p class="subtitle">Live Race Timer</p>
+    </div>
+
+    <div class="countdown-display">
+      <div id="timer" class="timer">--:--</div>
+      <div class="timer-label">Time Remaining</div>
+    </div>
+
+    <div class="status-display">
+      <div class="status-title">Race Status</div>
+      <div id="raceStatus" class="status-indicator status-waiting">Waiting</div>
+    </div>
+
+    <div id="raceInfo" class="race-info">
+      <h3>Current Race</h3>
+      <div id="raceDetails" class="no-race">No active race session</div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    let socket;
+    let gameState = {};
+
+    function initializeSocket() {
+      socket = io();
+
+      socket.on('gameState', (state) => {
+        gameState = state;
+        updateUI();
+      });
+
+      socket.on('raceTimer', (timeRemaining) => {
+        updateTimer(timeRemaining);
+      });
+    }
+
+    function updateUI() {
+      updateStatus();
+      updateRaceInfo();
+
+      if (gameState.raceStatus === 'active') {
+        updateTimer(gameState.raceTimeRemaining);
+      } else {
+        document.getElementById('timer').textContent = '--:--';
+        document.getElementById('timer').classList.remove('warning');
+      }
+    }
+
+    function updateStatus() {
+      const statusElement = document.getElementById('raceStatus');
+
+      switch (gameState.raceStatus) {
+        case 'active':
+          statusElement.textContent = 'Race Active';
+          statusElement.className = 'status-indicator status-active';
+          break;
+        case 'finished':
+          statusElement.textContent = 'Finished';
+          statusElement.className = 'status-indicator status-finished';
+          break;
+        default:
+          statusElement.textContent = 'Waiting';
+          statusElement.className = 'status-indicator status-waiting';
+      }
+    }
+
+    function updateTimer(timeRemaining) {
+      const timerElement = document.getElementById('timer');
+      const minutes = Math.floor(timeRemaining / 60000);
+      const seconds = Math.floor((timeRemaining % 60000) / 1000);
+
+      timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+      // Add warning class when time is low
+      if (timeRemaining <= 60000) { // 1 minute
+        timerElement.classList.add('warning');
+      } else {
+        timerElement.classList.remove('warning');
+      }
+    }
+
+    function updateRaceInfo() {
+      const raceDetails = document.getElementById('raceDetails');
+
+      if (gameState.raceSessions.length > 0 && gameState.currentRaceIndex >= 0) {
+        const currentSession = gameState.raceSessions[gameState.currentRaceIndex];
+        raceDetails.innerHTML = `
+                    <div class="driver-count">${currentSession.drivers.length} Drivers</div>
+                `;
+      } else if (gameState.raceSessions.length > 0) {
+        const nextSession = gameState.raceSessions[0];
+        raceDetails.innerHTML = `
+                    <div class="driver-count">Next Race: ${nextSession.drivers.length} Drivers</div>
+                `;
+      } else {
+        raceDetails.innerHTML = '<div class="no-race">No race sessions configured</div>';
+      }
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.error('Error attempting to enable fullscreen:', err);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    // Initialize socket connection
+    initializeSocket();
+  </script>
+</body>
+
+</html>

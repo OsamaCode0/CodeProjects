@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leader Board - Beachside Racetrack</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: white;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 2rem;
+      border-radius: 15px;
+      margin-bottom: 2rem;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .header h1 {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .header .subtitle {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+
+    .race-info {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 1.5rem;
+      border-radius: 15px;
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .race-status {
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    .race-timer {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #ffd700;
+    }
+
+    .race-mode {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .mode-safe {
+      background: #27ae60;
+    }
+
+    .mode-hazard {
+      background: #f39c12;
+    }
+
+    .mode-danger {
+      background: #e74c3c;
+    }
+
+    .mode-finish {
+      background: #2c3e50;
+    }
+
+    .leaderboard {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .leaderboard-header {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .leaderboard-header h2 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .leaderboard-table th {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 1rem;
+      text-align: left;
+      font-weight: bold;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .leaderboard-table td {
+      padding: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .leaderboard-table tr:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .position {
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-align: center;
+      width: 80px;
+    }
+
+    .position.first {
+      color: #ffd700;
+    }
+
+    .position.second {
+      color: #c0c0c0;
+    }
+
+    .position.third {
+      color: #cd7f32;
+    }
+
+    .car-number {
+      background: rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 0.5rem;
+      border-radius: 50%;
+      font-weight: bold;
+      text-align: center;
+      width: 3rem;
+      height: 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+    }
+
+    .driver-info {
+      display: flex;
+      align-items: center;
+    }
+
+    .lap-time {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #ffd700;
+    }
+
+    .no-time {
+      color: #bdc3c7;
+      font-style: italic;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 1.2rem;
+      padding: 3rem;
+      font-style: italic;
+    }
+
+    .fullscreen-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 10px 15px;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 1rem;
+    }
+
+    .fullscreen-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2rem;
+      }
+
+      .race-info {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .leaderboard-table {
+        font-size: 0.9rem;
+      }
+
+      .leaderboard-table th,
+      .leaderboard-table td {
+        padding: 0.5rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+
+  <div class="container">
+    <div class="header">
+      <h1>🏁 Leader Board</h1>
+      <p class="subtitle">Live Race Results</p>
+    </div>
+
+    <div class="race-info">
+      <div id="raceStatus" class="race-status">Waiting for Race</div>
+      <div id="raceTimer" class="race-timer">--:--</div>
+      <div id="raceMode" class="race-mode mode-safe">Safe</div>
+    </div>
+
+    <div class="leaderboard">
+      <div class="leaderboard-header">
+        <h2 id="leaderboardTitle">Current Race</h2>
+      </div>
+
+      <div id="leaderboardContent">
+        <!-- Leaderboard content will be populated here -->
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    let socket;
+    let gameState = {};
+
+    function initializeSocket() {
+      socket = io();
+
+      socket.on('gameState', (state) => {
+        gameState = state;
+        updateUI();
+      });
+
+      socket.on('raceTimer', (timeRemaining) => {
+        updateTimer(timeRemaining);
+      });
+    }
+
+    function updateUI() {
+      updateRaceInfo();
+      updateLeaderboard();
+    }
+
+    function updateRaceInfo() {
+      const statusElement = document.getElementById('raceStatus');
+      const modeElement = document.getElementById('raceMode');
+
+      if (gameState.raceStatus === 'active') {
+        statusElement.textContent = 'Race Active';
+        updateTimer(gameState.raceTimeRemaining);
+      } else if (gameState.raceStatus === 'finished') {
+        statusElement.textContent = 'Race Finished';
+        document.getElementById('raceTimer').textContent = '00:00';
+      } else {
+        statusElement.textContent = 'Waiting for Race';
+        document.getElementById('raceTimer').textContent = '--:--';
+      }
+
+      modeElement.textContent = gameState.raceMode.charAt(0).toUpperCase() + gameState.raceMode.slice(1);
+      modeElement.className = `race-mode mode-${gameState.raceMode}`;
+    }
+
+    function updateTimer(timeRemaining) {
+      const minutes = Math.floor(timeRemaining / 60000);
+      const seconds = Math.floor((timeRemaining % 60000) / 1000);
+      document.getElementById('raceTimer').textContent =
+        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function updateLeaderboard() {
+      const content = document.getElementById('leaderboardContent');
+      const title = document.getElementById('leaderboardTitle');
+
+      // Only show data when race is active
+      if (gameState.raceStatus == 'waiting') {
+        content.innerHTML = '<div class="empty-state">No race data available</div>';
+        title.textContent = 'Race Coming Soon';
+        return;
+      }
+
+      // Determine which race to show
+      let raceToShow = null;
+      let raceTitle = '';
+
+      if (gameState.currentRaceIndex >= 0 && gameState.currentRaceIndex < gameState.raceSessions.length) {
+        // Show current/active race
+        raceToShow = gameState.raceSessions[gameState.currentRaceIndex];
+        raceTitle = `Race Session ${gameState.currentRaceIndex + 1}`;
+      } else if (gameState.raceSessions.length > 0) {
+        // Show last completed race
+        let lastCompletedIndex = -1;
+        for (let i = gameState.raceSessions.length - 1; i >= 0; i--) {
+          if (gameState.raceSessions[i].completed) {
+            lastCompletedIndex = i;
+            break;
+          }
+        }
+
+        if (lastCompletedIndex !== -1) {
+          raceToShow = gameState.raceSessions[lastCompletedIndex];
+          raceTitle = `Race Session ${lastCompletedIndex + 1} (Completed)`;
+        }
+      }
+
+      title.textContent = raceTitle || 'Race Coming Soon';
+
+      if (!raceToShow || raceToShow.drivers.length === 0) {
+        content.innerHTML = '<div class="empty-state">No race data available</div>';
+        return;
+      }
+
+      // Sort drivers by fastest lap time
+      const sortedDrivers = [...raceToShow.drivers].map(driver => {
+        const lapData = gameState.lapTimes[driver.carNumber] || {};
+        return {
+          ...driver,
+          fastestLap: lapData.fastestLap,
+          currentLap: lapData.currentLap || 0
+        };
+      }).sort((a, b) => {
+        // If both have fastest laps, sort by time (lower is better)
+        if (a.fastestLap && b.fastestLap) {
+          return a.fastestLap - b.fastestLap;
+        }
+        // If only one has a fastest lap, that one goes first
+        if (a.fastestLap && !b.fastestLap) return -1;
+        if (!a.fastestLap && b.fastestLap) return 1;
+        // If neither has a fastest lap, sort by car number
+        return a.carNumber - b.carNumber;
+      });
+
+      content.innerHTML = `
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">Pos</th>
+                            <th>Driver</th>
+                            <th style="width: 100px;">Current Lap</th>
+                            <th style="width: 150px;">Fastest Lap</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sortedDrivers.map((driver, index) => {
+        const positionClass = index === 0 ? 'first' : index === 1 ? 'second' : index === 2 ? 'third' : '';
+        const lapTimeDisplay = driver.fastestLap
+          ? `${(driver.fastestLap / 1000).toFixed(2)}s`
+          : '--:--.--';
+
+        return `
+                                <tr>
+                                    <td class="position ${positionClass}">${index + 1}</td>
+                                    <td>
+                                        <div class="driver-info">
+                                            <div class="car-number">${driver.carNumber}</div>
+                                            <div>${driver.name}</div>
+                                        </div>
+                                    </td>
+                                    <td style="text-align: center; font-size: 1.1rem;">${driver.currentLap}</td>
+                                    <td class="lap-time ${!driver.fastestLap ? 'no-time' : ''}">${lapTimeDisplay}</td>
+                                </tr>
+                            `;
+      }).join('')}
+                    </tbody>
+                </table>
+            `;
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.log('Fullscreen not supported');
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    // Initialize when page loads
+    initializeSocket();
+  </script>
+</body>
+
+</html>
